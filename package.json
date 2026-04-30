@@ -1,0 +1,14 @@
+{
+  "name": "neuroforge",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "pnpm --filter neuroforge-frontend dev",
+    "build:frontend": "pnpm --filter neuroforge-frontend build",
+    "lint:frontend": "pnpm --filter neuroforge-frontend lint"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}

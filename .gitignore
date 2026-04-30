@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+.next/
+.turbo/
+dist/
+build/
+
+# Data caches (keep schema, not contents)
+backend/data/neurons.sqlite
+backend/data/swc_cache/*
+!backend/data/swc_cache/.gitkeep
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
