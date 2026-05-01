@@ -41,3 +41,22 @@ export const SWC_TYPE_LABELS: Record<number, string> = {
 export function swcTypeLabel(type: number): string {
   return SWC_TYPE_LABELS[type] ?? `custom (${type})`;
 }
+
+// Mirror of backend HHRequest / HHResponse pydantic models.
+export interface HHRequest {
+  duration_ms?: number;
+  stimulus_uA?: number;
+  stimulus_start_ms?: number;
+  stimulus_end_ms?: number | null;
+  dt_ms?: number;
+  record_every_n?: number;
+}
+
+export interface HHResponse {
+  times_ms: number[];
+  voltage_mV: number[];
+  stimulus_uA: number[];
+  spike_times_ms: number[];
+  dt_ms: number;
+  citation: string;
+}
