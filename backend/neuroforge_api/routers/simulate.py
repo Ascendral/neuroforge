@@ -9,6 +9,8 @@ from neuroforge_api.models.simulation import (
     HebbianResponse,
     HHRequest,
     HHResponse,
+    HopfieldRequest,
+    HopfieldResponse,
     STDPRequest,
     STDPResponse,
     V1Request,
@@ -16,6 +18,7 @@ from neuroforge_api.models.simulation import (
 )
 from neuroforge_api.simulators.hebbian import simulate_hebbian
 from neuroforge_api.simulators.hodgkin_huxley import simulate_hh
+from neuroforge_api.simulators.hopfield import simulate_hopfield
 from neuroforge_api.simulators.hubel_wiesel import (
     gabor_filter,
     orientation_tuning_curve,
@@ -58,6 +61,16 @@ HEBBIAN_CITATION = (
     "Oja E. A simplified neuron model as a principal component analyzer. "
     "J Math Biol. 1982;15(3):267-273. doi:10.1007/BF00275687"
 )
+
+HOPFIELD_CITATION = (
+    "Hopfield JJ. Neural networks and physical systems with emergent "
+    "collective computational abilities. Proc Natl Acad Sci USA. "
+    "1982;79(8):2554-2558. doi:10.1073/pnas.79.8.2554 (Nobel 2024). "
+    "Capacity bound: Amit DJ, Gutfreund H, Sompolinsky H. Statistical "
+    "mechanics of neural networks near saturation. Ann Phys. "
+    "1987;173(1):30-67. doi:10.1016/0003-4916(87)90092-3"
+)
+HOPFIELD_CRITICAL_ALPHA = 0.138
 
 
 @router.post("/hh", response_model=HHResponse)
@@ -111,6 +124,37 @@ def run_stdp(request: STDPRequest) -> STDPResponse:
         a_plus=A_PLUS,
         a_minus=A_MINUS,
         citation=STDP_CITATION,
+    )
+
+
+@router.post("/hopfield", response_model=HopfieldResponse)
+def run_hopfield(request: HopfieldRequest) -> HopfieldResponse:
+    try:
+        run = simulate_hopfield(
+            n_neurons=request.n_neurons,
+            n_patterns=request.n_patterns,
+            corruption_fraction=request.corruption_fraction,
+            target_index=request.target_index,
+            max_sweeps=request.max_sweeps,
+            seed=request.seed,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return HopfieldResponse(
+        n_neurons=run.n_neurons,
+        n_patterns=run.n_patterns,
+        target_index=run.target_index,
+        target_capacity_alpha=run.target_capacity_alpha,
+        critical_capacity=HOPFIELD_CRITICAL_ALPHA,
+        target_pattern=run.patterns[run.target_index].astype(int).tolist(),
+        corrupted_input=run.corrupted_input.astype(int).tolist(),
+        final_state=run.states[-1].astype(int).tolist(),
+        energies=run.energies.tolist(),
+        overlaps_with_target=run.overlaps_with_target.tolist(),
+        final_overlap=run.final_overlap,
+        converged=run.converged,
+        citation=HOPFIELD_CITATION,
     )
 
 

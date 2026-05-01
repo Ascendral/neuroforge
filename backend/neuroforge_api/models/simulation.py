@@ -96,3 +96,28 @@ class HebbianResponse(BaseModel):
     final_hebb_weight: list[float]
     final_oja_weight: list[float]
     citation: str
+
+
+class HopfieldRequest(BaseModel):
+    n_neurons: int = Field(default=64, ge=16, le=400)
+    n_patterns: int = Field(default=5, ge=1, le=80)
+    corruption_fraction: float = Field(default=0.2, ge=0.0, le=1.0)
+    target_index: int | None = Field(default=0, ge=0)
+    max_sweeps: int = Field(default=6, ge=1, le=30)
+    seed: int = Field(default=42, ge=0)
+
+
+class HopfieldResponse(BaseModel):
+    n_neurons: int
+    n_patterns: int
+    target_index: int
+    target_capacity_alpha: float
+    critical_capacity: float
+    target_pattern: list[int]
+    corrupted_input: list[int]
+    final_state: list[int]
+    energies: list[float]
+    overlaps_with_target: list[float]
+    final_overlap: float
+    converged: bool
+    citation: str

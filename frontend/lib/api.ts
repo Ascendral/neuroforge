@@ -3,6 +3,8 @@ import type {
   HebbianResponse,
   HHRequest,
   HHResponse,
+  HopfieldRequest,
+  HopfieldResponse,
   NeuronResponse,
   NeuronSearchResponse,
   STDPRequest,
@@ -90,4 +92,26 @@ export async function simulateHebbian(request: HebbianRequest = {}): Promise<Heb
     throw new Error(`simulateHebbian: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as HebbianResponse;
+}
+
+export async function simulateHopfield(request: HopfieldRequest = {}): Promise<HopfieldResponse> {
+  const response = await fetch(`${API_BASE}/api/simulate/hopfield`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`simulateHopfield: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as HopfieldResponse;
+}
+
+export async function fetchCA3Sample(size = 5): Promise<NeuronSearchResponse> {
+  const response = await fetch(`${API_BASE}/api/neurons/ca3/sample?size=${size}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchCA3Sample: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as NeuronSearchResponse;
 }

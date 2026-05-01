@@ -62,6 +62,42 @@ def _summary(meta: NeuroMorphoNeuron) -> NeuronSummary:
     )
 
 
+@router.get("/ca3/sample", response_model=NeuronSearchResponse)
+def sample_ca3_pyramidals(size: int = 5) -> NeuronSearchResponse:
+    """Real CA3 hippocampal pyramidal reconstructions.
+
+    CA3 is the recurrent-collateral region of hippocampus widely modeled as
+    the biological substrate of attractor-network dynamics — including the
+    pattern-completion and content-addressable recall implemented by the
+    Hopfield 1982 network.
+
+    Filter: brain_region=['CA3'] AND cell_type=['pyramidal'].
+    """
+    if size < 1 or size > 50:
+        raise HTTPException(status_code=422, detail="size must be in [1, 50]")
+    try:
+        results, total = search_neurons(
+            criteria={"brain_region": ["CA3"], "cell_type": ["pyramidal"]},
+            page=0,
+            size=size,
+        )
+    except NeuroMorphoError as exc:
+        raise HTTPException(status_code=502, detail=f"neuromorpho.org: {exc}") from exc
+
+    return NeuronSearchResponse(
+        region_query=["CA3", "pyramidal"],
+        total_matching=total,
+        page=0,
+        size=size,
+        results=[_summary(n) for n in results],
+        citation_note=(
+            "CA3 pyramidals form recurrent collaterals — the anatomical "
+            "substrate widely modeled as a biological Hopfield-style "
+            "attractor network for episodic memory recall."
+        ),
+    )
+
+
 @router.get("/hippocampus/sample", response_model=NeuronSearchResponse)
 def sample_hippocampal_pyramidals(size: int = 5) -> NeuronSearchResponse:
     """Return a page of real hippocampal pyramidal neurons.

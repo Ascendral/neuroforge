@@ -147,3 +147,28 @@ export interface HebbianResponse {
   final_oja_weight: number[];
   citation: string;
 }
+
+export interface HopfieldRequest {
+  n_neurons?: number;
+  n_patterns?: number;
+  corruption_fraction?: number;
+  target_index?: number;
+  max_sweeps?: number;
+  seed?: number;
+}
+
+export interface HopfieldResponse {
+  n_neurons: number;
+  n_patterns: number;
+  target_index: number;
+  target_capacity_alpha: number;
+  critical_capacity: number;
+  target_pattern: number[];
+  corrupted_input: number[];
+  final_state: number[];
+  energies: number[];
+  overlaps_with_target: number[];
+  final_overlap: number;
+  converged: boolean;
+  citation: string;
+}

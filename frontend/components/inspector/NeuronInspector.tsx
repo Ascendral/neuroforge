@@ -9,6 +9,7 @@ import { swcTypeLabel } from '@/lib/types';
 import { CitationCard } from './CitationCard';
 import { FiringPlot } from './FiringPlot';
 import { HebbianPanel } from './HebbianPanel';
+import { HopfieldPanel } from './HopfieldPanel';
 import { HubelWieselPanel } from './HubelWieselPanel';
 import { STDPPanel } from './STDPPanel';
 
@@ -169,6 +170,8 @@ export function NeuronInspector({ neuron, selected }: NeuronInspectorProps) {
       <STDPPanel />
 
       <HebbianPanel />
+
+      <HopfieldPanel />
 
       <HubelWieselPanel />
 
