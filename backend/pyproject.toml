@@ -12,6 +12,8 @@ dependencies = [
   "scipy>=1.13",
   "brian2>=2.7",
   "sqlalchemy>=2.0",
+  "nilearn>=0.10",
+  "nibabel>=5.2",
   # NOTE: allensdk 2.16 pins numpy<1.24, which has no py3.12 wheels.
   # Phase 1 decision required: (a) drop py3.12 → py3.11, (b) replace allensdk
   # with direct REST calls to api.brain-map.org, or (c) isolate allensdk in a
