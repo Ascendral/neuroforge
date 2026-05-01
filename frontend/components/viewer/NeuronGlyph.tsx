@@ -53,19 +53,19 @@ void main() {
   float t = mod(time_ms + phase_ms, period_ms);
   float wavefront = t * speed_um_per_ms;
   float distance_from_wave = abs(vDist - wavefront);
-  // Wider pulse band (90 µm) for clearer visibility against the brain shell.
-  float half_width = 90.0;
-  // Smooth bell-shape intensity instead of a triangle: looks more like a
-  // depolarization wave and fades naturally on either side.
+  // Wide pulse band (150 µm) — the wave crest reads as an unambiguous flash.
+  float half_width = 150.0;
   float t_norm = clamp(distance_from_wave / half_width, 0.0, 1.0);
   float intensity = pow(1.0 - t_norm, 2.0);
   // Quick fade once the wave has run past the dendrite's farthest extent.
   if (wavefront > maxDist + half_width) intensity = 0.0;
-  // Boost output above 1.0 at the peak so the fire color visibly pops
-  // (display will clip but the bright burst registers as glow).
-  vec3 c = mix(baseColor, fireColor, intensity);
-  c += fireColor * intensity * 1.4; // additive boost
-  gl_FragColor = vec4(c, 0.97);
+  // Slow background glow per cell so even resting branches pulse subtly.
+  float breathe = 0.35 + 0.15 * sin(6.2831853 * (time_ms + phase_ms) / period_ms);
+  // Strong additive flash on the wavefront — output exceeds 1.0; with
+  // AdditiveBlending the surrounding brain shell stays visible behind.
+  vec3 base_glow = baseColor * breathe;
+  vec3 flash = fireColor * intensity * 3.5 + baseColor * intensity * 1.5;
+  gl_FragColor = vec4(base_glow + flash, 1.0);
 }
 `;
 
@@ -162,6 +162,8 @@ export function NeuronGlyph({
           </bufferGeometry>
           <shaderMaterial
             transparent
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
             uniforms={uniforms.current}
             vertexShader={VERT}
             fragmentShader={FRAG}
