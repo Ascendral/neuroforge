@@ -283,3 +283,20 @@ export interface ReceptorMapResponse {
   cortical: ReceptorRegionValue[];
   subcortical: ReceptorRegionValue[];
 }
+
+export interface WhiteMatterTract {
+  name: string;
+  description: string;
+  color: string;
+  start_label: string;
+  end_label: string;
+  start_mni_mm: number[] | null;
+  end_mni_mm: number[] | null;
+  midpoint_mni_mm: number[] | null;
+}
+
+export interface WhiteMatterTractsResponse {
+  tracts: WhiteMatterTract[];
+  citation: string;
+  note: string;
+}

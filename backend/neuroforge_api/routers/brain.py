@@ -105,6 +105,23 @@ class ReceptorMapResponse(BaseModel):
     subcortical: list[ReceptorRegionValue]
 
 
+class WhiteMatterTract(BaseModel):
+    name: str
+    description: str
+    color: str
+    start_label: str
+    end_label: str
+    start_mni_mm: list[float] | None
+    end_mni_mm: list[float] | None
+    midpoint_mni_mm: list[float] | None
+
+
+class WhiteMatterTractsResponse(BaseModel):
+    tracts: list[WhiteMatterTract]
+    citation: str
+    note: str
+
+
 @router.get("/mesh", response_model=CorticalMeshResponse)
 def get_cortical_mesh() -> CorticalMeshResponse:
     """Return fsaverage5 pial mesh + Destrieux per-vertex labels for both hemispheres.
@@ -274,4 +291,74 @@ def receptor_map(key: str) -> ReceptorMapResponse:
         receptor=_receptor_to_pydantic(receptor),
         cortical=[_to_value(d, cort_by_label) for d in per_region["cortical"]],
         subcortical=[_to_value(d, sub_by_label) for d in per_region["subcortical"]],
+    )
+
+
+CATANI_CITATION = (
+    "Catani M, Thiebaut de Schotten M. A diffusion tensor imaging "
+    "tractography atlas for virtual in vivo dissections. Cortex. "
+    "2008;44(8):1105-1132. doi:10.1016/j.cortex.2008.05.004. "
+    "Catani M, Thiebaut de Schotten M. Atlas of Human Brain Connections. "
+    "Oxford University Press, 2012."
+)
+
+
+@router.get("/tracts", response_model=WhiteMatterTractsResponse)
+def list_white_matter_tracts() -> WhiteMatterTractsResponse:
+    """Schematic centerlines of major white-matter bundles."""
+    cortical_regions = atlas_module.harvard_oxford_cortical_regions()
+    subcortical_regions = atlas_module.harvard_oxford_subcortical_regions()
+    by_label: dict[str, atlas_module.AtlasRegion] = {
+        r.label: r for r in cortical_regions + subcortical_regions
+    }
+
+    out: list[WhiteMatterTract] = []
+    for t in atlas_module.WHITE_MATTER_TRACTS:
+        start_region = by_label.get(t["start_label"])
+        end_region = by_label.get(t["end_label"])
+        start_mni = list(start_region.centroid_mni_mm) if start_region and start_region.centroid_mni_mm else None
+        end_mni = list(end_region.centroid_mni_mm) if end_region and end_region.centroid_mni_mm else None
+
+        if "midpoint_override_mm" in t:
+            midpoint = list(t["midpoint_override_mm"])
+        elif start_mni and end_mni:
+            ox, oy, oz = t["midpoint_offset_mm"]
+            midpoint = [
+                (start_mni[0] + end_mni[0]) / 2 + ox,
+                (start_mni[1] + end_mni[1]) / 2 + oy,
+                (start_mni[2] + end_mni[2]) / 2 + oz,
+            ]
+        else:
+            midpoint = None
+
+        # For corpus-callosum-style "left to right of same label" tracts, the
+        # endpoints need to be split L/R of the midline since both labels are
+        # the same atlas record (single bilateral centroid). Apply ±25mm
+        # x-offset to give a real bilateral curve.
+        if start_mni and end_mni and t["start_label"] == t["end_label"]:
+            start_mni = [start_mni[0] - 25, start_mni[1], start_mni[2]]
+            end_mni = [end_mni[0] + 25, end_mni[1], end_mni[2]]
+
+        out.append(
+            WhiteMatterTract(
+                name=t["name"],
+                description=t["description"],
+                color=t["color"],
+                start_label=t["start_label"],
+                end_label=t["end_label"],
+                start_mni_mm=start_mni,
+                end_mni_mm=end_mni,
+                midpoint_mni_mm=midpoint,
+            )
+        )
+
+    return WhiteMatterTractsResponse(
+        tracts=out,
+        citation=CATANI_CITATION,
+        note=(
+            "Each tract is rendered as a single Bezier curve between two "
+            "Harvard-Oxford region centroids — a SCHEMATIC centerline, not "
+            "fiber-resolved tractography. Real DTI streamlines would be tens "
+            "of thousands of polylines per bundle (Yeh HCP-1065 / FSL XTRACT)."
+        ),
     )

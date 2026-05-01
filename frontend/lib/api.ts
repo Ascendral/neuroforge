@@ -4,6 +4,7 @@ import type {
   CognitiveFunctionsResponse,
   ReceptorListResponse,
   ReceptorMapResponse,
+  WhiteMatterTractsResponse,
   HebbianRequest,
   HebbianResponse,
   HHRequest,
@@ -198,4 +199,13 @@ export async function fetchReceptorMap(key: string): Promise<ReceptorMapResponse
     throw new Error(`fetchReceptorMap(${key}): ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as ReceptorMapResponse;
+}
+
+export async function fetchWhiteMatterTracts(): Promise<WhiteMatterTractsResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/tracts`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchWhiteMatterTracts: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as WhiteMatterTractsResponse;
 }

@@ -228,6 +228,94 @@ COGNITIVE_FUNCTIONS: list[dict] = [
 ]
 
 
+# Major white-matter fiber bundles. Endpoints reference Harvard-Oxford labels;
+# midpoints are anatomically-informed sag/cor offsets so the curve bows along
+# the known anatomical course rather than going straight. Per Catani &
+# Thiebaut de Schotten 2008 + 2012 atlases (the canonical clinical atlas of
+# major human white-matter bundles).
+#
+# This is SCHEMATIC: each "tract" is rendered as a single Bezier curve, NOT
+# as fiber-resolved tractography. Real DTI/HARDI streamlines (Yeh HCP-1065,
+# FSL XTRACT) would be tens of thousands of polylines per bundle. Frontend
+# UI calls these "schematic centerlines" honestly.
+#
+# Reference (clinical atlas):
+#     Catani M, Thiebaut de Schotten M. A diffusion tensor imaging
+#     tractography atlas for virtual in vivo dissections. Cortex.
+#     2008;44(8):1105-1132. doi:10.1016/j.cortex.2008.05.004
+#     Catani M, Thiebaut de Schotten M. Atlas of Human Brain Connections.
+#     Oxford University Press, 2012.
+
+WHITE_MATTER_TRACTS: list[dict] = [
+    {
+        "name": "Arcuate fasciculus (left)",
+        "description": "Connects Broca's area (frontal speech production) to Wernicke's area (temporal language comprehension). Damage → conduction aphasia.",
+        "start_label": "Inferior Frontal Gyrus, pars opercularis",
+        "end_label": "Superior Temporal Gyrus, posterior division",
+        "midpoint_offset_mm": [-30, -25, 25],
+        "color": "#ffd86b",
+    },
+    {
+        "name": "Cingulum (left)",
+        "description": "Wraps around the corpus callosum within the cingulate gyrus. Limbic-cortical connectivity.",
+        "start_label": "Cingulate Gyrus, anterior division",
+        "end_label": "Cingulate Gyrus, posterior division",
+        "midpoint_offset_mm": [-5, -10, 30],
+        "color": "#9bd2ff",
+    },
+    {
+        "name": "Corpus callosum (genu)",
+        "description": "Anterior bridge between left and right prefrontal cortex. Largest white-matter commissure in the brain.",
+        "start_label": "Frontal Pole",
+        "end_label": "Frontal Pole",
+        "midpoint_offset_mm": [0, 35, 15],
+        "midpoint_override_mm": [0, 35, 15],
+        "color": "#ff8c5e",
+    },
+    {
+        "name": "Corpus callosum (splenium)",
+        "description": "Posterior bridge connecting bilateral occipital + parietal cortex.",
+        "start_label": "Lateral Occipital Cortex, superior division",
+        "end_label": "Lateral Occipital Cortex, superior division",
+        "midpoint_offset_mm": [0, -35, 25],
+        "midpoint_override_mm": [0, -35, 25],
+        "color": "#ff6bd4",
+    },
+    {
+        "name": "Fornix",
+        "description": "Major output of the hippocampus to the mammillary bodies (memory circuit / Papez circuit).",
+        "start_label": "Left Hippocampus",
+        "end_label": "Right Hippocampus",
+        "midpoint_offset_mm": [0, -10, 5],
+        "color": "#7fff9b",
+    },
+    {
+        "name": "Uncinate fasciculus (left)",
+        "description": "Hooks under the Sylvian fissure connecting orbitofrontal to anterior temporal cortex. Emotion + memory integration.",
+        "start_label": "Frontal Orbital Cortex",
+        "end_label": "Temporal Pole",
+        "midpoint_offset_mm": [-25, 15, -15],
+        "color": "#c45eff",
+    },
+    {
+        "name": "Inferior longitudinal fasciculus (left)",
+        "description": "Major occipito-temporal pathway for visual recognition and reading.",
+        "start_label": "Lateral Occipital Cortex, inferior division",
+        "end_label": "Temporal Pole",
+        "midpoint_offset_mm": [-40, -30, -15],
+        "color": "#ff2d2d",
+    },
+    {
+        "name": "Corticospinal tract (left)",
+        "description": "Voluntary motor commands from primary motor cortex to spinal cord. Damage → contralateral paralysis.",
+        "start_label": "Precentral Gyrus",
+        "end_label": "Brain-Stem",
+        "midpoint_offset_mm": [-15, -10, 0],
+        "color": "#ffe45e",
+    },
+]
+
+
 @dataclass(frozen=True, slots=True)
 class CorticalSurface:
     """Fsaverage5 pial surface for one hemisphere."""

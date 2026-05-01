@@ -162,6 +162,37 @@ export interface RegionIntensity {
   normalized: number; // 0-1
 }
 
+export interface TractCurve {
+  name: string;
+  color: string;
+  start: [number, number, number];
+  midpoint: [number, number, number];
+  end: [number, number, number];
+}
+
+function TractTube({ curve }: { curve: TractCurve }) {
+  const tubeGeom = useMemo(() => {
+    const path = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(...curve.start),
+      new THREE.Vector3(...curve.midpoint),
+      new THREE.Vector3(...curve.end),
+    );
+    return new THREE.TubeGeometry(path, 48, 1.2, 8, false);
+  }, [curve.start, curve.midpoint, curve.end]);
+
+  return (
+    <mesh geometry={tubeGeom}>
+      <meshStandardMaterial
+        color={curve.color}
+        emissive={curve.color}
+        emissiveIntensity={0.4}
+        transparent
+        opacity={0.85}
+      />
+    </mesh>
+  );
+}
+
 interface BrainCanvasProps {
   mesh: BrainMeshResponse;
   markers?: NeuronMarker[];
@@ -176,6 +207,7 @@ interface BrainCanvasProps {
   highlightColor?: string;
   regionIntensities?: RegionIntensity[];
   intensityColor?: string;
+  tracts?: TractCurve[];
 }
 
 export function BrainCanvas({
@@ -188,6 +220,7 @@ export function BrainCanvas({
   highlightColor = '#ffe45e',
   regionIntensities = [],
   intensityColor = '#5eebff',
+  tracts = [],
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -317,6 +350,9 @@ export function BrainCanvas({
           </mesh>
         );
       })}
+      {tracts.map((t, i) => (
+        <TractTube key={`tract-${t.name}-${i}`} curve={t} />
+      ))}
       <OrbitControls
         target={center.center}
         enableDamping

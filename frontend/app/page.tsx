@@ -8,6 +8,7 @@ import {
   type FunctionHighlight,
   type NeuronMarker,
   type RegionIntensity,
+  type TractCurve,
 } from '@/components/viewer/BrainCanvas';
 import { NeuronCanvas } from '@/components/viewer/NeuronCanvas';
 import {
@@ -21,6 +22,7 @@ import {
   fetchReceptors,
   fetchRegionSample,
   fetchV1NeuronSample,
+  fetchWhiteMatterTracts,
 } from '@/lib/api';
 import { NeuronSelectionCtx } from '@/lib/neuron-context';
 import type {
@@ -31,6 +33,7 @@ import type {
   NeuronResponse,
   ReceptorListResponse,
   ReceptorMapResponse,
+  WhiteMatterTractsResponse,
 } from '@/lib/types';
 
 const DEFAULT_NEURON_ID = 1;
@@ -63,6 +66,8 @@ export default function Page() {
   const [receptors, setReceptors] = useState<ReceptorListResponse | null>(null);
   const [activeReceptor, setActiveReceptor] = useState<ReceptorMapResponse | null>(null);
   const [receptorLoading, setReceptorLoading] = useState(false);
+  const [tracts, setTracts] = useState<WhiteMatterTractsResponse | null>(null);
+  const [tractsVisible, setTractsVisible] = useState(false);
 
   // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
@@ -72,13 +77,15 @@ export default function Page() {
       fetchBrainRegions(),
       fetchCognitiveFunctions(),
       fetchReceptors(),
+      fetchWhiteMatterTracts(),
     ])
-      .then(([mesh, regs, funs, recs]) => {
+      .then(([mesh, regs, funs, recs, trks]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
         setFunctions(funs);
         setReceptors(recs);
+        setTracts(trks);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -385,6 +392,22 @@ export default function Page() {
                             })) as FunctionHighlight[])
                         : []
                     }
+                    tracts={
+                      tractsVisible && tracts
+                        ? (tracts.tracts
+                            .filter((t) => t.start_mni_mm && t.end_mni_mm && t.midpoint_mni_mm)
+                            .map(
+                              (t) =>
+                                ({
+                                  name: t.name,
+                                  color: t.color,
+                                  start: t.start_mni_mm as [number, number, number],
+                                  midpoint: t.midpoint_mni_mm as [number, number, number],
+                                  end: t.end_mni_mm as [number, number, number],
+                                }) as TractCurve,
+                            ) as TractCurve[])
+                        : []
+                    }
                     regionIntensities={
                       activeReceptor
                         ? ([...activeReceptor.cortical, ...activeReceptor.subcortical]
@@ -445,6 +468,43 @@ export default function Page() {
                         <div className="border-t border-white/10 pt-2 text-white/40">
                           {activeFunction.citation}
                         </div>
+                      </div>
+                    )}
+
+                    {tracts && (
+                      <div className="rounded border border-white/10 bg-black/85 p-3">
+                        <div className="mb-2 flex items-baseline justify-between">
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-white/40">
+                            white matter tracts
+                          </div>
+                          <button
+                            onClick={() => setTractsVisible((v) => !v)}
+                            className={`rounded border px-2 py-1 font-mono text-[10px] ${
+                              tractsVisible
+                                ? 'border-[#9bd2ff] bg-[#9bd2ff]/10 text-white'
+                                : 'border-white/20 text-white/60 hover:bg-white/5'
+                            }`}
+                          >
+                            {tractsVisible ? 'hide' : 'show'} {tracts.tracts.length}
+                          </button>
+                        </div>
+                        {tractsVisible && (
+                          <div className="space-y-1 font-mono text-[10px]">
+                            {tracts.tracts.map((t) => (
+                              <div key={t.name} className="flex items-baseline gap-2">
+                                <span
+                                  className="inline-block h-2 w-3 rounded"
+                                  style={{ background: t.color }}
+                                />
+                                <span className="text-white/80">{t.name}</span>
+                              </div>
+                            ))}
+                            <p className="mt-2 border-t border-white/10 pt-2 text-white/40">
+                              schematic centerlines (Bezier curves), not fiber-resolved tractography
+                            </p>
+                            <p className="text-white/40">{tracts.citation.split('. ').slice(0, 1).join('. ')}.</p>
+                          </div>
+                        )}
                       </div>
                     )}
 
