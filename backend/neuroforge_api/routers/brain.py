@@ -58,6 +58,25 @@ class RegionCatalogResponse(BaseModel):
     citation: str
 
 
+class FunctionRegionCentroid(BaseModel):
+    label: str
+    centroid_mni_mm: list[float] | None
+    found: bool
+
+
+class CognitiveFunction(BaseModel):
+    name: str
+    description: str
+    atlas_labels: list[str]
+    citation: str
+    region_centroids: list[FunctionRegionCentroid]
+
+
+class CognitiveFunctionsResponse(BaseModel):
+    functions: list[CognitiveFunction]
+    note: str
+
+
 @router.get("/mesh", response_model=CorticalMeshResponse)
 def get_cortical_mesh() -> CorticalMeshResponse:
     """Return fsaverage5 pial mesh + Destrieux per-vertex labels for both hemispheres.
@@ -123,4 +142,48 @@ def get_region_catalog() -> RegionCatalogResponse:
         subcortical=[_to_summary(r) for r in subcortical],
         module_mapping=mappings,
         citation=ATLAS_CITATION,
+    )
+
+
+@router.get("/functions", response_model=CognitiveFunctionsResponse)
+def get_cognitive_functions() -> CognitiveFunctionsResponse:
+    """Curated cognitive-function → brain-region registry with foundational citations."""
+    cortical = atlas_module.harvard_oxford_cortical_regions()
+    subcortical = atlas_module.harvard_oxford_subcortical_regions()
+    by_label: dict[str, atlas_module.AtlasRegion] = {r.label: r for r in cortical + subcortical}
+
+    out: list[CognitiveFunction] = []
+    for f in atlas_module.COGNITIVE_FUNCTIONS:
+        centroids: list[FunctionRegionCentroid] = []
+        for lbl in f["atlas_labels"]:
+            r = by_label.get(lbl)
+            if r and r.centroid_mni_mm:
+                centroids.append(
+                    FunctionRegionCentroid(
+                        label=lbl,
+                        centroid_mni_mm=list(r.centroid_mni_mm),
+                        found=True,
+                    )
+                )
+            else:
+                centroids.append(
+                    FunctionRegionCentroid(label=lbl, centroid_mni_mm=None, found=False)
+                )
+        out.append(
+            CognitiveFunction(
+                name=f["name"],
+                description=f["description"],
+                atlas_labels=list(f["atlas_labels"]),
+                citation=f["citation"],
+                region_centroids=centroids,
+            )
+        )
+
+    return CognitiveFunctionsResponse(
+        functions=out,
+        note=(
+            "Each function-region mapping is curated from primary neuroscience "
+            "literature with the foundational citation listed. See "
+            "neuroforge_api.data.atlas.COGNITIVE_FUNCTIONS for the source."
+        ),
     )

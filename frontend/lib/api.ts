@@ -1,6 +1,7 @@
 import type {
   BrainMeshResponse,
   BrainRegionsResponse,
+  CognitiveFunctionsResponse,
   HebbianRequest,
   HebbianResponse,
   HHRequest,
@@ -168,4 +169,13 @@ export async function fetchBrainRegions(): Promise<BrainRegionsResponse> {
     throw new Error(`fetchBrainRegions: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as BrainRegionsResponse;
+}
+
+export async function fetchCognitiveFunctions(): Promise<CognitiveFunctionsResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/functions`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchCognitiveFunctions: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as CognitiveFunctionsResponse;
 }

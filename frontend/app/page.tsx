@@ -3,12 +3,17 @@
 import { useEffect, useState } from 'react';
 
 import { NeuronInspector } from '@/components/inspector/NeuronInspector';
-import { BrainCanvas, type NeuronMarker } from '@/components/viewer/BrainCanvas';
+import {
+  BrainCanvas,
+  type FunctionHighlight,
+  type NeuronMarker,
+} from '@/components/viewer/BrainCanvas';
 import { NeuronCanvas } from '@/components/viewer/NeuronCanvas';
 import {
   fetchBrainMesh,
   fetchBrainRegions,
   fetchCA3Sample,
+  fetchCognitiveFunctions,
   fetchHippocampalSample,
   fetchNeuron,
   fetchRegionSample,
@@ -18,6 +23,8 @@ import { NeuronSelectionCtx } from '@/lib/neuron-context';
 import type {
   BrainMeshResponse,
   BrainRegionsResponse,
+  CognitiveFunction,
+  CognitiveFunctionsResponse,
   NeuronResponse,
 } from '@/lib/types';
 
@@ -46,15 +53,18 @@ export default function Page() {
     point: [number, number, number];
     nearestModule?: { module: string; ho_label: string; distance_mm: number } | null;
   } | null>(null);
+  const [functions, setFunctions] = useState<CognitiveFunctionsResponse | null>(null);
+  const [activeFunction, setActiveFunction] = useState<CognitiveFunction | null>(null);
 
-  // Fetch brain mesh + regions once
+  // Fetch brain mesh + regions + cognitive functions once
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchBrainMesh(), fetchBrainRegions()])
-      .then(([mesh, regs]) => {
+    Promise.all([fetchBrainMesh(), fetchBrainRegions(), fetchCognitiveFunctions()])
+      .then(([mesh, regs, funs]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
+        setFunctions(funs);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -313,7 +323,61 @@ export default function Page() {
                     markers={markers}
                     swcMap={swcMap}
                     onRegionClick={handleRegionClick}
+                    functionHighlights={
+                      activeFunction
+                        ? (activeFunction.region_centroids
+                            .filter((r) => r.found && r.centroid_mni_mm)
+                            .map((r) => ({
+                              label: r.label,
+                              centroid_mni_mm: r.centroid_mni_mm as [number, number, number],
+                            })) as FunctionHighlight[])
+                        : []
+                    }
                   />
+                )}
+                {functions && view === 'brain' && (
+                  <div className="absolute left-4 top-4 max-w-[260px] space-y-2">
+                    <div className="rounded border border-white/10 bg-black/85 p-3">
+                      <div className="mb-2 text-[10px] font-mono uppercase tracking-widest text-white/40">
+                        cognitive functions
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {functions.functions.map((f) => {
+                          const isActive = activeFunction?.name === f.name;
+                          return (
+                            <button
+                              key={f.name}
+                              onClick={() => setActiveFunction(isActive ? null : f)}
+                              className={`rounded border px-2 py-1 font-mono text-[10px] ${
+                                isActive
+                                  ? 'border-[#ffe45e] bg-[#ffe45e]/10 text-white'
+                                  : 'border-white/20 text-white/60 hover:bg-white/5'
+                              }`}
+                            >
+                              {f.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    {activeFunction && (
+                      <div className="rounded border border-[#ffe45e]/40 bg-black/85 p-3 font-mono text-[10px] leading-snug">
+                        <div className="mb-1 text-white">{activeFunction.name}</div>
+                        <div className="mb-2 text-white/60">{activeFunction.description}</div>
+                        <div className="mb-2 text-white/40">regions ({activeFunction.region_centroids.filter((r) => r.found).length}/{activeFunction.atlas_labels.length} resolved):</div>
+                        <ul className="mb-2 space-y-0.5">
+                          {activeFunction.region_centroids.map((r) => (
+                            <li key={r.label} className={r.found ? 'text-white/80' : 'text-white/30 line-through'}>
+                              {r.label}
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="border-t border-white/10 pt-2 text-white/40">
+                          {activeFunction.citation}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {brain && (
                   <div className="pointer-events-none absolute bottom-4 left-4 space-y-1 font-mono text-[10px] leading-tight text-white/60">

@@ -80,6 +80,154 @@ MODULE_TO_REGION = {
 }
 
 
+# Cognitive functions → brain regions, with foundational citations.
+# Each entry is curated by hand from neuroscience literature; visible here so
+# anyone can audit the source. Anti-theater: no inferred or aggregated maps,
+# every claim ties to a specific paper. atlas_labels are Harvard-Oxford
+# region names so they match what /api/brain/regions returns.
+COGNITIVE_FUNCTIONS: list[dict] = [
+    {
+        "name": "episodic memory",
+        "description": "Formation and retrieval of memories of specific events.",
+        "atlas_labels": ["Left Hippocampus", "Right Hippocampus"],
+        "citation": (
+            "Scoville WB, Milner B. Loss of recent memory after bilateral "
+            "hippocampal lesions. J Neurol Neurosurg Psychiatry. "
+            "1957;20(1):11-21. doi:10.1136/jnnp.20.1.11"
+        ),
+    },
+    {
+        "name": "fear and emotion",
+        "description": "Detection of threat and emotional salience; classical fear conditioning.",
+        "atlas_labels": ["Left Amygdala", "Right Amygdala"],
+        "citation": (
+            "LeDoux JE. Emotion and the amygdala. Annu Rev Neurosci. "
+            "1992;15:353-75. doi:10.1146/annurev.ne.15.030192.000543"
+        ),
+    },
+    {
+        "name": "reward and motivation",
+        "description": "Dopaminergic reward-prediction-error signaling drives learning.",
+        "atlas_labels": [
+            "Left Caudate", "Right Caudate",
+            "Left Putamen", "Right Putamen",
+            "Left Accumbens", "Right Accumbens",
+        ],
+        "citation": (
+            "Schultz W, Dayan P, Montague PR. A neural substrate of prediction "
+            "and reward. Science. 1997;275(5306):1593-9. "
+            "doi:10.1126/science.275.5306.1593"
+        ),
+    },
+    {
+        "name": "working memory",
+        "description": "Active maintenance and manipulation of information over seconds.",
+        "atlas_labels": [
+            "Frontal Pole",
+            "Middle Frontal Gyrus",
+            "Inferior Frontal Gyrus, pars triangularis",
+        ],
+        "citation": (
+            "Goldman-Rakic PS. Cellular basis of working memory. "
+            "Annu Rev Neurosci. 1995;18:477-98. "
+            "doi:10.1146/annurev.ne.18.030195.001541"
+        ),
+    },
+    {
+        "name": "visual perception",
+        "description": "Primary visual cortex extracts oriented edges from retinal input.",
+        "atlas_labels": ["Intracalcarine Cortex", "Supracalcarine Cortex", "Occipital Pole"],
+        "citation": (
+            "Hubel DH, Wiesel TN. Receptive fields, binocular interaction "
+            "and functional architecture in the cat's visual cortex. "
+            "J Physiol. 1962;160(1):106-54. doi:10.1113/jphysiol.1962.sp006837"
+        ),
+    },
+    {
+        "name": "motor planning and execution",
+        "description": "Voluntary movement initiation, somatotopic motor homunculus.",
+        "atlas_labels": ["Precentral Gyrus"],
+        "citation": (
+            "Penfield W, Boldrey E. Somatic motor and sensory representation "
+            "in the cerebral cortex of man as studied by electrical "
+            "stimulation. Brain. 1937;60(4):389-443. doi:10.1093/brain/60.4.389"
+        ),
+    },
+    {
+        "name": "default mode / self-reference",
+        "description": "Active when not task-engaged: mind-wandering, autobiographical thought.",
+        "atlas_labels": [
+            "Cingulate Gyrus, posterior division",
+            "Frontal Medial Cortex",
+        ],
+        "citation": (
+            "Raichle ME, MacLeod AM, Snyder AZ, Powers WJ, Gusnard DA, "
+            "Shulman GL. A default mode of brain function. Proc Natl Acad "
+            "Sci USA. 2001;98(2):676-82. doi:10.1073/pnas.98.2.676"
+        ),
+    },
+    {
+        "name": "language production (Broca)",
+        "description": "Speech production, grammatical processing; classically left-lateralized.",
+        "atlas_labels": [
+            "Inferior Frontal Gyrus, pars opercularis",
+            "Inferior Frontal Gyrus, pars triangularis",
+        ],
+        "citation": (
+            "Broca P. Remarques sur le siège de la faculté du langage "
+            "articulé. Bulletin de la Société Anatomique. 1861;36:330-57. "
+            "(foundational classic; no DOI)"
+        ),
+    },
+    {
+        "name": "attention orienting",
+        "description": "Top-down spatial attention; frontoparietal control network.",
+        "atlas_labels": ["Superior Parietal Lobule", "Frontal Pole"],
+        "citation": (
+            "Posner MI. Orienting of attention. Q J Exp Psychol. "
+            "1980;32(1):3-25. doi:10.1080/00335558008248231"
+        ),
+    },
+    {
+        "name": "arousal and wakefulness",
+        "description": "Brainstem reticular activating system regulates cortical arousal.",
+        "atlas_labels": ["Brain-Stem"],
+        "citation": (
+            "Moruzzi G, Magoun HW. Brain stem reticular formation and "
+            "activation of the EEG. Electroencephalogr Clin Neurophysiol. "
+            "1949;1(4):455-73. doi:10.1016/0013-4694(49)90219-9"
+        ),
+    },
+    {
+        "name": "pain perception",
+        "description": "Affective dimension of pain via anterior cingulate + insula.",
+        "atlas_labels": [
+            "Insular Cortex",
+            "Cingulate Gyrus, anterior division",
+        ],
+        "citation": (
+            "Apkarian AV, Bushnell MC, Treede RD, Zubieta JK. Human brain "
+            "mechanisms of pain perception and regulation in health and "
+            "disease. Eur J Pain. 2005;9(4):463-84. "
+            "doi:10.1016/j.ejpain.2004.11.001"
+        ),
+    },
+    {
+        "name": "executive control / conflict monitoring",
+        "description": "ACC monitors response conflict; dlPFC implements top-down control.",
+        "atlas_labels": [
+            "Cingulate Gyrus, anterior division",
+            "Middle Frontal Gyrus",
+        ],
+        "citation": (
+            "Miller EK, Cohen JD. An integrative theory of prefrontal cortex "
+            "function. Annu Rev Neurosci. 2001;24:167-202. "
+            "doi:10.1146/annurev.neuro.24.1.167"
+        ),
+    },
+]
+
+
 @dataclass(frozen=True, slots=True)
 class CorticalSurface:
     """Fsaverage5 pial surface for one hemisphere."""

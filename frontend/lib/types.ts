@@ -237,3 +237,22 @@ export interface BrainRegionsResponse {
   module_mapping: ModuleMapping[];
   citation: string;
 }
+
+export interface FunctionRegionCentroid {
+  label: string;
+  centroid_mni_mm: number[] | null;
+  found: boolean;
+}
+
+export interface CognitiveFunction {
+  name: string;
+  description: string;
+  atlas_labels: string[];
+  citation: string;
+  region_centroids: FunctionRegionCentroid[];
+}
+
+export interface CognitiveFunctionsResponse {
+  functions: CognitiveFunction[];
+  note: string;
+}

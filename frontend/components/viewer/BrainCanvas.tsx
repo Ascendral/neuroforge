@@ -151,6 +151,11 @@ function MarkerCluster({ markers, jitter_mm = 6 }: MarkerClusterProps) {
   );
 }
 
+export interface FunctionHighlight {
+  label: string;
+  centroid_mni_mm: [number, number, number];
+}
+
 interface BrainCanvasProps {
   mesh: BrainMeshResponse;
   markers?: NeuronMarker[];
@@ -161,6 +166,8 @@ interface BrainCanvasProps {
     label: string;
     point: [number, number, number];
   }) => void;
+  functionHighlights?: FunctionHighlight[];
+  highlightColor?: string;
 }
 
 export function BrainCanvas({
@@ -169,6 +176,8 @@ export function BrainCanvas({
   swcMap,
   glyphScale = 0.02,
   onRegionClick,
+  functionHighlights = [],
+  highlightColor = '#ffe45e',
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -271,6 +280,18 @@ export function BrainCanvas({
       {markers.length > 0 && (!swcMap || swcMap.size === 0) && (
         <MarkerCluster markers={markers} />
       )}
+      {functionHighlights.map((h, i) => (
+        <mesh key={`${h.label}-${i}`} position={h.centroid_mni_mm}>
+          <sphereGeometry args={[10, 24, 24]} />
+          <meshStandardMaterial
+            color={highlightColor}
+            emissive={highlightColor}
+            emissiveIntensity={1.0}
+            transparent
+            opacity={0.55}
+          />
+        </mesh>
+      ))}
       <OrbitControls
         target={center.center}
         enableDamping
