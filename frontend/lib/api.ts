@@ -2,6 +2,7 @@ import type {
   BrainMeshResponse,
   BrainRegionsResponse,
   CognitiveFunctionsResponse,
+  FunctionalNetworksResponse,
   ReceptorListResponse,
   ReceptorMapResponse,
   SubcorticalMeshResponse,
@@ -218,4 +219,13 @@ export async function fetchSubcorticalMeshes(): Promise<SubcorticalMeshResponse>
     throw new Error(`fetchSubcorticalMeshes: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as SubcorticalMeshResponse;
+}
+
+export async function fetchFunctionalNetworks(): Promise<FunctionalNetworksResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/networks`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchFunctionalNetworks: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as FunctionalNetworksResponse;
 }

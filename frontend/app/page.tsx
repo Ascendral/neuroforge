@@ -10,6 +10,7 @@ import {
   type RegionIntensity,
   type TractCurve,
 } from '@/components/viewer/BrainCanvas';
+import type { FunctionalNetworksResponse } from '@/lib/types';
 import { NeuronCanvas } from '@/components/viewer/NeuronCanvas';
 import {
   fetchBrainMesh,
@@ -18,6 +19,7 @@ import {
   fetchCognitiveFunctions,
   fetchHippocampalSample,
   fetchNeuron,
+  fetchFunctionalNetworks,
   fetchReceptorMap,
   fetchReceptors,
   fetchRegionSample,
@@ -71,6 +73,8 @@ export default function Page() {
   const [tracts, setTracts] = useState<WhiteMatterTractsResponse | null>(null);
   const [tractsVisible, setTractsVisible] = useState(false);
   const [subcortical, setSubcortical] = useState<SubcorticalMeshResponse | null>(null);
+  const [yeoNetworks, setYeoNetworks] = useState<FunctionalNetworksResponse | null>(null);
+  const [networksVisible, setNetworksVisible] = useState(false);
 
   // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
@@ -82,8 +86,9 @@ export default function Page() {
       fetchReceptors(),
       fetchWhiteMatterTracts(),
       fetchSubcorticalMeshes(),
+      fetchFunctionalNetworks().catch(() => null),
     ])
-      .then(([mesh, regs, funs, recs, trks, sub]) => {
+      .then(([mesh, regs, funs, recs, trks, sub, nets]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
@@ -91,6 +96,7 @@ export default function Page() {
         setReceptors(recs);
         setTracts(trks);
         setSubcortical(sub);
+        if (nets) setYeoNetworks(nets);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -395,6 +401,7 @@ export default function Page() {
                     markers={markers}
                     swcMap={swcMap}
                     subcorticalMeshes={subcortical?.meshes ?? []}
+                    networks={networksVisible && yeoNetworks ? yeoNetworks.networks : []}
                     onRegionClick={handleRegionClick}
                     functionHighlights={
                       activeFunction
@@ -482,6 +489,45 @@ export default function Page() {
                         <div className="border-t border-white/10 pt-2 text-white/40">
                           {activeFunction.citation}
                         </div>
+                      </div>
+                    )}
+
+                    {yeoNetworks && (
+                      <div className="rounded border border-white/10 bg-black/85 p-3">
+                        <div className="mb-2 flex items-baseline justify-between">
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-white/40">
+                            functional networks (Yeo 2011)
+                          </div>
+                          <button
+                            onClick={() => setNetworksVisible((v) => !v)}
+                            className={`rounded border px-2 py-1 font-mono text-[10px] ${
+                              networksVisible
+                                ? 'border-[#cd3e4e] bg-[#cd3e4e]/10 text-white'
+                                : 'border-white/20 text-white/60 hover:bg-white/5'
+                            }`}
+                          >
+                            {networksVisible ? 'hide' : 'show'} {yeoNetworks.networks.length}
+                          </button>
+                        </div>
+                        {networksVisible && (
+                          <div className="space-y-1 font-mono text-[10px]">
+                            {yeoNetworks.networks.map((n) => (
+                              <div key={n.id} className="flex items-baseline gap-2">
+                                <span className="inline-block h-2 w-3 rounded" style={{ background: n.color }} />
+                                <span className="text-white/80">{n.name}</span>
+                                <span className="text-white/30">
+                                  ({(n.voxel_count / 1000).toFixed(0)}k vox)
+                                </span>
+                              </div>
+                            ))}
+                            <p className="mt-2 border-t border-white/10 pt-2 text-white/40">
+                              n=1000 resting-state fMRI subjects, 7 large-scale networks
+                            </p>
+                            <p className="text-white/40">
+                              Yeo et al. J Neurophysiol. 2011. doi:10.1152/jn.00338.2011
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 

@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from neuroforge_api.data import atlas as atlas_module
+from neuroforge_api.data import networks as networks_module
 from neuroforge_api.data import receptors as receptors_module
 
 router = APIRouter(prefix="/api/brain", tags=["brain"])
@@ -133,6 +134,25 @@ class WhiteMatterTractsResponse(BaseModel):
     tracts: list[WhiteMatterTract]
     citation: str
     note: str
+
+
+class FunctionalNetwork(BaseModel):
+    id: int
+    key: str
+    name: str
+    color: str
+    description: str
+    voxel_count: int
+    centroid_mni_mm: list[float]
+    vertex_count: int
+    face_count: int
+    vertices_flat: list[float]
+    faces_flat: list[int]
+
+
+class FunctionalNetworksResponse(BaseModel):
+    networks: list[FunctionalNetwork]
+    citation: str
 
 
 @router.get("/mesh", response_model=CorticalMeshResponse)
@@ -415,3 +435,36 @@ def list_white_matter_tracts() -> WhiteMatterTractsResponse:
             "of thousands of polylines per bundle (Yeh HCP-1065 / FSL XTRACT)."
         ),
     )
+
+
+YEO_CITATION = (
+    "Yeo BTT, Krienen FM, Sepulcre J, Sabuncu MR, Lashkari D, Hollinshead M, "
+    "Roffman JL, Smoller JW, Zöllei L, Polimeni JR, Fischl B, Liu H, "
+    "Buckner RL. The organization of the human cerebral cortex estimated by "
+    "intrinsic functional connectivity. J Neurophysiol. 2011;106(3):1125-65. "
+    "doi:10.1152/jn.00338.2011 (n = 1000 subjects, resting-state fMRI)"
+)
+
+
+@router.get("/networks", response_model=FunctionalNetworksResponse)
+def get_functional_networks() -> FunctionalNetworksResponse:
+    """7 large-scale functional networks (Yeo 2011) as triangulated meshes."""
+    meshes = networks_module.all_network_meshes()
+    out: list[FunctionalNetwork] = []
+    for m in meshes:
+        out.append(
+            FunctionalNetwork(
+                id=m.network_id,
+                key=m.key,
+                name=m.name,
+                color=m.color,
+                description=m.description,
+                voxel_count=m.voxel_count,
+                centroid_mni_mm=list(m.centroid_mni_mm),
+                vertex_count=int(m.vertices.shape[0]),
+                face_count=int(m.faces.shape[0]),
+                vertices_flat=m.vertices.astype(float).flatten().tolist(),
+                faces_flat=m.faces.astype(int).flatten().tolist(),
+            )
+        )
+    return FunctionalNetworksResponse(networks=out, citation=YEO_CITATION)

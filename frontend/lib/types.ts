@@ -228,6 +228,25 @@ export interface SubcorticalMeshResponse {
   citation: string;
 }
 
+export interface FunctionalNetwork {
+  id: number;
+  key: string;
+  name: string;
+  color: string;
+  description: string;
+  voxel_count: number;
+  centroid_mni_mm: number[];
+  vertex_count: number;
+  face_count: number;
+  vertices_flat: number[];
+  faces_flat: number[];
+}
+
+export interface FunctionalNetworksResponse {
+  networks: FunctionalNetwork[];
+  citation: string;
+}
+
 export interface BrainRegion {
   region_id: number;
   label: string;

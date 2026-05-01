@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { useNeuronSelection } from '@/lib/neuron-context';
 import type {
   BrainMeshResponse,
+  FunctionalNetwork,
   NeuronResponse,
   NeuronSummary,
   SubcorticalMesh,
@@ -201,6 +202,37 @@ function TractTube({ curve }: { curve: TractCurve }) {
   );
 }
 
+function NetworkMeshNode({ network }: { network: FunctionalNetwork }) {
+  const { positions, indices } = useMemo(() => {
+    return {
+      positions: new Float32Array(network.vertices_flat),
+      indices: new Uint32Array(network.faces_flat),
+    };
+  }, [network.vertices_flat, network.faces_flat]);
+  const geomRef = useRef<THREE.BufferGeometry>(null);
+  useEffect(() => {
+    geomRef.current?.computeVertexNormals();
+  }, [positions, indices]);
+  return (
+    <mesh>
+      <bufferGeometry ref={geomRef}>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="index" args={[indices, 1]} />
+      </bufferGeometry>
+      <meshStandardMaterial
+        color={network.color}
+        emissive={network.color}
+        emissiveIntensity={0.3}
+        roughness={0.7}
+        side={THREE.DoubleSide}
+        transparent
+        opacity={0.32}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
 function SubcorticalMeshNode({ mesh }: { mesh: SubcorticalMesh }) {
   const { positions, indices } = useMemo(() => {
     return {
@@ -249,6 +281,7 @@ interface BrainCanvasProps {
   intensityColor?: string;
   tracts?: TractCurve[];
   subcorticalMeshes?: SubcorticalMesh[];
+  networks?: FunctionalNetwork[];
 }
 
 export function BrainCanvas({
@@ -263,6 +296,7 @@ export function BrainCanvas({
   intensityColor = '#5eebff',
   tracts = [],
   subcorticalMeshes = [],
+  networks = [],
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -304,6 +338,9 @@ export function BrainCanvas({
       <directionalLight position={[-1, -0.5, -1]} intensity={0.3} />
       {subcorticalMeshes.map((sub) => (
         <SubcorticalMeshNode key={sub.label} mesh={sub} />
+      ))}
+      {networks.map((net) => (
+        <NetworkMeshNode key={net.id} network={net} />
       ))}
       <HemisphereMesh
         vertices_flat={mesh.left.vertices_flat}
