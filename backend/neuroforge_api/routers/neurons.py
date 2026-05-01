@@ -62,6 +62,39 @@ def _summary(meta: NeuroMorphoNeuron) -> NeuronSummary:
     )
 
 
+@router.get("/hippocampus/sample", response_model=NeuronSearchResponse)
+def sample_hippocampal_pyramidals(size: int = 5) -> NeuronSearchResponse:
+    """Return a page of real hippocampal pyramidal neurons.
+
+    Uses NeuroMorpho.org's POST /api/neuron/select with the filter
+    {"brain_region": ["hippocampus"], "cell_type": ["pyramidal"]} — these are
+    the canonical Bliss-Lømo / Hebb-LTP cell type.
+    """
+    if size < 1 or size > 50:
+        raise HTTPException(status_code=422, detail="size must be in [1, 50]")
+    try:
+        results, total = search_neurons(
+            criteria={"brain_region": ["hippocampus"], "cell_type": ["pyramidal"]},
+            page=0,
+            size=size,
+        )
+    except NeuroMorphoError as exc:
+        raise HTTPException(status_code=502, detail=f"neuromorpho.org: {exc}") from exc
+
+    return NeuronSearchResponse(
+        region_query=["hippocampus", "pyramidal"],
+        total_matching=total,
+        page=0,
+        size=size,
+        results=[_summary(n) for n in results],
+        citation_note=(
+            "Filter: brain_region='hippocampus' AND cell_type='pyramidal'. "
+            "These are the cells in which Bliss & Lømo 1973 first demonstrated "
+            "long-term potentiation (LTP), the cellular correlate of Hebb's rule."
+        ),
+    )
+
+
 @router.get("/v1/sample", response_model=NeuronSearchResponse)
 def sample_v1_neurons(size: int = 5) -> NeuronSearchResponse:
     """Return a page of real V1 (primary visual cortex) reconstructions.

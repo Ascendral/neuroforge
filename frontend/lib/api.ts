@@ -1,4 +1,6 @@
 import type {
+  HebbianRequest,
+  HebbianResponse,
   HHRequest,
   HHResponse,
   NeuronResponse,
@@ -66,4 +68,26 @@ export async function fetchV1NeuronSample(size = 5): Promise<NeuronSearchRespons
     throw new Error(`fetchV1NeuronSample: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as NeuronSearchResponse;
+}
+
+export async function fetchHippocampalSample(size = 5): Promise<NeuronSearchResponse> {
+  const response = await fetch(`${API_BASE}/api/neurons/hippocampus/sample?size=${size}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchHippocampalSample: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as NeuronSearchResponse;
+}
+
+export async function simulateHebbian(request: HebbianRequest = {}): Promise<HebbianResponse> {
+  const response = await fetch(`${API_BASE}/api/simulate/hebbian`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`simulateHebbian: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as HebbianResponse;
 }

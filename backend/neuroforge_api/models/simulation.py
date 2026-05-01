@@ -76,3 +76,23 @@ class V1Response(BaseModel):
     tuning_simple: list[float]
     tuning_complex: list[float]
     citation: str
+
+
+class HebbianRequest(BaseModel):
+    n_iterations: int = Field(default=2000, ge=10, le=20000)
+    learning_rate: float = Field(default=0.005, gt=0.0, le=0.1)
+    correlation: float = Field(default=0.8, gt=-0.999, lt=0.999)
+    input_dim: int = Field(default=2, ge=2, le=16)
+    seed: int = Field(default=42, ge=0)
+
+
+class HebbianResponse(BaseModel):
+    iterations: list[int]
+    hebb_norm: list[float]
+    hebb_angle_deg: list[float]
+    oja_norm: list[float]
+    oja_angle_deg: list[float]
+    principal_direction: list[float]
+    final_hebb_weight: list[float]
+    final_oja_weight: list[float]
+    citation: str

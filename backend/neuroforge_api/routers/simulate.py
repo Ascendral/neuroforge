@@ -5,6 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from neuroforge_api.models.simulation import (
+    HebbianRequest,
+    HebbianResponse,
     HHRequest,
     HHResponse,
     STDPRequest,
@@ -12,6 +14,7 @@ from neuroforge_api.models.simulation import (
     V1Request,
     V1Response,
 )
+from neuroforge_api.simulators.hebbian import simulate_hebbian
 from neuroforge_api.simulators.hodgkin_huxley import simulate_hh
 from neuroforge_api.simulators.hubel_wiesel import (
     gabor_filter,
@@ -44,6 +47,16 @@ V1_CITATION = (
     "Hubel DH, Wiesel TN. Receptive fields, binocular interaction and "
     "functional architecture in the cat's visual cortex. J Physiol. "
     "1962;160(1):106-54. doi:10.1113/jphysiol.1962.sp006837"
+)
+
+HEBBIAN_CITATION = (
+    "Hebb DO. The Organization of Behavior. Wiley, 1949. "
+    "Bliss TVP, Lømo T. Long-lasting potentiation of synaptic transmission "
+    "in the dentate area of the anaesthetized rabbit following stimulation "
+    "of the perforant path. J Physiol. 1973;232(2):331-356. "
+    "doi:10.1113/jphysiol.1973.sp010273. "
+    "Oja E. A simplified neuron model as a principal component analyzer. "
+    "J Math Biol. 1982;15(3):267-273. doi:10.1007/BF00275687"
 )
 
 
@@ -98,6 +111,44 @@ def run_stdp(request: STDPRequest) -> STDPResponse:
         a_plus=A_PLUS,
         a_minus=A_MINUS,
         citation=STDP_CITATION,
+    )
+
+
+@router.post("/hebbian", response_model=HebbianResponse)
+def run_hebbian(request: HebbianRequest) -> HebbianResponse:
+    record_every_n = max(1, request.n_iterations // 200)
+    try:
+        hebb = simulate_hebbian(
+            rule="hebb",
+            n_iterations=request.n_iterations,
+            learning_rate=request.learning_rate,
+            correlation=request.correlation,
+            input_dim=request.input_dim,
+            seed=request.seed,
+            record_every_n=record_every_n,
+        )
+        oja = simulate_hebbian(
+            rule="oja",
+            n_iterations=request.n_iterations,
+            learning_rate=request.learning_rate,
+            correlation=request.correlation,
+            input_dim=request.input_dim,
+            seed=request.seed,
+            record_every_n=record_every_n,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return HebbianResponse(
+        iterations=hebb.iterations.tolist(),
+        hebb_norm=hebb.weight_norm.tolist(),
+        hebb_angle_deg=hebb.weight_angle_deg.tolist(),
+        oja_norm=oja.weight_norm.tolist(),
+        oja_angle_deg=oja.weight_angle_deg.tolist(),
+        principal_direction=hebb.principal_direction.tolist(),
+        final_hebb_weight=hebb.final_weight.tolist(),
+        final_oja_weight=oja.final_weight.tolist(),
+        citation=HEBBIAN_CITATION,
     )
 
 

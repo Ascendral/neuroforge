@@ -127,3 +127,23 @@ export interface NeuronSearchResponse {
   results: NeuronSummary[];
   citation_note: string;
 }
+
+export interface HebbianRequest {
+  n_iterations?: number;
+  learning_rate?: number;
+  correlation?: number;
+  input_dim?: number;
+  seed?: number;
+}
+
+export interface HebbianResponse {
+  iterations: number[];
+  hebb_norm: number[];
+  hebb_angle_deg: number[];
+  oja_norm: number[];
+  oja_angle_deg: number[];
+  principal_direction: number[];
+  final_hebb_weight: number[];
+  final_oja_weight: number[];
+  citation: string;
+}
