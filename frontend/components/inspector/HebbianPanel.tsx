@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { fetchHippocampalSample, simulateHebbian } from '@/lib/api';
+import { useNeuronSelection } from '@/lib/neuron-context';
 import type { HebbianResponse, NeuronSearchResponse } from '@/lib/types';
 
 // Anti-theater: weight curves are drawn directly from response.hebb_norm /
@@ -39,6 +40,7 @@ export function HebbianPanel() {
   const [eta, setEta] = useState(0.005);
   const [sample, setSample] = useState<NeuronSearchResponse | null>(null);
   const [sampleError, setSampleError] = useState<string | null>(null);
+  const selection = useNeuronSelection();
 
   useEffect(() => {
     let cancelled = false;
@@ -222,31 +224,45 @@ export function HebbianPanel() {
 
         {sample && (
           <ul className="space-y-2 font-mono text-[10px]">
-            {sample.results.map((n) => (
-              <li key={n.neuron_id} className="border-l border-white/10 pl-2">
-                <a href={n.source_url} target="_blank" rel="noreferrer" className="text-white underline-offset-2 hover:underline">
-                  {n.neuron_name}
-                </a>{' '}
-                <span className="text-white/40">#{n.neuron_id}</span>
-                <div className="text-white/60">
-                  {n.species}
-                  {' · '}
-                  {n.brain_region.join(' / ')}
-                </div>
-                <div className="text-white/40">
-                  {n.cell_type.join(', ') || '—'}
-                  {' · '}
-                  {n.archive}
-                </div>
-                {n.reference_doi.length > 0 && (
-                  <div>
-                    <a href={`https://doi.org/${n.reference_doi[0]}`} target="_blank" rel="noreferrer" className="text-white/70 underline-offset-2 hover:underline">
-                      doi:{n.reference_doi[0]}
+            {sample.results.map((n) => {
+              const isActive = selection?.selectedId === n.neuron_id;
+              return (
+                <li
+                  key={n.neuron_id}
+                  className={`border-l pl-2 ${isActive ? 'border-accent' : 'border-white/10'}`}
+                >
+                  <button
+                    onClick={() => selection?.selectNeuron(n.neuron_id)}
+                    className="text-left text-white hover:text-accent"
+                    title="render this neuron in the 3D viewer"
+                  >
+                    {n.neuron_name}
+                  </button>{' '}
+                  <span className="text-white/40">#{n.neuron_id}</span>
+                  {isActive && <span className="ml-2 text-accent">▸ rendered</span>}
+                  <div className="text-white/60">
+                    {n.species}
+                    {' · '}
+                    {n.brain_region.join(' / ')}
+                  </div>
+                  <div className="text-white/40">
+                    {n.cell_type.join(', ') || '—'}
+                    {' · '}
+                    {n.archive}
+                  </div>
+                  <div className="space-x-2">
+                    {n.reference_doi.length > 0 && (
+                      <a href={`https://doi.org/${n.reference_doi[0]}`} target="_blank" rel="noreferrer" className="text-white/70 underline-offset-2 hover:underline">
+                        doi:{n.reference_doi[0]}
+                      </a>
+                    )}
+                    <a href={n.source_url} target="_blank" rel="noreferrer" className="text-white/40 underline-offset-2 hover:underline">
+                      neuromorpho ↗
                     </a>
                   </div>
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

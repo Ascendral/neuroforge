@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from neuroforge_api import __version__
 from neuroforge_api.db import init_db
+from neuroforge_api.routers import citations as citations_router
 from neuroforge_api.routers import neurons as neurons_router
 from neuroforge_api.routers import simulate as simulate_router
 
@@ -27,6 +28,7 @@ app.add_middleware(
 
 app.include_router(neurons_router.router)
 app.include_router(simulate_router.router)
+app.include_router(citations_router.router)
 
 
 @app.get("/health")
