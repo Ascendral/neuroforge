@@ -160,11 +160,21 @@ export default function Page() {
         if (cancelled) return;
 
         const out: NeuronMarker[] = [];
+        // Per-population glyph scale. Small subcortical regions need smaller
+        // scale so the rendered cell stays within the region's real anatomical
+        // bounds. Cortex has more room; cortical pyramidals can stay bigger.
+        // Hippocampus / amygdala / thalamus / striatum are tight subcortical
+        // structures (~13-22 mm wide) so we use 0.006 → cells ~2-6 mm.
+        const SCALE_CORTICAL = 0.012;     // V1, motor, prefrontal
+        const SCALE_SUBCORTICAL = 0.006;  // hippocampus, amygdala, thalamus, striatum
+        const SCALE_SCHEMATIC = 0.008;    // cerebellum, olfactory, SN, dentate
+
         const push = (
           sample: { results: NeuronMarker['neuron'][] } | null,
           leftLabel: string,
           color: string,
           module: string,
+          scale: number,
           rightLabel?: string,
         ) => {
           if (!sample) return;
@@ -173,7 +183,7 @@ export default function Page() {
           sample.results.forEach((n, i) => {
             const c = right && i % 2 === 1 ? right : left;
             if (!c) return;
-            out.push({ neuron: n, centroid_mni_mm: c, module, color });
+            out.push({ neuron: n, centroid_mni_mm: c, module, color, scale });
           });
         };
 
@@ -183,32 +193,30 @@ export default function Page() {
           leftCentroid: [number, number, number],
           color: string,
           module: string,
+          scale: number,
           rightCentroid?: [number, number, number],
         ) => {
           if (!sample) return;
           sample.results.forEach((n, i) => {
             const c = rightCentroid && i % 2 === 1 ? rightCentroid : leftCentroid;
-            out.push({ neuron: n, centroid_mni_mm: c, module, color });
+            out.push({ neuron: n, centroid_mni_mm: c, module, color, scale });
           });
         };
 
-        push(v1 as { results: NeuronMarker['neuron'][] } | null, 'Intracalcarine Cortex', '#9bd2ff', 'hubel_wiesel');
-        push(hippo as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#7fff9b', 'hebbian', 'Right Hippocampus');
-        push(ca3 as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#ff2d2d', 'hopfield', 'Right Hippocampus');
-        push(motor as { results: NeuronMarker['neuron'][] } | null, 'Precentral Gyrus', '#ffd86b', 'motor_cortex');
-        push(pfc as { results: NeuronMarker['neuron'][] } | null, 'Frontal Pole', '#d99bff', 'prefrontal');
-        push(thal as { results: NeuronMarker['neuron'][] } | null, 'Left Thalamus', '#ff9b6b', 'thalamus', 'Right Thalamus');
-        push(amyg as { results: NeuronMarker['neuron'][] } | null, 'Left Amygdala', '#ff6bd4', 'amygdala', 'Right Amygdala');
-        push(stri as { results: NeuronMarker['neuron'][] } | null, 'Left Caudate', '#6bffd4', 'striatum', 'Right Caudate');
+        push(v1 as { results: NeuronMarker['neuron'][] } | null, 'Intracalcarine Cortex', '#9bd2ff', 'hubel_wiesel', SCALE_CORTICAL);
+        push(hippo as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#7fff9b', 'hebbian', SCALE_SUBCORTICAL, 'Right Hippocampus');
+        push(ca3 as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#ff2d2d', 'hopfield', SCALE_SUBCORTICAL, 'Right Hippocampus');
+        push(motor as { results: NeuronMarker['neuron'][] } | null, 'Precentral Gyrus', '#ffd86b', 'motor_cortex', SCALE_CORTICAL);
+        push(pfc as { results: NeuronMarker['neuron'][] } | null, 'Frontal Pole', '#d99bff', 'prefrontal', SCALE_CORTICAL);
+        push(thal as { results: NeuronMarker['neuron'][] } | null, 'Left Thalamus', '#ff9b6b', 'thalamus', SCALE_SUBCORTICAL, 'Right Thalamus');
+        push(amyg as { results: NeuronMarker['neuron'][] } | null, 'Left Amygdala', '#ff6bd4', 'amygdala', SCALE_SUBCORTICAL, 'Right Amygdala');
+        push(stri as { results: NeuronMarker['neuron'][] } | null, 'Left Caudate', '#6bffd4', 'striatum', SCALE_SUBCORTICAL, 'Right Caudate');
 
         // Schematic placements (no Harvard-Oxford label exists for these).
-        pushSchematic(purk as { results: NeuronMarker['neuron'][] } | null, cerebellum, '#ff8c5e', 'cerebellum_purkinje');
-        // Dentate granule cells live within the hippocampus subfield;
-        // place at HO Hippocampus centroid (subfield-level resolution
-        // would need Iglesias 2015).
-        push(dg as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#b5e85b', 'dentate_granule', 'Right Hippocampus');
-        pushSchematic(olf as { results: NeuronMarker['neuron'][] } | null, olfactoryL, '#ff6bb5', 'olfactory_mitral', olfactoryR);
-        pushSchematic(sn as { results: NeuronMarker['neuron'][] } | null, substantiaNigraL, '#c45eff', 'substantia_nigra_dopa', substantiaNigraR);
+        pushSchematic(purk as { results: NeuronMarker['neuron'][] } | null, cerebellum, '#ff8c5e', 'cerebellum_purkinje', SCALE_SCHEMATIC);
+        push(dg as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#b5e85b', 'dentate_granule', SCALE_SUBCORTICAL, 'Right Hippocampus');
+        pushSchematic(olf as { results: NeuronMarker['neuron'][] } | null, olfactoryL, '#ff6bb5', 'olfactory_mitral', SCALE_SCHEMATIC, olfactoryR);
+        pushSchematic(sn as { results: NeuronMarker['neuron'][] } | null, substantiaNigraL, '#c45eff', 'substantia_nigra_dopa', SCALE_SUBCORTICAL, substantiaNigraR);
 
         setMarkers(out);
       })
@@ -630,7 +638,9 @@ export default function Page() {
                       <span className="text-white/30">(schematic)</span>
                     </div>
                     <div className="mt-2 text-white/30">
-                      neuron scale ×20 (real cells ~0.3 mm; brain ~140 mm)
+                      neuron scale: cortical ×12, subcortical ×6 (small regions
+                      like hippocampus would otherwise contain cells exceeding
+                      their real bounds)
                     </div>
                     <div className="text-white/30">
                       &quot;schematic&quot; = MNI centroid from Mai et al. 2015 stereotaxic

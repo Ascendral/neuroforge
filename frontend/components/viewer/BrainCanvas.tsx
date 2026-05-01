@@ -87,6 +87,9 @@ export interface NeuronMarker {
   centroid_mni_mm: [number, number, number];
   module: string;
   color: string;
+  /** Optional per-marker glyph scale override (microns × scale → mm in brain space).
+   *  Useful when a cell would visibly spill out of a small subcortical region. */
+  scale?: number;
 }
 
 interface MarkerClusterProps {
@@ -313,7 +316,7 @@ export function BrainCanvas({
                 key={`g-${seed}-${i}`}
                 neuron={swc}
                 position={pos}
-                scale={glyphScale}
+                scale={m.scale ?? glyphScale}
                 color={m.color}
               />
             );
