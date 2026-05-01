@@ -21,6 +21,7 @@ import {
   fetchReceptorMap,
   fetchReceptors,
   fetchRegionSample,
+  fetchSubcorticalMeshes,
   fetchV1NeuronSample,
   fetchWhiteMatterTracts,
 } from '@/lib/api';
@@ -33,6 +34,7 @@ import type {
   NeuronResponse,
   ReceptorListResponse,
   ReceptorMapResponse,
+  SubcorticalMeshResponse,
   WhiteMatterTractsResponse,
 } from '@/lib/types';
 
@@ -68,6 +70,7 @@ export default function Page() {
   const [receptorLoading, setReceptorLoading] = useState(false);
   const [tracts, setTracts] = useState<WhiteMatterTractsResponse | null>(null);
   const [tractsVisible, setTractsVisible] = useState(false);
+  const [subcortical, setSubcortical] = useState<SubcorticalMeshResponse | null>(null);
 
   // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
@@ -78,14 +81,16 @@ export default function Page() {
       fetchCognitiveFunctions(),
       fetchReceptors(),
       fetchWhiteMatterTracts(),
+      fetchSubcorticalMeshes(),
     ])
-      .then(([mesh, regs, funs, recs, trks]) => {
+      .then(([mesh, regs, funs, recs, trks, sub]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
         setFunctions(funs);
         setReceptors(recs);
         setTracts(trks);
+        setSubcortical(sub);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -389,6 +394,7 @@ export default function Page() {
                     mesh={brain}
                     markers={markers}
                     swcMap={swcMap}
+                    subcorticalMeshes={subcortical?.meshes ?? []}
                     onRegionClick={handleRegionClick}
                     functionHighlights={
                       activeFunction

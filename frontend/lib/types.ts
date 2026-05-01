@@ -215,6 +215,19 @@ export interface BrainMeshResponse {
   citation: string;
 }
 
+export interface SubcorticalMesh {
+  label: string;
+  vertex_count: number;
+  face_count: number;
+  vertices_flat: number[];
+  faces_flat: number[];
+}
+
+export interface SubcorticalMeshResponse {
+  meshes: SubcorticalMesh[];
+  citation: string;
+}
+
 export interface BrainRegion {
   region_id: number;
   label: string;

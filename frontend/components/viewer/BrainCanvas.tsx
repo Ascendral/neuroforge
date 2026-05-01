@@ -6,7 +6,12 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 import { useNeuronSelection } from '@/lib/neuron-context';
-import type { BrainMeshResponse, NeuronResponse, NeuronSummary } from '@/lib/types';
+import type {
+  BrainMeshResponse,
+  NeuronResponse,
+  NeuronSummary,
+  SubcorticalMesh,
+} from '@/lib/types';
 
 import { NeuronGlyph } from './NeuronGlyph';
 
@@ -196,6 +201,38 @@ function TractTube({ curve }: { curve: TractCurve }) {
   );
 }
 
+function SubcorticalMeshNode({ mesh }: { mesh: SubcorticalMesh }) {
+  const { positions, indices } = useMemo(() => {
+    return {
+      positions: new Float32Array(mesh.vertices_flat),
+      indices: new Uint32Array(mesh.faces_flat),
+    };
+  }, [mesh.vertices_flat, mesh.faces_flat]);
+
+  const geomRef = useRef<THREE.BufferGeometry>(null);
+  useEffect(() => {
+    geomRef.current?.computeVertexNormals();
+  }, [positions, indices]);
+
+  return (
+    <mesh>
+      <bufferGeometry ref={geomRef}>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="index" args={[indices, 1]} />
+      </bufferGeometry>
+      <meshStandardMaterial
+        color="#a0a0a8"
+        roughness={0.9}
+        metalness={0.05}
+        side={THREE.DoubleSide}
+        transparent
+        opacity={0.18}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
 interface BrainCanvasProps {
   mesh: BrainMeshResponse;
   markers?: NeuronMarker[];
@@ -211,6 +248,7 @@ interface BrainCanvasProps {
   regionIntensities?: RegionIntensity[];
   intensityColor?: string;
   tracts?: TractCurve[];
+  subcorticalMeshes?: SubcorticalMesh[];
 }
 
 export function BrainCanvas({
@@ -224,6 +262,7 @@ export function BrainCanvas({
   regionIntensities = [],
   intensityColor = '#5eebff',
   tracts = [],
+  subcorticalMeshes = [],
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -263,6 +302,9 @@ export function BrainCanvas({
       <ambientLight intensity={0.45} />
       <directionalLight position={[1, 1, 1]} intensity={0.6} />
       <directionalLight position={[-1, -0.5, -1]} intensity={0.3} />
+      {subcorticalMeshes.map((sub) => (
+        <SubcorticalMeshNode key={sub.label} mesh={sub} />
+      ))}
       <HemisphereMesh
         vertices_flat={mesh.left.vertices_flat}
         faces_flat={mesh.left.faces_flat}

@@ -36,6 +36,19 @@ class CorticalMeshResponse(BaseModel):
     citation: str
 
 
+class SubcorticalMesh(BaseModel):
+    label: str
+    vertex_count: int
+    face_count: int
+    vertices_flat: list[float]
+    faces_flat: list[int]
+
+
+class SubcorticalMeshResponse(BaseModel):
+    meshes: list[SubcorticalMesh]
+    citation: str
+
+
 class RegionSummary(BaseModel):
     region_id: int
     label: str
@@ -151,6 +164,46 @@ def get_cortical_mesh() -> CorticalMeshResponse:
         destrieux_labels=list(labels),
         citation=ATLAS_CITATION,
     )
+
+
+# Which Harvard-Oxford subcortical regions to surface as meshes inside the
+# cortical shell. These give the brain visual extension below + medial to
+# the cortex (where the cortical mesh ends) and provide an anatomically
+# correct container for cells placed in those regions.
+SUBCORTICAL_MESHES_TO_INCLUDE: tuple[str, ...] = (
+    "Brain-Stem",
+    "Left Hippocampus",
+    "Right Hippocampus",
+    "Left Amygdala",
+    "Right Amygdala",
+    "Left Thalamus",
+    "Right Thalamus",
+    "Left Caudate",
+    "Right Caudate",
+    "Left Putamen",
+    "Right Putamen",
+)
+
+
+@router.get("/subcortical-meshes", response_model=SubcorticalMeshResponse)
+def get_subcortical_meshes() -> SubcorticalMeshResponse:
+    """Triangulated subcortical region surfaces (marching cubes from HO masks)."""
+    out: list[SubcorticalMesh] = []
+    for label in SUBCORTICAL_MESHES_TO_INCLUDE:
+        result = atlas_module.subcortical_region_mesh(label)
+        if result is None:
+            continue
+        verts, faces = result
+        out.append(
+            SubcorticalMesh(
+                label=label,
+                vertex_count=int(verts.shape[0]),
+                face_count=int(faces.shape[0]),
+                vertices_flat=verts.flatten().astype(float).tolist(),
+                faces_flat=faces.flatten().astype(int).tolist(),
+            )
+        )
+    return SubcorticalMeshResponse(meshes=out, citation=ATLAS_CITATION)
 
 
 @router.get("/regions", response_model=RegionCatalogResponse)

@@ -423,6 +423,35 @@ def harvard_oxford_subcortical_regions() -> list[AtlasRegion]:
     return out
 
 
+@lru_cache(maxsize=8)
+def subcortical_region_mesh(label: str) -> tuple[np.ndarray, np.ndarray] | None:
+    """Extract a triangulated surface mesh from a Harvard-Oxford subcortical
+    region's voxel mask using marching cubes.
+
+    Returns (vertices_mni_mm, faces) or None if the label has no voxels.
+    """
+    from scipy.ndimage import gaussian_filter
+    from skimage import measure
+
+    atlas = harvard_oxford_subcortical_atlas()
+    img = _load_atlas_image(atlas["maps"])
+    arr = np.asarray(img.dataobj)
+    if label not in atlas["labels"]:
+        return None
+    label_id = atlas["labels"].index(label)
+    mask = (arr == label_id).astype(np.float32)
+    if not mask.any():
+        return None
+    # Mild smoothing so the mesh isn't a stair-stepped voxel cube.
+    smoothed = gaussian_filter(mask, sigma=0.7)
+    verts, faces, _, _ = measure.marching_cubes(smoothed, level=0.3)
+    # voxel indices → MNI mm via affine
+    affine = img.affine
+    homog = np.column_stack([verts, np.ones(len(verts))])
+    mni = (affine @ homog.T).T[:, :3]
+    return mni.astype(np.float32), faces.astype(np.int32)
+
+
 def harvard_oxford_cortical_regions() -> list[AtlasRegion]:
     atlas = harvard_oxford_cortical_atlas()
     img = _load_atlas_image(atlas["maps"])

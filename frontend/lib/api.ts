@@ -4,6 +4,7 @@ import type {
   CognitiveFunctionsResponse,
   ReceptorListResponse,
   ReceptorMapResponse,
+  SubcorticalMeshResponse,
   WhiteMatterTractsResponse,
   HebbianRequest,
   HebbianResponse,
@@ -208,4 +209,13 @@ export async function fetchWhiteMatterTracts(): Promise<WhiteMatterTractsRespons
     throw new Error(`fetchWhiteMatterTracts: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as WhiteMatterTractsResponse;
+}
+
+export async function fetchSubcorticalMeshes(): Promise<SubcorticalMeshResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/subcortical-meshes`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchSubcorticalMeshes: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as SubcorticalMeshResponse;
 }
