@@ -29,3 +29,27 @@ class HHResponse(BaseModel):
     spike_times_ms: list[float]
     dt_ms: float
     citation: str
+
+
+class STDPRequest(BaseModel):
+    """Spike-timing-dependent plasticity pair-pulse request."""
+
+    dt_ms: float = Field(default=10.0, ge=-200.0, le=200.0)
+    dt_min_ms: float = Field(default=-80.0, ge=-200.0, lt=0.0)
+    dt_max_ms: float = Field(default=80.0, gt=0.0, le=200.0)
+    curve_points: int = Field(default=161, ge=11, le=801)
+
+
+class STDPResponse(BaseModel):
+    dt_ms: float
+    observed_delta_w: float
+    kernel_delta_w: float
+    pre_spike_ms: float
+    post_spike_ms: float
+    curve_dt_ms: list[float]
+    curve_delta_w: list[float]
+    tau_plus_ms: float
+    tau_minus_ms: float
+    a_plus: float
+    a_minus: float
+    citation: str

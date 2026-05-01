@@ -60,3 +60,25 @@ export interface HHResponse {
   dt_ms: number;
   citation: string;
 }
+
+export interface STDPRequest {
+  dt_ms?: number;
+  dt_min_ms?: number;
+  dt_max_ms?: number;
+  curve_points?: number;
+}
+
+export interface STDPResponse {
+  dt_ms: number;
+  observed_delta_w: number;
+  kernel_delta_w: number;
+  pre_spike_ms: number;
+  post_spike_ms: number;
+  curve_dt_ms: number[];
+  curve_delta_w: number[];
+  tau_plus_ms: number;
+  tau_minus_ms: number;
+  a_plus: number;
+  a_minus: number;
+  citation: string;
+}

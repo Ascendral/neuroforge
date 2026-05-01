@@ -8,6 +8,7 @@ import { swcTypeLabel } from '@/lib/types';
 
 import { CitationCard } from './CitationCard';
 import { FiringPlot } from './FiringPlot';
+import { STDPPanel } from './STDPPanel';
 
 interface SelectedPoint {
   id: number;
@@ -162,6 +163,8 @@ export function NeuronInspector({ neuron, selected }: NeuronInspectorProps) {
           )}
         </div>
       </section>
+
+      <STDPPanel />
 
       <CitationCard neuron={neuron} />
     </aside>
