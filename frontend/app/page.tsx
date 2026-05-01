@@ -417,6 +417,10 @@ export default function Page() {
                       neuron scale ×20 (real cells ~0.3 mm; brain ~140 mm)
                     </div>
                     <div className="text-white/30">
+                      firing animation: pulse propagates from soma at 250 µm/ms,
+                      600 ms ISI (real APs ~500 µm/ms, ~15 ms ISI; scaled for sight)
+                    </div>
+                    <div className="text-white/30">
                       every neuron is a real reconstruction from neuromorpho.org
                     </div>
                   </div>
