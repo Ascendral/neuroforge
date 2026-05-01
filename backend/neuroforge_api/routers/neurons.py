@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -44,6 +46,40 @@ class NeuronSearchResponse(BaseModel):
 
 router = APIRouter(prefix="/api/neurons", tags=["neurons"])
 
+# In-memory cache for the per-region sample endpoints. neuromorpho.org's
+# region listings change ~yearly; caching for 1 hour cheap-side avoids
+# hammering them during page reloads. Keyed by (region_query, size).
+_SAMPLE_CACHE: dict[tuple[str, int], tuple[float, NeuronSearchResponse]] = {}
+_SAMPLE_TTL_S = 3600.0
+
+
+def _cached_search(
+    cache_key: tuple[str, int],
+    *,
+    criteria: dict[str, list[str]],
+    size: int,
+    region_query: list[str],
+    citation_note: str,
+):
+    now = time.monotonic()
+    cached = _SAMPLE_CACHE.get(cache_key)
+    if cached and now - cached[0] < _SAMPLE_TTL_S:
+        return cached[1]
+    try:
+        results, total = search_neurons(criteria=criteria, page=0, size=size)
+    except NeuroMorphoError as exc:
+        raise HTTPException(status_code=502, detail=f"neuromorpho.org: {exc}") from exc
+    response = NeuronSearchResponse(
+        region_query=region_query,
+        total_matching=total,
+        page=0,
+        size=size,
+        results=[_summary(n) for n in results],
+        citation_note=citation_note,
+    )
+    _SAMPLE_CACHE[cache_key] = (now, response)
+    return response
+
 
 def _summary(meta: NeuroMorphoNeuron) -> NeuronSummary:
     return NeuronSummary(
@@ -75,21 +111,11 @@ def sample_ca3_pyramidals(size: int = 5) -> NeuronSearchResponse:
     """
     if size < 1 or size > 50:
         raise HTTPException(status_code=422, detail="size must be in [1, 50]")
-    try:
-        results, total = search_neurons(
-            criteria={"brain_region": ["CA3"], "cell_type": ["pyramidal"]},
-            page=0,
-            size=size,
-        )
-    except NeuroMorphoError as exc:
-        raise HTTPException(status_code=502, detail=f"neuromorpho.org: {exc}") from exc
-
-    return NeuronSearchResponse(
-        region_query=["CA3", "pyramidal"],
-        total_matching=total,
-        page=0,
+    return _cached_search(
+        ("ca3", size),
+        criteria={"brain_region": ["CA3"], "cell_type": ["pyramidal"]},
         size=size,
-        results=[_summary(n) for n in results],
+        region_query=["CA3", "pyramidal"],
         citation_note=(
             "CA3 pyramidals form recurrent collaterals — the anatomical "
             "substrate widely modeled as a biological Hopfield-style "
@@ -108,21 +134,11 @@ def sample_hippocampal_pyramidals(size: int = 5) -> NeuronSearchResponse:
     """
     if size < 1 or size > 50:
         raise HTTPException(status_code=422, detail="size must be in [1, 50]")
-    try:
-        results, total = search_neurons(
-            criteria={"brain_region": ["hippocampus"], "cell_type": ["pyramidal"]},
-            page=0,
-            size=size,
-        )
-    except NeuroMorphoError as exc:
-        raise HTTPException(status_code=502, detail=f"neuromorpho.org: {exc}") from exc
-
-    return NeuronSearchResponse(
-        region_query=["hippocampus", "pyramidal"],
-        total_matching=total,
-        page=0,
+    return _cached_search(
+        ("hippocampus", size),
+        criteria={"brain_region": ["hippocampus"], "cell_type": ["pyramidal"]},
         size=size,
-        results=[_summary(n) for n in results],
+        region_query=["hippocampus", "pyramidal"],
         citation_note=(
             "Filter: brain_region='hippocampus' AND cell_type='pyramidal'. "
             "These are the cells in which Bliss & Lømo 1973 first demonstrated "
@@ -141,21 +157,11 @@ def sample_v1_neurons(size: int = 5) -> NeuronSearchResponse:
     """
     if size < 1 or size > 50:
         raise HTTPException(status_code=422, detail="size must be in [1, 50]")
-    try:
-        results, total = search_neurons(
-            criteria={"brain_region": ["primary visual"]},
-            page=0,
-            size=size,
-        )
-    except NeuroMorphoError as exc:
-        raise HTTPException(status_code=502, detail=f"neuromorpho.org: {exc}") from exc
-
-    return NeuronSearchResponse(
-        region_query=["primary visual"],
-        total_matching=total,
-        page=0,
+    return _cached_search(
+        ("v1", size),
+        criteria={"brain_region": ["primary visual"]},
         size=size,
-        results=[_summary(n) for n in results],
+        region_query=["primary visual"],
         citation_note=(
             "All metadata fetched live from NeuroMorpho.org. Each neuron's "
             "reference_doi / reference_pmid resolve to the publication that "

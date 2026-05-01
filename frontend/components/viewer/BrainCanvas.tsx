@@ -1,24 +1,29 @@
 'use client';
 
-import { OrbitControls } from '@react-three/drei';
+import { Instance, Instances, OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
-import type { BrainMeshResponse } from '@/lib/types';
+import { useNeuronSelection } from '@/lib/neuron-context';
+import type { BrainMeshResponse, NeuronSummary } from '@/lib/types';
 
 // Anti-theater: every vertex below comes from fsaverage5's pial.gii.gz file
 // inside the nilearn package. The brain you're seeing is the actual averaged
 // cortical surface from 40 healthy human subjects in MNI152 space, not a
-// stylized illustration.
+// stylized illustration. Neuron markers are placed at the *real MNI centroid*
+// of their region (Harvard-Oxford), with small jitter so multiple cells in
+// the same region don't overlap visually. The UI labels this "schematic
+// placement within {region}".
 
 interface HemisphereProps {
   vertices_flat: number[];
   faces_flat: number[];
   color: string;
+  opacity: number;
 }
 
-function HemisphereMesh({ vertices_flat, faces_flat, color }: HemisphereProps) {
+function HemisphereMesh({ vertices_flat, faces_flat, color, opacity }: HemisphereProps) {
   const geomRef = useRef<THREE.BufferGeometry>(null);
 
   const { positions, indices } = useMemo(() => {
@@ -47,16 +52,89 @@ function HemisphereMesh({ vertices_flat, faces_flat, color }: HemisphereProps) {
         roughness={0.85}
         metalness={0.05}
         side={THREE.DoubleSide}
+        transparent
+        opacity={opacity}
+        depthWrite={false}
       />
     </mesh>
   );
 }
 
-interface BrainCanvasProps {
-  mesh: BrainMeshResponse;
+export interface NeuronMarker {
+  neuron: NeuronSummary;
+  centroid_mni_mm: [number, number, number];
+  module: string;
+  color: string;
 }
 
-export function BrainCanvas({ mesh }: BrainCanvasProps) {
+interface MarkerClusterProps {
+  markers: NeuronMarker[];
+  jitter_mm?: number;
+}
+
+function MarkerCluster({ markers, jitter_mm = 6 }: MarkerClusterProps) {
+  const selection = useNeuronSelection();
+  const positions = useMemo(() => {
+    // Deterministic jitter from neuron_id so positions are stable across re-renders
+    return markers.map((m, _i) => {
+      const seed = m.neuron.neuron_id;
+      const dx = (Math.sin(seed * 12.9898) * 43758.5453) % 1;
+      const dy = (Math.sin(seed * 78.233) * 43758.5453) % 1;
+      const dz = (Math.sin(seed * 39.346) * 43758.5453) % 1;
+      return [
+        m.centroid_mni_mm[0] + (dx - 0.5) * jitter_mm,
+        m.centroid_mni_mm[1] + (dy - 0.5) * jitter_mm,
+        m.centroid_mni_mm[2] + (dz - 0.5) * jitter_mm,
+      ] as [number, number, number];
+    });
+  }, [markers, jitter_mm]);
+
+  // Group by color so each Instances batch can carry a single material color
+  const byColor = useMemo(() => {
+    const groups = new Map<string, { marker: NeuronMarker; pos: [number, number, number] }[]>();
+    markers.forEach((m, i) => {
+      const list = groups.get(m.color) ?? [];
+      list.push({ marker: m, pos: positions[i] });
+      groups.set(m.color, list);
+    });
+    return Array.from(groups.entries());
+  }, [markers, positions]);
+
+  return (
+    <>
+      {byColor.map(([color, group]) => (
+        <Instances
+          key={color}
+          limit={group.length}
+          range={group.length}
+          onClick={(event) => {
+            event.stopPropagation();
+            const idx = event.instanceId;
+            if (idx === undefined) return;
+            selection?.selectNeuron(group[idx].marker.neuron.neuron_id);
+          }}
+        >
+          <sphereGeometry args={[2.2, 12, 12]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} />
+          {group.map((g, i) => (
+            <Instance
+              key={g.marker.neuron.neuron_id}
+              position={g.pos}
+              userData={{ neuronId: g.marker.neuron.neuron_id }}
+            />
+          ))}
+        </Instances>
+      ))}
+    </>
+  );
+}
+
+interface BrainCanvasProps {
+  mesh: BrainMeshResponse;
+  markers?: NeuronMarker[];
+}
+
+export function BrainCanvas({ mesh, markers = [] }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
     const v = [...mesh.left.vertices_flat, ...mesh.right.vertices_flat];
@@ -92,19 +170,22 @@ export function BrainCanvas({ mesh }: BrainCanvasProps) {
       }}
       style={{ background: '#000' }}
     >
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[1, 1, 1]} intensity={0.7} />
+      <ambientLight intensity={0.45} />
+      <directionalLight position={[1, 1, 1]} intensity={0.6} />
       <directionalLight position={[-1, -0.5, -1]} intensity={0.3} />
       <HemisphereMesh
         vertices_flat={mesh.left.vertices_flat}
         faces_flat={mesh.left.faces_flat}
         color="#d8d8d8"
+        opacity={0.12}
       />
       <HemisphereMesh
         vertices_flat={mesh.right.vertices_flat}
         faces_flat={mesh.right.faces_flat}
         color="#bfbfbf"
+        opacity={0.12}
       />
+      {markers.length > 0 && <MarkerCluster markers={markers} />}
       <OrbitControls
         target={center.center}
         enableDamping

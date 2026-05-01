@@ -20,7 +20,10 @@ import requests
 
 API_BASE = "https://neuromorpho.org/api"
 SWC_BASE = "https://neuromorpho.org/dableFiles"
-DEFAULT_TIMEOUT_S = 30
+# Bumped from 30s after observing real upstream latency of ~70s on
+# /api/neuron/id/{id} during 2026-04-30. neuromorpho.org's response time is
+# inconsistent; failing under 30s is a backend artifact, not a real outage.
+DEFAULT_TIMEOUT_S = 120
 
 
 class NeuroMorphoError(RuntimeError):
