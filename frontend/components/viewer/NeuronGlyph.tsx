@@ -53,19 +53,46 @@ void main() {
   float t = mod(time_ms + phase_ms, period_ms);
   float wavefront = t * speed_um_per_ms;
   float distance_from_wave = abs(vDist - wavefront);
-  // Wide pulse band (150 µm) — the wave crest reads as an unambiguous flash.
-  float half_width = 150.0;
+  // Very wide pulse (220 µm) for unmistakable flash band.
+  float half_width = 220.0;
   float t_norm = clamp(distance_from_wave / half_width, 0.0, 1.0);
-  float intensity = pow(1.0 - t_norm, 2.0);
-  // Quick fade once the wave has run past the dendrite's farthest extent.
+  float intensity = pow(1.0 - t_norm, 1.5);
   if (wavefront > maxDist + half_width) intensity = 0.0;
-  // Slow background glow per cell so even resting branches pulse subtly.
-  float breathe = 0.35 + 0.15 * sin(6.2831853 * (time_ms + phase_ms) / period_ms);
-  // Strong additive flash on the wavefront — output exceeds 1.0; with
-  // AdditiveBlending the surrounding brain shell stays visible behind.
-  vec3 base_glow = baseColor * breathe;
-  vec3 flash = fireColor * intensity * 3.5 + baseColor * intensity * 1.5;
+  // Stronger background breathing.
+  float breathe = 0.45 + 0.30 * sin(6.2831853 * (time_ms + phase_ms) / period_ms);
+  vec3 base_glow = baseColor * breathe * 1.2;
+  // Massive flash boost: white core + cell-color halo.
+  vec3 flash = fireColor * intensity * 6.5 + baseColor * intensity * 3.0;
   gl_FragColor = vec4(base_glow + flash, 1.0);
+}
+`;
+
+// Soma flare shader. Each cell's soma briefly bursts white at the start of
+// every firing cycle (when the wave begins propagating outward), then fades.
+// Mimics the action-potential initiation at the axon hillock.
+const SOMA_VERT = `
+void main() {
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const SOMA_FRAG = `
+precision mediump float;
+uniform float time_ms;
+uniform float period_ms;
+uniform float phase_ms;
+uniform vec3 baseColor;
+uniform vec3 fireColor;
+void main() {
+  float t = mod(time_ms + phase_ms, period_ms);
+  // Flash window: first 120 ms of each period, with sharp rise + decay.
+  float flash_dur = 120.0;
+  float u = clamp(t / flash_dur, 0.0, 1.0);
+  float intensity = u < 1.0 ? exp(-u * 4.0) : 0.0;
+  // Slow breathing too — soma never fully dim.
+  float breathe = 0.7 + 0.3 * sin(6.2831853 * (time_ms + phase_ms) / period_ms);
+  vec3 c = baseColor * breathe + fireColor * intensity * 5.0 + baseColor * intensity * 4.0;
+  gl_FragColor = vec4(c, 1.0);
 }
 `;
 
@@ -148,8 +175,29 @@ export function NeuronGlyph({
     maxDist: { value: maxDist },
   });
 
+  const somaUniforms = useRef({
+    time_ms: { value: 0 },
+    period_ms: { value: period_ms },
+    phase_ms: { value: phase_ms },
+    baseColor: { value: baseColor },
+    fireColor: { value: fireColor },
+  });
+
+  // Pulse the soma scale alongside the flash — gives a real "puff" effect.
+  const somaRef = useRef<THREE.Mesh>(null);
+
   useFrame((state) => {
-    uniforms.current.time_ms.value = state.clock.elapsedTime * 1000.0;
+    const tMs = state.clock.elapsedTime * 1000.0;
+    uniforms.current.time_ms.value = tMs;
+    somaUniforms.current.time_ms.value = tMs;
+    if (somaRef.current) {
+      const t = ((tMs + phase_ms) % period_ms);
+      const flashDur = 120;
+      const u = Math.min(t / flashDur, 1);
+      const flash = u < 1 ? Math.exp(-u * 4) : 0;
+      const s = 1.0 + flash * 0.9;
+      somaRef.current.scale.setScalar(s);
+    }
   });
 
   return (
@@ -169,9 +217,16 @@ export function NeuronGlyph({
             fragmentShader={FRAG}
           />
         </lineSegments>
-        <mesh>
-          <sphereGeometry args={[8, 12, 12]} />
-          <meshBasicMaterial color={color} />
+        <mesh ref={somaRef}>
+          <sphereGeometry args={[10, 16, 16]} />
+          <shaderMaterial
+            transparent
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            uniforms={somaUniforms.current}
+            vertexShader={SOMA_VERT}
+            fragmentShader={SOMA_FRAG}
+          />
         </mesh>
       </group>
     </group>
