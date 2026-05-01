@@ -53,13 +53,19 @@ void main() {
   float t = mod(time_ms + phase_ms, period_ms);
   float wavefront = t * speed_um_per_ms;
   float distance_from_wave = abs(vDist - wavefront);
-  // Half-width of the pulse, in microns. ~30µm gives a clearly visible band.
-  float half_width = 30.0;
-  float intensity = 1.0 - clamp(distance_from_wave / half_width, 0.0, 1.0);
-  // Quick fade if the wave already passed beyond the cell's max extent.
+  // Wider pulse band (90 µm) for clearer visibility against the brain shell.
+  float half_width = 90.0;
+  // Smooth bell-shape intensity instead of a triangle: looks more like a
+  // depolarization wave and fades naturally on either side.
+  float t_norm = clamp(distance_from_wave / half_width, 0.0, 1.0);
+  float intensity = pow(1.0 - t_norm, 2.0);
+  // Quick fade once the wave has run past the dendrite's farthest extent.
   if (wavefront > maxDist + half_width) intensity = 0.0;
+  // Boost output above 1.0 at the peak so the fire color visibly pops
+  // (display will clip but the bright burst registers as glow).
   vec3 c = mix(baseColor, fireColor, intensity);
-  gl_FragColor = vec4(c, 0.95);
+  c += fireColor * intensity * 1.4; // additive boost
+  gl_FragColor = vec4(c, 0.97);
 }
 `;
 
@@ -123,10 +129,9 @@ export function NeuronGlyph({
   }, [neuron.points]);
 
   const baseColor = useMemo(() => new THREE.Color(color), [color]);
-  const fireColor = useMemo(
-    () => new THREE.Color('#ffffff').lerp(new THREE.Color(color), 0.0).addScalar(0.1),
-    [color],
-  );
+  // Bright pulse color: full white with a tinge of the cell's hue, so the
+  // wave reads as a clear flash propagating along the dendrite tree.
+  const fireColor = useMemo(() => new THREE.Color('#ffffff'), []);
   // Stable per-neuron phase offset so neurons don't fire in lockstep.
   const phase_ms = useMemo(() => {
     const seed = neuron.neuron_id;
