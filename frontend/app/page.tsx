@@ -10,7 +10,7 @@ import {
   type RegionIntensity,
   type TractCurve,
 } from '@/components/viewer/BrainCanvas';
-import type { FunctionalNetworksResponse } from '@/lib/types';
+import type { FunctionalNetworksResponse, SchaeferParcelsResponse } from '@/lib/types';
 import { NeuronCanvas } from '@/components/viewer/NeuronCanvas';
 import {
   fetchBrainMesh,
@@ -23,6 +23,7 @@ import {
   fetchReceptorMap,
   fetchReceptors,
   fetchRegionSample,
+  fetchSchaeferParcels,
   fetchSubcorticalMeshes,
   fetchV1NeuronSample,
   fetchWhiteMatterTracts,
@@ -75,6 +76,8 @@ export default function Page() {
   const [subcortical, setSubcortical] = useState<SubcorticalMeshResponse | null>(null);
   const [yeoNetworks, setYeoNetworks] = useState<FunctionalNetworksResponse | null>(null);
   const [networksVisible, setNetworksVisible] = useState(false);
+  const [schaefer, setSchaefer] = useState<SchaeferParcelsResponse | null>(null);
+  const [schaeferVisible, setSchaeferVisible] = useState(false);
 
   // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
@@ -87,8 +90,9 @@ export default function Page() {
       fetchWhiteMatterTracts(),
       fetchSubcorticalMeshes(),
       fetchFunctionalNetworks().catch(() => null),
+      fetchSchaeferParcels().catch(() => null),
     ])
-      .then(([mesh, regs, funs, recs, trks, sub, nets]) => {
+      .then(([mesh, regs, funs, recs, trks, sub, nets, sch]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
@@ -97,6 +101,7 @@ export default function Page() {
         setTracts(trks);
         setSubcortical(sub);
         if (nets) setYeoNetworks(nets);
+        if (sch) setSchaefer(sch);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -402,6 +407,7 @@ export default function Page() {
                     swcMap={swcMap}
                     subcorticalMeshes={subcortical?.meshes ?? []}
                     networks={networksVisible && yeoNetworks ? yeoNetworks.networks : []}
+                    schaeferParcels={schaeferVisible && schaefer ? schaefer.parcels : []}
                     onRegionClick={handleRegionClick}
                     functionHighlights={
                       activeFunction
@@ -489,6 +495,37 @@ export default function Page() {
                         <div className="border-t border-white/10 pt-2 text-white/40">
                           {activeFunction.citation}
                         </div>
+                      </div>
+                    )}
+
+                    {schaefer && (
+                      <div className="rounded border border-white/10 bg-black/85 p-3">
+                        <div className="mb-2 flex items-baseline justify-between">
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-white/40">
+                            schaefer 100 parcels (2018)
+                          </div>
+                          <button
+                            onClick={() => setSchaeferVisible((v) => !v)}
+                            className={`rounded border px-2 py-1 font-mono text-[10px] ${
+                              schaeferVisible
+                                ? 'border-[#7fff9b] bg-[#7fff9b]/10 text-white'
+                                : 'border-white/20 text-white/60 hover:bg-white/5'
+                            }`}
+                          >
+                            {schaeferVisible ? 'hide' : 'show'} {schaefer.n_parcels}
+                          </button>
+                        </div>
+                        {schaeferVisible && (
+                          <div className="space-y-1 font-mono text-[10px] text-white/40">
+                            <p>
+                              100 cortical parcels colored by Yeo network membership.
+                              Each dot is a parcel centroid in MNI space.
+                            </p>
+                            <p className="border-t border-white/10 pt-2">
+                              Schaefer et al. Cereb Cortex. 2018. doi:10.1093/cercor/bhx179
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 

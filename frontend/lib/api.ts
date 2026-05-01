@@ -4,6 +4,7 @@ import type {
   CognitiveFunctionsResponse,
   FunctionalNetworksResponse,
   ReceptorListResponse,
+  SchaeferParcelsResponse,
   ReceptorMapResponse,
   SubcorticalMeshResponse,
   WhiteMatterTractsResponse,
@@ -228,4 +229,13 @@ export async function fetchFunctionalNetworks(): Promise<FunctionalNetworksRespo
     throw new Error(`fetchFunctionalNetworks: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as FunctionalNetworksResponse;
+}
+
+export async function fetchSchaeferParcels(): Promise<SchaeferParcelsResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/schaefer-parcels`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchSchaeferParcels: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as SchaeferParcelsResponse;
 }

@@ -247,6 +247,24 @@ export interface FunctionalNetworksResponse {
   citation: string;
 }
 
+export interface SchaeferParcel {
+  parcel_id: number;
+  name: string;
+  short_name: string;
+  hemisphere: string;
+  network_id: number;
+  network_name: string;
+  color: string;
+  voxel_count: number;
+  centroid_mni_mm: number[];
+}
+
+export interface SchaeferParcelsResponse {
+  parcels: SchaeferParcel[];
+  n_parcels: number;
+  citation: string;
+}
+
 export interface BrainRegion {
   region_id: number;
   label: string;

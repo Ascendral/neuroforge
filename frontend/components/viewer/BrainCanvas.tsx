@@ -11,6 +11,7 @@ import type {
   FunctionalNetwork,
   NeuronResponse,
   NeuronSummary,
+  SchaeferParcel,
   SubcorticalMesh,
 } from '@/lib/types';
 
@@ -282,6 +283,7 @@ interface BrainCanvasProps {
   tracts?: TractCurve[];
   subcorticalMeshes?: SubcorticalMesh[];
   networks?: FunctionalNetwork[];
+  schaeferParcels?: SchaeferParcel[];
 }
 
 export function BrainCanvas({
@@ -297,6 +299,7 @@ export function BrainCanvas({
   tracts = [],
   subcorticalMeshes = [],
   networks = [],
+  schaeferParcels = [],
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -342,6 +345,25 @@ export function BrainCanvas({
       {networks.map((net) => (
         <NetworkMeshNode key={net.id} network={net} />
       ))}
+      {schaeferParcels.length > 0 && (
+        <group>
+          {schaeferParcels.map((p) => (
+            <mesh
+              key={p.parcel_id}
+              position={[p.centroid_mni_mm[0], p.centroid_mni_mm[1], p.centroid_mni_mm[2]]}
+            >
+              <sphereGeometry args={[3.5, 12, 12]} />
+              <meshStandardMaterial
+                color={p.color}
+                emissive={p.color}
+                emissiveIntensity={0.7}
+                transparent
+                opacity={0.9}
+              />
+            </mesh>
+          ))}
+        </group>
+      )}
       <HemisphereMesh
         vertices_flat={mesh.left.vertices_flat}
         faces_flat={mesh.left.faces_flat}

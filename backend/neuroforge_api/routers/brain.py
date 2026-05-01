@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from neuroforge_api.data import atlas as atlas_module
 from neuroforge_api.data import networks as networks_module
 from neuroforge_api.data import receptors as receptors_module
+from neuroforge_api.data import schaefer as schaefer_module
 
 router = APIRouter(prefix="/api/brain", tags=["brain"])
 
@@ -152,6 +153,24 @@ class FunctionalNetwork(BaseModel):
 
 class FunctionalNetworksResponse(BaseModel):
     networks: list[FunctionalNetwork]
+    citation: str
+
+
+class SchaeferParcelEntry(BaseModel):
+    parcel_id: int
+    name: str
+    short_name: str
+    hemisphere: str
+    network_id: int
+    network_name: str
+    color: str
+    voxel_count: int
+    centroid_mni_mm: list[float]
+
+
+class SchaeferParcelsResponse(BaseModel):
+    parcels: list[SchaeferParcelEntry]
+    n_parcels: int
     citation: str
 
 
@@ -468,3 +487,36 @@ def get_functional_networks() -> FunctionalNetworksResponse:
             )
         )
     return FunctionalNetworksResponse(networks=out, citation=YEO_CITATION)
+
+
+SCHAEFER_CITATION = (
+    "Schaefer A, Kong R, Gordon EM, Laumann TO, Zuo XN, Holmes AJ, "
+    "Eickhoff SB, Yeo BTT. Local-global parcellation of the human cerebral "
+    "cortex from intrinsic functional connectivity MRI. "
+    "Cereb Cortex. 2018;28(9):3095-3114. doi:10.1093/cercor/bhx179"
+)
+
+
+@router.get("/schaefer-parcels", response_model=SchaeferParcelsResponse)
+def get_schaefer_parcels() -> SchaeferParcelsResponse:
+    """Schaefer 2018 100-region cortical parcellation, each parcel tagged
+    with its Yeo network membership and canonical color."""
+    parcels = schaefer_module.schaefer_parcels()
+    out: list[SchaeferParcelEntry] = []
+    for p in parcels:
+        out.append(
+            SchaeferParcelEntry(
+                parcel_id=p.parcel_id,
+                name=p.name,
+                short_name=p.short_name,
+                hemisphere=p.hemisphere,
+                network_id=p.network_id,
+                network_name=p.network_name,
+                color=p.color,
+                voxel_count=p.voxel_count,
+                centroid_mni_mm=list(p.centroid_mni_mm),
+            )
+        )
+    return SchaeferParcelsResponse(
+        parcels=out, n_parcels=len(out), citation=SCHAEFER_CITATION
+    )
