@@ -256,3 +256,30 @@ export interface CognitiveFunctionsResponse {
   functions: CognitiveFunction[];
   note: string;
 }
+
+export interface ReceptorEntry {
+  key: string;
+  name: string;
+  system: string;
+  tracer: string;
+  n_subjects: number;
+  citation: string;
+}
+
+export interface ReceptorListResponse {
+  receptors: ReceptorEntry[];
+  umbrella_citation: string;
+}
+
+export interface ReceptorRegionValue {
+  label: string;
+  centroid_mni_mm: number[] | null;
+  mean: number;
+  normalized: number;
+}
+
+export interface ReceptorMapResponse {
+  receptor: ReceptorEntry;
+  cortical: ReceptorRegionValue[];
+  subcortical: ReceptorRegionValue[];
+}

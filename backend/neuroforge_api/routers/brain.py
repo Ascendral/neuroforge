@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from neuroforge_api.data import atlas as atlas_module
+from neuroforge_api.data import receptors as receptors_module
 
 router = APIRouter(prefix="/api/brain", tags=["brain"])
 
@@ -75,6 +76,33 @@ class CognitiveFunction(BaseModel):
 class CognitiveFunctionsResponse(BaseModel):
     functions: list[CognitiveFunction]
     note: str
+
+
+class ReceptorRegionValue(BaseModel):
+    label: str
+    centroid_mni_mm: list[float] | None
+    mean: float
+    normalized: float  # 0-1 within this atlas
+
+
+class ReceptorEntry(BaseModel):
+    key: str
+    name: str
+    system: str
+    tracer: str
+    n_subjects: int
+    citation: str
+
+
+class ReceptorListResponse(BaseModel):
+    receptors: list[ReceptorEntry]
+    umbrella_citation: str
+
+
+class ReceptorMapResponse(BaseModel):
+    receptor: ReceptorEntry
+    cortical: list[ReceptorRegionValue]
+    subcortical: list[ReceptorRegionValue]
 
 
 @router.get("/mesh", response_model=CorticalMeshResponse)
@@ -186,4 +214,64 @@ def get_cognitive_functions() -> CognitiveFunctionsResponse:
             "literature with the foundational citation listed. See "
             "neuroforge_api.data.atlas.COGNITIVE_FUNCTIONS for the source."
         ),
+    )
+
+
+HANSEN_UMBRELLA = (
+    "Hansen JY et al. Mapping neurotransmitter systems to the structural and "
+    "functional organization of the human neocortex. Nat Neurosci. "
+    "2022;25(11):1569-1581. doi:10.1038/s41593-022-01186-3. "
+    "Data: github.com/netneurolab/hansen_receptors"
+)
+
+
+def _receptor_to_pydantic(r: receptors_module.ReceptorEntry) -> ReceptorEntry:
+    return ReceptorEntry(
+        key=r.key,
+        name=r.name,
+        system=r.system,
+        tracer=r.tracer,
+        n_subjects=r.n_subjects,
+        citation=r.citation,
+    )
+
+
+@router.get("/receptors", response_model=ReceptorListResponse)
+def list_receptors() -> ReceptorListResponse:
+    return ReceptorListResponse(
+        receptors=[_receptor_to_pydantic(r) for r in receptors_module.RECEPTORS],
+        umbrella_citation=HANSEN_UMBRELLA,
+    )
+
+
+@router.get("/receptors/{key}", response_model=ReceptorMapResponse)
+def receptor_map(key: str) -> ReceptorMapResponse:
+    receptor = next((r for r in receptors_module.RECEPTORS if r.key == key), None)
+    if receptor is None:
+        raise HTTPException(status_code=404, detail=f"unknown receptor: {key}")
+    try:
+        per_region = receptors_module.receptor_per_region(key)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"receptor data error: {exc}") from exc
+
+    # Look up centroids
+    cortical_regions = atlas_module.harvard_oxford_cortical_regions()
+    subcortical_regions = atlas_module.harvard_oxford_subcortical_regions()
+    cort_by_label = {r.label: r for r in cortical_regions}
+    sub_by_label = {r.label: r for r in subcortical_regions}
+
+    def _to_value(d: dict, by_label: dict) -> ReceptorRegionValue:
+        label = d["label"]
+        region = by_label.get(label)
+        return ReceptorRegionValue(
+            label=label,
+            centroid_mni_mm=list(region.centroid_mni_mm) if region and region.centroid_mni_mm else None,
+            mean=d["mean"],
+            normalized=d["normalized"],
+        )
+
+    return ReceptorMapResponse(
+        receptor=_receptor_to_pydantic(receptor),
+        cortical=[_to_value(d, cort_by_label) for d in per_region["cortical"]],
+        subcortical=[_to_value(d, sub_by_label) for d in per_region["subcortical"]],
     )

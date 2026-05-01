@@ -156,6 +156,12 @@ export interface FunctionHighlight {
   centroid_mni_mm: [number, number, number];
 }
 
+export interface RegionIntensity {
+  label: string;
+  centroid_mni_mm: [number, number, number];
+  normalized: number; // 0-1
+}
+
 interface BrainCanvasProps {
   mesh: BrainMeshResponse;
   markers?: NeuronMarker[];
@@ -168,6 +174,8 @@ interface BrainCanvasProps {
   }) => void;
   functionHighlights?: FunctionHighlight[];
   highlightColor?: string;
+  regionIntensities?: RegionIntensity[];
+  intensityColor?: string;
 }
 
 export function BrainCanvas({
@@ -178,6 +186,8 @@ export function BrainCanvas({
   onRegionClick,
   functionHighlights = [],
   highlightColor = '#ffe45e',
+  regionIntensities = [],
+  intensityColor = '#5eebff',
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -292,6 +302,21 @@ export function BrainCanvas({
           />
         </mesh>
       ))}
+      {regionIntensities.map((r, i) => {
+        const radius = 4 + r.normalized * 14;
+        return (
+          <mesh key={`int-${r.label}-${i}`} position={r.centroid_mni_mm}>
+            <sphereGeometry args={[radius, 24, 24]} />
+            <meshStandardMaterial
+              color={intensityColor}
+              emissive={intensityColor}
+              emissiveIntensity={Math.max(0.15, r.normalized)}
+              transparent
+              opacity={0.15 + 0.5 * r.normalized}
+            />
+          </mesh>
+        );
+      })}
       <OrbitControls
         target={center.center}
         enableDamping

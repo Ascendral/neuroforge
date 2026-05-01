@@ -7,6 +7,7 @@ import {
   BrainCanvas,
   type FunctionHighlight,
   type NeuronMarker,
+  type RegionIntensity,
 } from '@/components/viewer/BrainCanvas';
 import { NeuronCanvas } from '@/components/viewer/NeuronCanvas';
 import {
@@ -16,6 +17,8 @@ import {
   fetchCognitiveFunctions,
   fetchHippocampalSample,
   fetchNeuron,
+  fetchReceptorMap,
+  fetchReceptors,
   fetchRegionSample,
   fetchV1NeuronSample,
 } from '@/lib/api';
@@ -26,6 +29,8 @@ import type {
   CognitiveFunction,
   CognitiveFunctionsResponse,
   NeuronResponse,
+  ReceptorListResponse,
+  ReceptorMapResponse,
 } from '@/lib/types';
 
 const DEFAULT_NEURON_ID = 1;
@@ -55,16 +60,25 @@ export default function Page() {
   } | null>(null);
   const [functions, setFunctions] = useState<CognitiveFunctionsResponse | null>(null);
   const [activeFunction, setActiveFunction] = useState<CognitiveFunction | null>(null);
+  const [receptors, setReceptors] = useState<ReceptorListResponse | null>(null);
+  const [activeReceptor, setActiveReceptor] = useState<ReceptorMapResponse | null>(null);
+  const [receptorLoading, setReceptorLoading] = useState(false);
 
-  // Fetch brain mesh + regions + cognitive functions once
+  // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchBrainMesh(), fetchBrainRegions(), fetchCognitiveFunctions()])
-      .then(([mesh, regs, funs]) => {
+    Promise.all([
+      fetchBrainMesh(),
+      fetchBrainRegions(),
+      fetchCognitiveFunctions(),
+      fetchReceptors(),
+    ])
+      .then(([mesh, regs, funs, recs]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
         setFunctions(funs);
+        setReceptors(recs);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -371,10 +385,28 @@ export default function Page() {
                             })) as FunctionHighlight[])
                         : []
                     }
+                    regionIntensities={
+                      activeReceptor
+                        ? ([...activeReceptor.cortical, ...activeReceptor.subcortical]
+                            .filter((r) => r.centroid_mni_mm)
+                            .map(
+                              (r) =>
+                                ({
+                                  label: r.label,
+                                  centroid_mni_mm: r.centroid_mni_mm as [
+                                    number,
+                                    number,
+                                    number,
+                                  ],
+                                  normalized: r.normalized,
+                                }) as RegionIntensity,
+                            ) as RegionIntensity[])
+                        : []
+                    }
                   />
                 )}
                 {functions && view === 'brain' && (
-                  <div className="absolute left-4 top-4 max-w-[260px] space-y-2">
+                  <div className="absolute left-4 top-4 max-w-[260px] space-y-2 max-h-[calc(100vh-3rem)] overflow-y-auto pr-1">
                     <div className="rounded border border-white/10 bg-black/85 p-3">
                       <div className="mb-2 text-[10px] font-mono uppercase tracking-widest text-white/40">
                         cognitive functions
@@ -413,6 +445,73 @@ export default function Page() {
                         <div className="border-t border-white/10 pt-2 text-white/40">
                           {activeFunction.citation}
                         </div>
+                      </div>
+                    )}
+
+                    {receptors && (
+                      <div className="rounded border border-white/10 bg-black/85 p-3">
+                        <div className="mb-2 text-[10px] font-mono uppercase tracking-widest text-white/40">
+                          neurotransmitter receptors
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {receptors.receptors.map((r) => {
+                            const isActive = activeReceptor?.receptor.key === r.key;
+                            return (
+                              <button
+                                key={r.key}
+                                disabled={receptorLoading}
+                                onClick={async () => {
+                                  if (isActive) {
+                                    setActiveReceptor(null);
+                                    return;
+                                  }
+                                  setReceptorLoading(true);
+                                  try {
+                                    setActiveReceptor(await fetchReceptorMap(r.key));
+                                  } catch {
+                                    /* ignore — UI shows nothing */
+                                  } finally {
+                                    setReceptorLoading(false);
+                                  }
+                                }}
+                                className={`rounded border px-2 py-1 font-mono text-[10px] disabled:cursor-not-allowed disabled:opacity-50 ${
+                                  isActive
+                                    ? 'border-[#5eebff] bg-[#5eebff]/10 text-white'
+                                    : 'border-white/20 text-white/60 hover:bg-white/5'
+                                }`}
+                              >
+                                {r.key}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {activeReceptor && (
+                          <div className="mt-2 font-mono text-[10px] leading-snug">
+                            <div className="text-white">{activeReceptor.receptor.name}</div>
+                            <div className="text-white/50">
+                              tracer: {activeReceptor.receptor.tracer} · n={activeReceptor.receptor.n_subjects}
+                            </div>
+                            <div className="mt-1 text-white/40">
+                              top regions:
+                              <ul className="mt-0.5 space-y-0.5">
+                                {[...activeReceptor.cortical, ...activeReceptor.subcortical]
+                                  .sort((a, b) => b.mean - a.mean)
+                                  .slice(0, 6)
+                                  .map((r) => (
+                                    <li key={r.label} className="text-white/70">
+                                      {r.label}{' '}
+                                      <span className="text-white/40">
+                                        (mean {r.mean.toFixed(2)})
+                                      </span>
+                                    </li>
+                                  ))}
+                              </ul>
+                            </div>
+                            <div className="mt-2 border-t border-white/10 pt-2 text-white/40">
+                              {activeReceptor.receptor.citation}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
