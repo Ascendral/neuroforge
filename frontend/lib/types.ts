@@ -198,3 +198,42 @@ export interface MCPXorSearchResponse {
   no_solution: boolean;
   citation: string;
 }
+
+export interface BrainHemisphereMesh {
+  hemisphere: 'left' | 'right';
+  vertex_count: number;
+  face_count: number;
+  vertices_flat: number[];
+  faces_flat: number[];
+  destrieux_label_id: number[];
+}
+
+export interface BrainMeshResponse {
+  left: BrainHemisphereMesh;
+  right: BrainHemisphereMesh;
+  destrieux_labels: string[];
+  citation: string;
+}
+
+export interface BrainRegion {
+  region_id: number;
+  label: string;
+  atlas: string;
+  centroid_mni_mm: number[] | null;
+  voxel_count: number | null;
+}
+
+export interface ModuleMapping {
+  module: string;
+  atlas: string | null;
+  labels: string[];
+  note: string;
+  has_anatomical_anchor: boolean;
+}
+
+export interface BrainRegionsResponse {
+  cortical: BrainRegion[];
+  subcortical: BrainRegion[];
+  module_mapping: ModuleMapping[];
+  citation: string;
+}

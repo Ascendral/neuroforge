@@ -1,4 +1,6 @@
 import type {
+  BrainMeshResponse,
+  BrainRegionsResponse,
   HebbianRequest,
   HebbianResponse,
   HHRequest,
@@ -134,4 +136,22 @@ export async function fetchXorImpossibility(): Promise<MCPXorSearchResponse> {
     throw new Error(`fetchXorImpossibility: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as MCPXorSearchResponse;
+}
+
+export async function fetchBrainMesh(): Promise<BrainMeshResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/mesh`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchBrainMesh: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as BrainMeshResponse;
+}
+
+export async function fetchBrainRegions(): Promise<BrainRegionsResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/regions`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchBrainRegions: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as BrainRegionsResponse;
 }
