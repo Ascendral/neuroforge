@@ -6,7 +6,9 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 import { useNeuronSelection } from '@/lib/neuron-context';
-import type { BrainMeshResponse, NeuronSummary } from '@/lib/types';
+import type { BrainMeshResponse, NeuronResponse, NeuronSummary } from '@/lib/types';
+
+import { NeuronGlyph } from './NeuronGlyph';
 
 // Anti-theater: every vertex below comes from fsaverage5's pial.gii.gz file
 // inside the nilearn package. The brain you're seeing is the actual averaged
@@ -132,9 +134,11 @@ function MarkerCluster({ markers, jitter_mm = 6 }: MarkerClusterProps) {
 interface BrainCanvasProps {
   mesh: BrainMeshResponse;
   markers?: NeuronMarker[];
+  swcMap?: Map<number, NeuronResponse>;
+  glyphScale?: number; // microns × glyphScale → mm. 0.02 ≈ 20× exaggeration of real ~0.001.
 }
 
-export function BrainCanvas({ mesh, markers = [] }: BrainCanvasProps) {
+export function BrainCanvas({ mesh, markers = [], swcMap, glyphScale = 0.02 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
     const v = [...mesh.left.vertices_flat, ...mesh.right.vertices_flat];
@@ -185,7 +189,35 @@ export function BrainCanvas({ mesh, markers = [] }: BrainCanvasProps) {
         color="#bfbfbf"
         opacity={0.12}
       />
-      {markers.length > 0 && <MarkerCluster markers={markers} />}
+      {markers.length > 0 &&
+        markers.map((m, i) => {
+          const seed = m.neuron.neuron_id;
+          const dx = (Math.sin(seed * 12.9898) * 43758.5453) % 1;
+          const dy = (Math.sin(seed * 78.233) * 43758.5453) % 1;
+          const dz = (Math.sin(seed * 39.346) * 43758.5453) % 1;
+          const jitterMm = 6;
+          const pos: [number, number, number] = [
+            m.centroid_mni_mm[0] + (dx - 0.5) * jitterMm,
+            m.centroid_mni_mm[1] + (dy - 0.5) * jitterMm,
+            m.centroid_mni_mm[2] + (dz - 0.5) * jitterMm,
+          ];
+          const swc = swcMap?.get(m.neuron.neuron_id);
+          if (swc) {
+            return (
+              <NeuronGlyph
+                key={`g-${seed}-${i}`}
+                neuron={swc}
+                position={pos}
+                scale={glyphScale}
+                color={m.color}
+              />
+            );
+          }
+          return null;
+        })}
+      {markers.length > 0 && (!swcMap || swcMap.size === 0) && (
+        <MarkerCluster markers={markers} />
+      )}
       <OrbitControls
         target={center.center}
         enableDamping

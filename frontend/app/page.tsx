@@ -36,6 +36,7 @@ export default function Page() {
   const [brain, setBrain] = useState<BrainMeshResponse | null>(null);
   const [regions, setRegions] = useState<BrainRegionsResponse | null>(null);
   const [markers, setMarkers] = useState<NeuronMarker[]>([]);
+  const [swcMap, setSwcMap] = useState<Map<number, NeuronResponse>>(new Map());
   const [neuronError, setNeuronError] = useState<string | null>(null);
   const [brainError, setBrainError] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedPoint | null>(null);
@@ -121,6 +122,32 @@ export default function Page() {
       cancelled = true;
     };
   }, [regions]);
+
+  // Once markers are placed, fetch each neuron's SWC in parallel so the
+  // brain shell can replace dots with actual reconstructed morphology.
+  // Backend's SQLite cache makes warm refetches fast; cold first run hits
+  // neuromorpho.org (slow but populates the cache).
+  useEffect(() => {
+    if (markers.length === 0) return;
+    let cancelled = false;
+    Promise.all(
+      markers.map((m) =>
+        fetchNeuron(m.neuron.neuron_id)
+          .then((data) => [m.neuron.neuron_id, data] as const)
+          .catch(() => null),
+      ),
+    ).then((entries) => {
+      if (cancelled) return;
+      const map = new Map<number, NeuronResponse>();
+      for (const e of entries) {
+        if (e !== null) map.set(e[0], e[1]);
+      }
+      setSwcMap(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [markers]);
 
   // Fetch neuron when neuronId changes
   useEffect(() => {
@@ -214,7 +241,7 @@ export default function Page() {
                     loading fsaverage5 cortical mesh…
                   </div>
                 )}
-                {brain && <BrainCanvas mesh={brain} markers={markers} />}
+                {brain && <BrainCanvas mesh={brain} markers={markers} swcMap={swcMap} />}
               </>
             )}
             {view === 'neuron' && (
