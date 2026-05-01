@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from neuroforge_api.data import atlas as atlas_module
 from neuroforge_api.data import networks as networks_module
+from neuroforge_api.data import pauli as pauli_module
 from neuroforge_api.data import receptors as receptors_module
 from neuroforge_api.data import schaefer as schaefer_module
 
@@ -171,6 +172,25 @@ class SchaeferParcelEntry(BaseModel):
 class SchaeferParcelsResponse(BaseModel):
     parcels: list[SchaeferParcelEntry]
     n_parcels: int
+    citation: str
+
+
+class PauliNucleusEntry(BaseModel):
+    label_id: int
+    abbrev: str
+    full_name: str
+    system: str
+    color: str
+    voxel_count: int
+    centroid_mni_mm: list[float]
+    vertex_count: int
+    face_count: int
+    vertices_flat: list[float]
+    faces_flat: list[int]
+
+
+class PauliNucleiResponse(BaseModel):
+    nuclei: list[PauliNucleusEntry]
     citation: str
 
 
@@ -520,3 +540,34 @@ def get_schaefer_parcels() -> SchaeferParcelsResponse:
     return SchaeferParcelsResponse(
         parcels=out, n_parcels=len(out), citation=SCHAEFER_CITATION
     )
+
+
+PAULI_CITATION = (
+    "Pauli WM, Nili AN, Tyszka JM. A high-resolution probabilistic in vivo "
+    "atlas of human subcortical brain nuclei. Sci Data. 2018;5:180063. "
+    "doi:10.1038/sdata.2018.63"
+)
+
+
+@router.get("/pauli-nuclei", response_model=PauliNucleiResponse)
+def get_pauli_nuclei() -> PauliNucleiResponse:
+    """Pauli 2017 deep subcortical nuclei meshes — VTA, SNc, GPi/GPe, RN, etc."""
+    nuclei = pauli_module.all_pauli_nuclei()
+    out: list[PauliNucleusEntry] = []
+    for n in nuclei:
+        out.append(
+            PauliNucleusEntry(
+                label_id=n.label_id,
+                abbrev=n.abbrev,
+                full_name=n.full_name,
+                system=n.system,
+                color=n.color,
+                voxel_count=n.voxel_count,
+                centroid_mni_mm=list(n.centroid_mni_mm),
+                vertex_count=int(n.vertices.shape[0]),
+                face_count=int(n.faces.shape[0]),
+                vertices_flat=n.vertices.astype(float).flatten().tolist(),
+                faces_flat=n.faces.astype(int).flatten().tolist(),
+            )
+        )
+    return PauliNucleiResponse(nuclei=out, citation=PAULI_CITATION)

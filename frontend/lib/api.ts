@@ -3,6 +3,7 @@ import type {
   BrainRegionsResponse,
   CognitiveFunctionsResponse,
   FunctionalNetworksResponse,
+  PauliNucleiResponse,
   ReceptorListResponse,
   SchaeferParcelsResponse,
   ReceptorMapResponse,
@@ -238,4 +239,13 @@ export async function fetchSchaeferParcels(): Promise<SchaeferParcelsResponse> {
     throw new Error(`fetchSchaeferParcels: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as SchaeferParcelsResponse;
+}
+
+export async function fetchPauliNuclei(): Promise<PauliNucleiResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/pauli-nuclei`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchPauliNuclei: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as PauliNucleiResponse;
 }

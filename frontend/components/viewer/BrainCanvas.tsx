@@ -11,6 +11,7 @@ import type {
   FunctionalNetwork,
   NeuronResponse,
   NeuronSummary,
+  PauliNucleus,
   SchaeferParcel,
   SubcorticalMesh,
 } from '@/lib/types';
@@ -203,6 +204,37 @@ function TractTube({ curve }: { curve: TractCurve }) {
   );
 }
 
+function PauliNucleusNode({ nucleus }: { nucleus: PauliNucleus }) {
+  const { positions, indices } = useMemo(() => {
+    return {
+      positions: new Float32Array(nucleus.vertices_flat),
+      indices: new Uint32Array(nucleus.faces_flat),
+    };
+  }, [nucleus.vertices_flat, nucleus.faces_flat]);
+  const geomRef = useRef<THREE.BufferGeometry>(null);
+  useEffect(() => {
+    geomRef.current?.computeVertexNormals();
+  }, [positions, indices]);
+  return (
+    <mesh>
+      <bufferGeometry ref={geomRef}>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="index" args={[indices, 1]} />
+      </bufferGeometry>
+      <meshStandardMaterial
+        color={nucleus.color}
+        emissive={nucleus.color}
+        emissiveIntensity={0.45}
+        roughness={0.5}
+        side={THREE.DoubleSide}
+        transparent
+        opacity={0.55}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
 function NetworkMeshNode({ network }: { network: FunctionalNetwork }) {
   const { positions, indices } = useMemo(() => {
     return {
@@ -284,6 +316,7 @@ interface BrainCanvasProps {
   subcorticalMeshes?: SubcorticalMesh[];
   networks?: FunctionalNetwork[];
   schaeferParcels?: SchaeferParcel[];
+  pauliNuclei?: PauliNucleus[];
 }
 
 export function BrainCanvas({
@@ -300,6 +333,7 @@ export function BrainCanvas({
   subcorticalMeshes = [],
   networks = [],
   schaeferParcels = [],
+  pauliNuclei = [],
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -344,6 +378,9 @@ export function BrainCanvas({
       ))}
       {networks.map((net) => (
         <NetworkMeshNode key={net.id} network={net} />
+      ))}
+      {pauliNuclei.map((n) => (
+        <PauliNucleusNode key={n.abbrev} nucleus={n} />
       ))}
       {schaeferParcels.length > 0 && (
         <group>

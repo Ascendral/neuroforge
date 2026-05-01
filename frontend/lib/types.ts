@@ -265,6 +265,25 @@ export interface SchaeferParcelsResponse {
   citation: string;
 }
 
+export interface PauliNucleus {
+  label_id: number;
+  abbrev: string;
+  full_name: string;
+  system: string;
+  color: string;
+  voxel_count: number;
+  centroid_mni_mm: number[];
+  vertex_count: number;
+  face_count: number;
+  vertices_flat: number[];
+  faces_flat: number[];
+}
+
+export interface PauliNucleiResponse {
+  nuclei: PauliNucleus[];
+  citation: string;
+}
+
 export interface BrainRegion {
   region_id: number;
   label: string;

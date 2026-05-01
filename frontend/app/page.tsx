@@ -10,7 +10,11 @@ import {
   type RegionIntensity,
   type TractCurve,
 } from '@/components/viewer/BrainCanvas';
-import type { FunctionalNetworksResponse, SchaeferParcelsResponse } from '@/lib/types';
+import type {
+  FunctionalNetworksResponse,
+  PauliNucleiResponse,
+  SchaeferParcelsResponse,
+} from '@/lib/types';
 import { NeuronCanvas } from '@/components/viewer/NeuronCanvas';
 import {
   fetchBrainMesh,
@@ -20,6 +24,7 @@ import {
   fetchHippocampalSample,
   fetchNeuron,
   fetchFunctionalNetworks,
+  fetchPauliNuclei,
   fetchReceptorMap,
   fetchReceptors,
   fetchRegionSample,
@@ -78,6 +83,8 @@ export default function Page() {
   const [networksVisible, setNetworksVisible] = useState(false);
   const [schaefer, setSchaefer] = useState<SchaeferParcelsResponse | null>(null);
   const [schaeferVisible, setSchaeferVisible] = useState(false);
+  const [pauli, setPauli] = useState<PauliNucleiResponse | null>(null);
+  const [pauliVisible, setPauliVisible] = useState(false);
 
   // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
@@ -91,8 +98,9 @@ export default function Page() {
       fetchSubcorticalMeshes(),
       fetchFunctionalNetworks().catch(() => null),
       fetchSchaeferParcels().catch(() => null),
+      fetchPauliNuclei().catch(() => null),
     ])
-      .then(([mesh, regs, funs, recs, trks, sub, nets, sch]) => {
+      .then(([mesh, regs, funs, recs, trks, sub, nets, sch, pau]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
@@ -102,6 +110,7 @@ export default function Page() {
         setSubcortical(sub);
         if (nets) setYeoNetworks(nets);
         if (sch) setSchaefer(sch);
+        if (pau) setPauli(pau);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -408,6 +417,7 @@ export default function Page() {
                     subcorticalMeshes={subcortical?.meshes ?? []}
                     networks={networksVisible && yeoNetworks ? yeoNetworks.networks : []}
                     schaeferParcels={schaeferVisible && schaefer ? schaefer.parcels : []}
+                    pauliNuclei={pauliVisible && pauli ? pauli.nuclei : []}
                     onRegionClick={handleRegionClick}
                     functionHighlights={
                       activeFunction
@@ -495,6 +505,44 @@ export default function Page() {
                         <div className="border-t border-white/10 pt-2 text-white/40">
                           {activeFunction.citation}
                         </div>
+                      </div>
+                    )}
+
+                    {pauli && (
+                      <div className="rounded border border-white/10 bg-black/85 p-3">
+                        <div className="mb-2 flex items-baseline justify-between">
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-white/40">
+                            deep nuclei (Pauli 2017)
+                          </div>
+                          <button
+                            onClick={() => setPauliVisible((v) => !v)}
+                            className={`rounded border px-2 py-1 font-mono text-[10px] ${
+                              pauliVisible
+                                ? 'border-[#ff2d2d] bg-[#ff2d2d]/10 text-white'
+                                : 'border-white/20 text-white/60 hover:bg-white/5'
+                            }`}
+                          >
+                            {pauliVisible ? 'hide' : 'show'} {pauli.nuclei.length}
+                          </button>
+                        </div>
+                        {pauliVisible && (
+                          <div className="space-y-1 font-mono text-[10px]">
+                            {pauli.nuclei.map((n) => (
+                              <div key={n.abbrev} className="flex items-baseline gap-2">
+                                <span className="inline-block h-2 w-3 rounded" style={{ background: n.color }} />
+                                <span className="text-white/80">{n.abbrev}</span>
+                                <span className="text-white/50">{n.full_name}</span>
+                              </div>
+                            ))}
+                            <p className="mt-2 border-t border-white/10 pt-2 text-white/40">
+                              VTA = reward dopamine. SNc = movement dopamine. Includes
+                              hypothalamus, habenula, mammillary, basal ganglia output.
+                            </p>
+                            <p className="text-white/40">
+                              Pauli et al. Sci Data. 2018. doi:10.1038/sdata.2018.63
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 
