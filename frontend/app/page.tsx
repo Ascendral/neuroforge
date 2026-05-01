@@ -40,6 +40,11 @@ export default function Page() {
   const [neuronError, setNeuronError] = useState<string | null>(null);
   const [brainError, setBrainError] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedPoint | null>(null);
+  const [clickedRegion, setClickedRegion] = useState<{
+    label: string;
+    point: [number, number, number];
+    nearestModule?: { module: string; ho_label: string; distance_mm: number } | null;
+  } | null>(null);
 
   // Fetch brain mesh + regions once
   useEffect(() => {
@@ -171,6 +176,43 @@ export default function Page() {
     setView('neuron');
   };
 
+  const handleRegionClick = (info: {
+    destrieuxId: number;
+    label: string;
+    point: [number, number, number];
+  }) => {
+    if (!regions) {
+      setClickedRegion({ label: info.label, point: info.point, nearestModule: null });
+      return;
+    }
+    // Find the nearest anchored module by Euclidean distance from the click
+    // point (MNI mm) to each module's region centroid (HO labels).
+    let best: { module: string; ho_label: string; distance_mm: number } | null = null;
+    for (const m of regions.module_mapping) {
+      if (!m.has_anatomical_anchor) continue;
+      for (const lbl of m.labels) {
+        const candidate =
+          regions.subcortical.find((r) => r.label === lbl) ??
+          regions.cortical.find((r) => r.label === lbl);
+        if (!candidate?.centroid_mni_mm) continue;
+        const c = candidate.centroid_mni_mm;
+        const d = Math.sqrt(
+          (c[0] - info.point[0]) ** 2 +
+            (c[1] - info.point[1]) ** 2 +
+            (c[2] - info.point[2]) ** 2,
+        );
+        if (!best || d < best.distance_mm) {
+          best = { module: m.module, ho_label: lbl, distance_mm: d };
+        }
+      }
+    }
+    setClickedRegion({
+      label: info.label,
+      point: info.point,
+      nearestModule: best,
+    });
+  };
+
   return (
     <NeuronSelectionCtx.Provider value={{ selectNeuron, selectedId: neuronId }}>
       <main className="flex h-screen w-screen flex-col bg-black text-white">
@@ -241,7 +283,65 @@ export default function Page() {
                     loading fsaverage5 cortical mesh…
                   </div>
                 )}
-                {brain && <BrainCanvas mesh={brain} markers={markers} swcMap={swcMap} />}
+                {brain && (
+                  <BrainCanvas
+                    mesh={brain}
+                    markers={markers}
+                    swcMap={swcMap}
+                    onRegionClick={handleRegionClick}
+                  />
+                )}
+                {brain && (
+                  <div className="pointer-events-none absolute bottom-4 left-4 space-y-1 font-mono text-[10px] leading-tight text-white/60">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#9bd2ff]" />
+                      <span>V1 (Hubel-Wiesel) — Intracalcarine Cortex</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#7fff9b]" />
+                      <span>Hippocampus pyramidals (Hebbian / LTP)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-accent" />
+                      <span>CA3 pyramidals (Hopfield attractor)</span>
+                    </div>
+                    <div className="mt-2 text-white/30">
+                      neuron scale ×20 (real cells ~0.3 mm; brain ~140 mm)
+                    </div>
+                  </div>
+                )}
+                {clickedRegion && (
+                  <div className="absolute right-4 top-4 max-w-[300px] rounded border border-white/10 bg-black/85 p-3 font-mono text-[10px] leading-tight">
+                    <div className="text-white/40">destrieux region</div>
+                    <div className="mb-2 break-words text-white">{clickedRegion.label}</div>
+                    <div className="text-white/40">click @ MNI mm</div>
+                    <div className="mb-2 text-white/80">
+                      ({clickedRegion.point[0].toFixed(1)},{' '}
+                      {clickedRegion.point[1].toFixed(1)},{' '}
+                      {clickedRegion.point[2].toFixed(1)})
+                    </div>
+                    {clickedRegion.nearestModule ? (
+                      <>
+                        <div className="text-white/40">nearest module anchor</div>
+                        <div className="text-accent">
+                          {clickedRegion.nearestModule.module} ·{' '}
+                          {clickedRegion.nearestModule.ho_label}
+                        </div>
+                        <div className="text-white/50">
+                          {clickedRegion.nearestModule.distance_mm.toFixed(1)} mm away
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-white/50">no anchored module nearby</div>
+                    )}
+                    <button
+                      onClick={() => setClickedRegion(null)}
+                      className="mt-2 text-white/40 underline-offset-2 hover:text-white hover:underline"
+                    >
+                      dismiss
+                    </button>
+                  </div>
+                )}
               </>
             )}
             {view === 'neuron' && (

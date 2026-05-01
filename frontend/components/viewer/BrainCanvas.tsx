@@ -21,11 +21,20 @@ import { NeuronGlyph } from './NeuronGlyph';
 interface HemisphereProps {
   vertices_flat: number[];
   faces_flat: number[];
+  destrieux_label_id: number[];
   color: string;
   opacity: number;
+  onRegionClick?: (info: { destrieuxId: number; point: [number, number, number] }) => void;
 }
 
-function HemisphereMesh({ vertices_flat, faces_flat, color, opacity }: HemisphereProps) {
+function HemisphereMesh({
+  vertices_flat,
+  faces_flat,
+  destrieux_label_id,
+  color,
+  opacity,
+  onRegionClick,
+}: HemisphereProps) {
   const geomRef = useRef<THREE.BufferGeometry>(null);
 
   const { positions, indices } = useMemo(() => {
@@ -41,7 +50,18 @@ function HemisphereMesh({ vertices_flat, faces_flat, color, opacity }: Hemispher
   }, [positions, indices]);
 
   return (
-    <mesh>
+    <mesh
+      onClick={(event) => {
+        if (!onRegionClick) return;
+        event.stopPropagation();
+        const faceIdx = event.faceIndex;
+        if (faceIdx === undefined || faceIdx === null) return;
+        const vIdx = indices[faceIdx * 3]; // first vertex of triangle
+        const destrieuxId = destrieux_label_id[vIdx] ?? 0;
+        const p = event.point;
+        onRegionClick({ destrieuxId, point: [p.x, p.y, p.z] });
+      }}
+    >
       <bufferGeometry ref={geomRef}>
         <bufferAttribute
           attach="attributes-position"
@@ -136,9 +156,20 @@ interface BrainCanvasProps {
   markers?: NeuronMarker[];
   swcMap?: Map<number, NeuronResponse>;
   glyphScale?: number; // microns × glyphScale → mm. 0.02 ≈ 20× exaggeration of real ~0.001.
+  onRegionClick?: (info: {
+    destrieuxId: number;
+    label: string;
+    point: [number, number, number];
+  }) => void;
 }
 
-export function BrainCanvas({ mesh, markers = [], swcMap, glyphScale = 0.02 }: BrainCanvasProps) {
+export function BrainCanvas({
+  mesh,
+  markers = [],
+  swcMap,
+  glyphScale = 0.02,
+  onRegionClick,
+}: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
     const v = [...mesh.left.vertices_flat, ...mesh.right.vertices_flat];
@@ -180,14 +211,36 @@ export function BrainCanvas({ mesh, markers = [], swcMap, glyphScale = 0.02 }: B
       <HemisphereMesh
         vertices_flat={mesh.left.vertices_flat}
         faces_flat={mesh.left.faces_flat}
+        destrieux_label_id={mesh.left.destrieux_label_id}
         color="#d8d8d8"
         opacity={0.12}
+        onRegionClick={
+          onRegionClick
+            ? ({ destrieuxId, point }) =>
+                onRegionClick({
+                  destrieuxId,
+                  label: mesh.destrieux_labels[destrieuxId] ?? `unknown (${destrieuxId})`,
+                  point,
+                })
+            : undefined
+        }
       />
       <HemisphereMesh
         vertices_flat={mesh.right.vertices_flat}
         faces_flat={mesh.right.faces_flat}
+        destrieux_label_id={mesh.right.destrieux_label_id}
         color="#bfbfbf"
         opacity={0.12}
+        onRegionClick={
+          onRegionClick
+            ? ({ destrieuxId, point }) =>
+                onRegionClick({
+                  destrieuxId,
+                  label: mesh.destrieux_labels[destrieuxId] ?? `unknown (${destrieuxId})`,
+                  point,
+                })
+            : undefined
+        }
       />
       {markers.length > 0 &&
         markers.map((m, i) => {
