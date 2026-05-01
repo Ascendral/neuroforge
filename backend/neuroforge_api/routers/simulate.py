@@ -11,6 +11,8 @@ from neuroforge_api.models.simulation import (
     HHResponse,
     HopfieldRequest,
     HopfieldResponse,
+    MCPGateResponse,
+    MCPXorSearchResponse,
     STDPRequest,
     STDPResponse,
     V1Request,
@@ -22,6 +24,11 @@ from neuroforge_api.simulators.hopfield import simulate_hopfield
 from neuroforge_api.simulators.hubel_wiesel import (
     gabor_filter,
     orientation_tuning_curve,
+)
+from neuroforge_api.simulators.mcp import (
+    GATES,
+    evaluate_gate,
+    search_xor_single_layer,
 )
 from neuroforge_api.simulators.stdp import (
     A_MINUS,
@@ -71,6 +78,17 @@ HOPFIELD_CITATION = (
     "1987;173(1):30-67. doi:10.1016/0003-4916(87)90092-3"
 )
 HOPFIELD_CRITICAL_ALPHA = 0.138
+
+MCP_CITATION = (
+    "McCulloch WS, Pitts W. A logical calculus of the ideas immanent in "
+    "nervous activity. Bull Math Biophys. 1943;5(4):115-133. "
+    "doi:10.1007/BF02478259. "
+    "Minsky M, Papert S. Perceptrons. MIT Press, 1969 (single-layer XOR "
+    "impossibility). "
+    "Rumelhart DE, Hinton GE, Williams RJ. Learning representations by "
+    "back-propagating errors. Nature. 1986;323(6088):533-536. "
+    "doi:10.1038/323533a0 (multi-layer escape)."
+)
 
 
 @router.post("/hh", response_model=HHResponse)
@@ -124,6 +142,44 @@ def run_stdp(request: STDPRequest) -> STDPResponse:
         a_plus=A_PLUS,
         a_minus=A_MINUS,
         citation=STDP_CITATION,
+    )
+
+
+@router.get("/mcp/{gate_or_search}", response_model=None)
+def run_mcp(gate_or_search: str):
+    """Evaluate a McCulloch-Pitts gate by name, or run the XOR-search proof."""
+    if gate_or_search.lower() == "xor-search":
+        proof = search_xor_single_layer()
+        return MCPXorSearchResponse(
+            target=list(proof.target),
+            weight_range=list(proof.weight_range),
+            threshold_range=list(proof.threshold_range),
+            step=proof.weight_step,
+            combinations_tried=proof.combinations_tried,
+            best_match_correct=proof.best_match_correct,
+            best_weights=list(proof.best_weights) if proof.best_weights is not None else None,
+            best_threshold=proof.best_threshold,
+            no_solution=proof.no_solution,
+            citation=MCP_CITATION,
+        )
+    name = gate_or_search.upper()
+    if name not in GATES:
+        raise HTTPException(
+            status_code=404,
+            detail=f"unknown gate '{gate_or_search}'; choices: {sorted(GATES)} or 'xor-search'",
+        )
+    result = evaluate_gate(name)
+    return MCPGateResponse(
+        name=result.name,
+        description=result.description,
+        n_inputs=result.n_inputs,
+        weights=list(result.weights),
+        threshold=result.threshold,
+        inputs_table=result.inputs_table,
+        expected=list(result.expected),
+        produced=list(result.produced),
+        passes=result.passes,
+        citation=MCP_CITATION,
     )
 
 

@@ -172,3 +172,29 @@ export interface HopfieldResponse {
   converged: boolean;
   citation: string;
 }
+
+export interface MCPGateResponse {
+  name: string;
+  description: string;
+  n_inputs: number;
+  weights: number[];
+  threshold: number;
+  inputs_table: number[][];
+  expected: number[];
+  produced: number[];
+  passes: boolean;
+  citation: string;
+}
+
+export interface MCPXorSearchResponse {
+  target: number[];
+  weight_range: number[];
+  threshold_range: number[];
+  step: number;
+  combinations_tried: number;
+  best_match_correct: number;
+  best_weights: number[] | null;
+  best_threshold: number | null;
+  no_solution: boolean;
+  citation: string;
+}

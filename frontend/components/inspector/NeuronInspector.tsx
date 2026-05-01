@@ -11,6 +11,7 @@ import { FiringPlot } from './FiringPlot';
 import { HebbianPanel } from './HebbianPanel';
 import { HopfieldPanel } from './HopfieldPanel';
 import { HubelWieselPanel } from './HubelWieselPanel';
+import { McCullochPittsPanel } from './McCullochPittsPanel';
 import { STDPPanel } from './STDPPanel';
 
 interface SelectedPoint {
@@ -166,6 +167,8 @@ export function NeuronInspector({ neuron, selected }: NeuronInspectorProps) {
           )}
         </div>
       </section>
+
+      <McCullochPittsPanel />
 
       <STDPPanel />
 

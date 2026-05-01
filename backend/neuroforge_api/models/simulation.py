@@ -121,3 +121,29 @@ class HopfieldResponse(BaseModel):
     final_overlap: float
     converged: bool
     citation: str
+
+
+class MCPGateResponse(BaseModel):
+    name: str
+    description: str
+    n_inputs: int
+    weights: list[float]
+    threshold: float
+    inputs_table: list[list[int]]
+    expected: list[int]
+    produced: list[int]
+    passes: bool
+    citation: str
+
+
+class MCPXorSearchResponse(BaseModel):
+    target: list[int]
+    weight_range: list[int]
+    threshold_range: list[int]
+    step: float
+    combinations_tried: int
+    best_match_correct: int
+    best_weights: list[float] | None
+    best_threshold: float | None
+    no_solution: bool
+    citation: str

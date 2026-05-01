@@ -5,6 +5,8 @@ import type {
   HHResponse,
   HopfieldRequest,
   HopfieldResponse,
+  MCPGateResponse,
+  MCPXorSearchResponse,
   NeuronResponse,
   NeuronSearchResponse,
   STDPRequest,
@@ -114,4 +116,22 @@ export async function fetchCA3Sample(size = 5): Promise<NeuronSearchResponse> {
     throw new Error(`fetchCA3Sample: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as NeuronSearchResponse;
+}
+
+export async function fetchMCPGate(name: string): Promise<MCPGateResponse> {
+  const response = await fetch(`${API_BASE}/api/simulate/mcp/${encodeURIComponent(name)}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchMCPGate(${name}): ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as MCPGateResponse;
+}
+
+export async function fetchXorImpossibility(): Promise<MCPXorSearchResponse> {
+  const response = await fetch(`${API_BASE}/api/simulate/mcp/xor-search`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchXorImpossibility: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as MCPXorSearchResponse;
 }
