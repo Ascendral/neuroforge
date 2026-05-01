@@ -4,6 +4,8 @@ import type {
   NeuronResponse,
   STDPRequest,
   STDPResponse,
+  V1Request,
+  V1Response,
 } from './types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8000';
@@ -41,4 +43,17 @@ export async function simulateSTDP(request: STDPRequest = {}): Promise<STDPRespo
     throw new Error(`simulateSTDP: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as STDPResponse;
+}
+
+export async function simulateV1(request: V1Request = {}): Promise<V1Response> {
+  const response = await fetch(`${API_BASE}/api/simulate/v1`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`simulateV1: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as V1Response;
 }

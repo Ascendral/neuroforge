@@ -53,3 +53,26 @@ class STDPResponse(BaseModel):
     a_plus: float
     a_minus: float
     citation: str
+
+
+class V1Request(BaseModel):
+    """Hubel-Wiesel V1 receptive-field tuning request."""
+
+    preferred_orientation_deg: float = Field(default=45.0, ge=0.0, lt=180.0)
+    spatial_frequency_cyc_per_px: float = Field(default=0.1, gt=0.0, le=0.5)
+    image_size: int = Field(default=65, ge=15, le=129)
+    n_orientations: int = Field(default=36, ge=8, le=180)
+    sigma_px: float | None = Field(default=None, gt=0.0)
+
+
+class V1Response(BaseModel):
+    preferred_orientation_deg: float
+    spatial_frequency_cyc_per_px: float
+    image_size: int
+    sigma_px: float
+    gabor_even: list[list[float]]
+    gabor_odd: list[list[float]]
+    tuning_orientations_deg: list[float]
+    tuning_simple: list[float]
+    tuning_complex: list[float]
+    citation: str

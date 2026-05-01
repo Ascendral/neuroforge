@@ -82,3 +82,24 @@ export interface STDPResponse {
   a_minus: number;
   citation: string;
 }
+
+export interface V1Request {
+  preferred_orientation_deg?: number;
+  spatial_frequency_cyc_per_px?: number;
+  image_size?: number;
+  n_orientations?: number;
+  sigma_px?: number;
+}
+
+export interface V1Response {
+  preferred_orientation_deg: number;
+  spatial_frequency_cyc_per_px: number;
+  image_size: number;
+  sigma_px: number;
+  gabor_even: number[][];
+  gabor_odd: number[][];
+  tuning_orientations_deg: number[];
+  tuning_simple: number[];
+  tuning_complex: number[];
+  citation: string;
+}
