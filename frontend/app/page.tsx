@@ -112,6 +112,15 @@ export default function Page() {
     let v1Cells: unknown;
     void v1Cells;
 
+    // Schematic MNI centroids for structures not in Harvard-Oxford.
+    // Approximate from Mai JK, Majtanik M, Paxinos G. Atlas of the Human
+    // Brain, 4th ed. Academic Press, 2015. Labeled "schematic" in legend.
+    const cerebellum: [number, number, number] = [0, -60, -30];
+    const olfactoryL: [number, number, number] = [-5, 30, -25];
+    const olfactoryR: [number, number, number] = [5, 30, -25];
+    const substantiaNigraL: [number, number, number] = [-10, -15, -10];
+    const substantiaNigraR: [number, number, number] = [10, -15, -10];
+
     Promise.all([
       fetchSafe(fetchV1NeuronSample(10)),
       fetchSafe(fetchHippocampalSample(10)),
@@ -121,8 +130,12 @@ export default function Page() {
       fetchSafe(fetchRegionSample('thalamus', { size: 10 })),
       fetchSafe(fetchRegionSample('amygdala', { size: 10 })),
       fetchSafe(fetchRegionSample('striatum', { size: 10 })),
+      fetchSafe(fetchRegionSample('cerebellum', { cell_type: 'Purkinje', size: 10 })),
+      fetchSafe(fetchRegionSample('dentate gyrus', { cell_type: 'granule', size: 10 })),
+      fetchSafe(fetchRegionSample('main olfactory bulb', { cell_type: 'mitral', size: 10 })),
+      fetchSafe(fetchRegionSample('substantia nigra', { cell_type: 'dopaminergic', size: 10 })),
     ])
-      .then(([v1, hippo, ca3, motor, pfc, thal, amyg, stri]) => {
+      .then(([v1, hippo, ca3, motor, pfc, thal, amyg, stri, purk, dg, olf, sn]) => {
         if (cancelled) return;
 
         const out: NeuronMarker[] = [];
@@ -143,6 +156,21 @@ export default function Page() {
           });
         };
 
+        // Schematic-anchor variant: uses hardcoded MNI centroids from Mai 2015
+        const pushSchematic = (
+          sample: { results: NeuronMarker['neuron'][] } | null,
+          leftCentroid: [number, number, number],
+          color: string,
+          module: string,
+          rightCentroid?: [number, number, number],
+        ) => {
+          if (!sample) return;
+          sample.results.forEach((n, i) => {
+            const c = rightCentroid && i % 2 === 1 ? rightCentroid : leftCentroid;
+            out.push({ neuron: n, centroid_mni_mm: c, module, color });
+          });
+        };
+
         push(v1 as { results: NeuronMarker['neuron'][] } | null, 'Intracalcarine Cortex', '#9bd2ff', 'hubel_wiesel');
         push(hippo as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#7fff9b', 'hebbian', 'Right Hippocampus');
         push(ca3 as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#ff2d2d', 'hopfield', 'Right Hippocampus');
@@ -151,6 +179,16 @@ export default function Page() {
         push(thal as { results: NeuronMarker['neuron'][] } | null, 'Left Thalamus', '#ff9b6b', 'thalamus', 'Right Thalamus');
         push(amyg as { results: NeuronMarker['neuron'][] } | null, 'Left Amygdala', '#ff6bd4', 'amygdala', 'Right Amygdala');
         push(stri as { results: NeuronMarker['neuron'][] } | null, 'Left Caudate', '#6bffd4', 'striatum', 'Right Caudate');
+
+        // Schematic placements (no Harvard-Oxford label exists for these).
+        pushSchematic(purk as { results: NeuronMarker['neuron'][] } | null, cerebellum, '#ff8c5e', 'cerebellum_purkinje');
+        // Dentate granule cells live within the hippocampus subfield;
+        // place at HO Hippocampus centroid (subfield-level resolution
+        // would need Iglesias 2015).
+        push(dg as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#b5e85b', 'dentate_granule', 'Right Hippocampus');
+        pushSchematic(olf as { results: NeuronMarker['neuron'][] } | null, olfactoryL, '#ff6bb5', 'olfactory_mitral', olfactoryR);
+        pushSchematic(sn as { results: NeuronMarker['neuron'][] } | null, substantiaNigraL, '#c45eff', 'substantia_nigra_dopa', substantiaNigraR);
+
         setMarkers(out);
       })
       .catch(() => {
@@ -413,8 +451,31 @@ export default function Page() {
                       <span className="inline-block h-2 w-3 rounded bg-[#6bffd4]" />
                       <span>Striatum (Caudate)</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#ff8c5e]" />
+                      <span>Cerebellum Purkinje cell</span>
+                      <span className="text-white/30">(schematic)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#b5e85b]" />
+                      <span>Dentate gyrus granule cell</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#ff6bb5]" />
+                      <span>Olfactory bulb mitral cell</span>
+                      <span className="text-white/30">(schematic)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#c45eff]" />
+                      <span>Substantia nigra dopaminergic</span>
+                      <span className="text-white/30">(schematic)</span>
+                    </div>
                     <div className="mt-2 text-white/30">
                       neuron scale ×20 (real cells ~0.3 mm; brain ~140 mm)
+                    </div>
+                    <div className="text-white/30">
+                      &quot;schematic&quot; = MNI centroid from Mai et al. 2015 stereotaxic
+                      atlas (structure not in Harvard-Oxford)
                     </div>
                     <div className="text-white/30">
                       firing animation: pulse propagates from soma at 250 µm/ms,
