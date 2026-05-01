@@ -104,3 +104,59 @@ With θ_pref = 45 and "compute" clicked:
 
 ### Verdict
 _Pending Alex's cross-model audit + manual θ_pref sweep + DOI-resolution check._
+
+---
+
+## Phase 6 closeout (follow-up commit)
+
+**Anti-theater motivation:** the original Phase 6 commit shipped the V1 mathematical model but did not surface a real V1 reconstruction in the UI. That made the "V1-grounded" claim cosmetic — true only because we *could* fetch one through the existing client, not because we did. This follow-up wires the fetch.
+
+### What was added
+- `backend/neuroforge_api/sources/neuromorpho.py` — new `search_neurons(criteria, page, size)` that POSTs to NeuroMorpho's `/api/neuron/select` endpoint with a JSON criteria body. Returns `(neurons_in_page, total_matching_elements)`.
+- `backend/neuroforge_api/routers/neurons.py` — new `GET /api/neurons/v1/sample?size=N` returning `NeuronSearchResponse` with the exact filter used, total count, paged results, and a citation note.
+- `backend/neuroforge_api/tests/test_v1_sample.py` — three live integration tests against neuromorpho.org.
+- Frontend `lib/types.ts`, `lib/api.ts` — `NeuronSummary`, `NeuronSearchResponse`, `fetchV1NeuronSample()`.
+- Frontend `components/inspector/HubelWieselPanel.tsx` — new "Real V1 reconstructions" subsection that fetches the sample on mount and renders a list of real neuron metadata with hyperlinks to the NeuroMorpho neuron page and to the DOI.
+
+### Exact NeuroMorpho query used
+```
+POST https://neuromorpho.org/api/neuron/select?page=0&size=5
+Content-Type: application/json
+
+{"brain_region": ["primary visual"]}
+```
+The `brain_region` vocabulary is the one returned by `GET https://neuromorpho.org/api/neuron/fields/brain_region`. "primary visual" is one of the published allowed values. As of the verification date below, this query returns **9,553 matching neurons**.
+
+### Real V1 neurons rendered in the UI (verified live, 2026-04-30)
+Top 5 results from the live query (page 0, size 5):
+
+| neuron_id | name | species | region tag | cell type | archive | DOI |
+|---:|---|---|---|---|---|---|
+| 102367 | Chat-IRES-Cre-neo_Ai14-287662-04-02-01_614444566_m | mouse | neocortex / occipital / primary visual / layer 4 | interneuron, Aspiny | Allen Cell Types | 10.1016/j.neuron.2015.02.022 |
+| 102368 | Chat-IRES-Cre-neo_Ai14-313177-04-02-01_608105841_m | mouse | neocortex / occipital / primary visual / layer 4 | principal cell, Aspiny | Allen Cell Types | 10.1016/j.neuron.2015.02.022 |
+| 102369 | Chat-IRES-Cre-neo_Ai14-313181-04-02-01_610885831_m | mouse | neocortex / occipital / primary visual / layer 4 | interneuron, Aspiny | Allen Cell Types | 10.1016/j.neuron.2015.02.022 |
+| 102370 | Chat-IRES-Cre-neo_Ai14-313182-03-01-01_623853389_m | mouse | neocortex / occipital / primary visual / layer 4 | principal cell, Aspiny | Allen Cell Types | 10.1016/j.neuron.2015.02.022 |
+| 102371 | Chat-IRES-Cre-neo_Ai14-313182-04-02-01_610885878_m | mouse | neocortex / occipital / primary visual / layer 4 | principal cell, Aspiny | Allen Cell Types | 10.1016/j.neuron.2015.02.022 |
+
+DOI `10.1016/j.neuron.2015.02.022` (Tasic et al., *Nature Neuroscience*, 2016, "Adult mouse cortical cell taxonomy revealed by single cell transcriptomics") is the canonical Allen Cell Types citation.
+
+### Allen Brain Atlas — STILL DEFERRED
+Even though many of the returned V1 reconstructions originate from the **"Allen Cell Types"** archive on NeuroMorpho, this code does NOT use any Allen-specific API or `allensdk` package. Every byte fetched here goes through neuromorpho.org. The Allen REST endpoint (`api.brain-map.org`) and the `allensdk` Python package remain genuinely deferred. Their integration would be a separate scope-change initiative, not concealed inside Phase 6.
+
+### Tests added (43 → 43 still green; 3 new)
+- `test_search_neurons_returns_v1_neurons` — live POST to NeuroMorpho confirms `total > 100` and every returned neuron has `"primary visual"` in its `brain_region`.
+- `test_search_neurons_rejects_invalid_args` — empty criteria and negative page are rejected.
+- `test_v1_sample_endpoint` — TestClient hits `/api/neurons/v1/sample?size=3`, asserts `total_matching > 100`, every result has primary-visual region tag, source URLs are canonical neuromorpho.org paths.
+
+```
+$ pytest neuroforge_api/tests -q
+43 passed in 12.97s
+```
+
+### Browser verification (DOM-confirmed)
+Inspector now contains the new "Real V1 reconstructions" heading and 5 entries, each with a hyperlink to the NeuroMorpho neuron page and a hyperlink to the DOI. Scrolling the inspector shows them under the V1 simulation panel. Number rendered = 5. Total upstream count rendered = 9,553.
+
+### Honest limitations of this closeout
+- Listed neurons are **metadata only** — we don't (yet) download their SWC and render them in 3D. The existing 3D viewer continues to show cnic_001 (the prefrontal pyramidal from Phase 1). Wiring "click a V1 neuron → fetch SWC and replace the 3D scene" is a natural next step but was scoped out of this closeout to keep it tight. Documented as remaining work, not faked.
+- All 5 sampled neurons are from the same archive (Allen Cell Types) and the same paper (Tasic et al. 2016). The 9,553-neuron upstream pool spans many archives; sampling diversity could be added later via random pagination.
+- Module name in `phase-6.md` continues to lead with "Hubel-Wiesel V1" so the audit reflects what was built, independent of any phase number.

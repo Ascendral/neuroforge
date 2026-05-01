@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import select
 
 from neuroforge_api.db import init_db, session_scope
@@ -13,10 +14,85 @@ from neuroforge_api.sources.neuromorpho import (
     NeuroMorphoNeuron,
     download_swc,
     get_neuron,
+    search_neurons,
     swc_url,
 )
 
+
+class NeuronSummary(BaseModel):
+    neuron_id: int
+    neuron_name: str
+    archive: str
+    species: str
+    scientific_name: str
+    brain_region: list[str]
+    cell_type: list[str]
+    reference_doi: list[str]
+    reference_pmid: list[str]
+    png_url: str | None
+    source_url: str
+    swc_url: str
+
+
+class NeuronSearchResponse(BaseModel):
+    region_query: list[str]
+    total_matching: int
+    page: int
+    size: int
+    results: list[NeuronSummary]
+    citation_note: str
+
 router = APIRouter(prefix="/api/neurons", tags=["neurons"])
+
+
+def _summary(meta: NeuroMorphoNeuron) -> NeuronSummary:
+    return NeuronSummary(
+        neuron_id=meta.neuron_id,
+        neuron_name=meta.neuron_name,
+        archive=meta.archive,
+        species=meta.species,
+        scientific_name=meta.scientific_name,
+        brain_region=list(meta.brain_region),
+        cell_type=list(meta.cell_type),
+        reference_doi=list(meta.reference_doi),
+        reference_pmid=list(meta.reference_pmid),
+        png_url=meta.png_url,
+        source_url=f"https://neuromorpho.org/neuron_info.jsp?neuron_id={meta.neuron_id}",
+        swc_url=swc_url(meta.neuron_name, meta.archive),
+    )
+
+
+@router.get("/v1/sample", response_model=NeuronSearchResponse)
+def sample_v1_neurons(size: int = 5) -> NeuronSearchResponse:
+    """Return a page of real V1 (primary visual cortex) reconstructions.
+
+    Uses NeuroMorpho.org's POST /api/neuron/select with brain_region filter
+    {"brain_region": ["primary visual"]}. The brain_region vocabulary is the
+    one returned by GET /api/neuron/fields/brain_region.
+    """
+    if size < 1 or size > 50:
+        raise HTTPException(status_code=422, detail="size must be in [1, 50]")
+    try:
+        results, total = search_neurons(
+            criteria={"brain_region": ["primary visual"]},
+            page=0,
+            size=size,
+        )
+    except NeuroMorphoError as exc:
+        raise HTTPException(status_code=502, detail=f"neuromorpho.org: {exc}") from exc
+
+    return NeuronSearchResponse(
+        region_query=["primary visual"],
+        total_matching=total,
+        page=0,
+        size=size,
+        results=[_summary(n) for n in results],
+        citation_note=(
+            "All metadata fetched live from NeuroMorpho.org. Each neuron's "
+            "reference_doi / reference_pmid resolve to the publication that "
+            "deposited the reconstruction."
+        ),
+    )
 
 
 def _build_response(meta: NeuroMorphoNeuron, swc_text: str) -> NeuronResponse:

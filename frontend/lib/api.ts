@@ -2,6 +2,7 @@ import type {
   HHRequest,
   HHResponse,
   NeuronResponse,
+  NeuronSearchResponse,
   STDPRequest,
   STDPResponse,
   V1Request,
@@ -56,4 +57,13 @@ export async function simulateV1(request: V1Request = {}): Promise<V1Response> {
     throw new Error(`simulateV1: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as V1Response;
+}
+
+export async function fetchV1NeuronSample(size = 5): Promise<NeuronSearchResponse> {
+  const response = await fetch(`${API_BASE}/api/neurons/v1/sample?size=${size}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchV1NeuronSample: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as NeuronSearchResponse;
 }

@@ -103,3 +103,27 @@ export interface V1Response {
   tuning_complex: number[];
   citation: string;
 }
+
+export interface NeuronSummary {
+  neuron_id: number;
+  neuron_name: string;
+  archive: string;
+  species: string;
+  scientific_name: string;
+  brain_region: string[];
+  cell_type: string[];
+  reference_doi: string[];
+  reference_pmid: string[];
+  png_url: string | null;
+  source_url: string;
+  swc_url: string;
+}
+
+export interface NeuronSearchResponse {
+  region_query: string[];
+  total_matching: number;
+  page: number;
+  size: number;
+  results: NeuronSummary[];
+  citation_note: string;
+}

@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { simulateV1 } from '@/lib/api';
-import type { V1Response } from '@/lib/types';
+import { fetchV1NeuronSample, simulateV1 } from '@/lib/api';
+import type { NeuronSearchResponse, V1Response } from '@/lib/types';
 
 // Anti-theater: the Gabor visualization is drawn from response.gabor_even.
 // The tuning curve is drawn from response.tuning_*. Nothing synthetic.
@@ -99,6 +99,22 @@ export function HubelWieselPanel() {
   const [response, setResponse] = useState<V1Response | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [v1Sample, setV1Sample] = useState<NeuronSearchResponse | null>(null);
+  const [v1Error, setV1Error] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchV1NeuronSample(5)
+      .then((sample) => {
+        if (!cancelled) setV1Sample(sample);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setV1Error(err instanceof Error ? err.message : String(err));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const onRun = async () => {
     setRunning(true);
@@ -220,6 +236,72 @@ export function HubelWieselPanel() {
           <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
             {response.citation}
           </p>
+        )}
+      </div>
+
+      <div className="space-y-2 border-t border-white/10 pt-3">
+        <div className="flex items-baseline justify-between">
+          <h3 className="text-xs uppercase tracking-widest text-white/40">
+            Real V1 reconstructions
+          </h3>
+          {v1Sample && (
+            <span className="font-mono text-[10px] text-white/30">
+              {v1Sample.total_matching.toLocaleString()} on neuromorpho.org
+            </span>
+          )}
+        </div>
+
+        {v1Error && <p className="text-xs text-accent">{v1Error}</p>}
+        {!v1Sample && !v1Error && (
+          <p className="font-mono text-[10px] text-white/40">
+            loading from neuromorpho.org…
+          </p>
+        )}
+
+        {v1Sample && (
+          <p className="font-mono text-[10px] leading-snug text-white/40">
+            query: brain_region = &quot;primary visual&quot;
+          </p>
+        )}
+
+        {v1Sample && (
+          <ul className="space-y-2 font-mono text-[10px]">
+            {v1Sample.results.map((n) => (
+              <li key={n.neuron_id} className="border-l border-white/10 pl-2">
+                <a
+                  href={n.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-white underline-offset-2 hover:underline"
+                >
+                  {n.neuron_name}
+                </a>{' '}
+                <span className="text-white/40">#{n.neuron_id}</span>
+                <div className="text-white/60">
+                  {n.species}
+                  {' · '}
+                  {n.brain_region.join(' / ')}
+                </div>
+                <div className="text-white/40">
+                  {n.cell_type.join(', ') || '—'}
+                  {' · '}
+                  {n.archive}
+                </div>
+                {n.reference_doi.length > 0 && (
+                  <div>
+                    <a
+                      href={`https://doi.org/${n.reference_doi[0]}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-white/70 underline-offset-2 hover:underline"
+                    >
+                      doi:{n.reference_doi[0]}
+                    </a>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </section>

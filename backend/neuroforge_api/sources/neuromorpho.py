@@ -102,6 +102,47 @@ def list_neurons(*, page: int = 0, size: int = 50) -> list[NeuroMorphoNeuron]:
     return [_parse_neuron_record(record) for record in embedded]
 
 
+def search_neurons(
+    *,
+    criteria: dict[str, list[str]],
+    page: int = 0,
+    size: int = 25,
+) -> tuple[list[NeuroMorphoNeuron], int]:
+    """Filtered search via POST /api/neuron/select.
+
+    Each criterion key is a queryable field name (see /api/neuron/fields) and
+    the value is a list of allowed values for that field (OR-combined within a
+    field; AND-combined across fields). The full list of allowed brain_region
+    values is at GET /api/neuron/fields/brain_region.
+
+    Returns: (neurons_in_page, total_matching_elements).
+    """
+    if page < 0 or size < 1 or size > 500:
+        raise ValueError("page must be >= 0 and 1 <= size <= 500")
+    if not criteria:
+        raise ValueError("criteria must be non-empty")
+
+    url = f"{API_BASE}/neuron/select?page={page}&size={size}"
+    try:
+        response = requests.post(
+            url,
+            json=criteria,
+            timeout=DEFAULT_TIMEOUT_S,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
+        )
+    except requests.RequestException as exc:
+        raise NeuroMorphoError(f"network error posting {url}: {exc}") from exc
+    if not response.ok:
+        raise NeuroMorphoError(
+            f"HTTP {response.status_code} posting {url}: {response.text[:200]}"
+        )
+
+    payload = response.json()
+    embedded = payload.get("_embedded", {}).get("neuronResources", [])
+    total = int(payload.get("page", {}).get("totalElements", 0))
+    return [_parse_neuron_record(record) for record in embedded], total
+
+
 def swc_url(neuron_name: str, archive: str) -> str:
     """Build the CNG-standardized SWC URL for a neuron.
 
