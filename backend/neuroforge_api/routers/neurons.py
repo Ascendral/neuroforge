@@ -98,6 +98,35 @@ def _summary(meta: NeuroMorphoNeuron) -> NeuronSummary:
     )
 
 
+@router.get("/sample", response_model=NeuronSearchResponse)
+def sample_by_region(
+    region: str,
+    cell_type: str | None = None,
+    size: int = 10,
+) -> NeuronSearchResponse:
+    """Generic per-region neuron sample. Cached for 1 hour.
+
+    region: NeuroMorpho brain_region term (e.g. 'primary motor', 'amygdala')
+    cell_type: optional cell_type filter (e.g. 'pyramidal')
+    """
+    if size < 1 or size > 50:
+        raise HTTPException(status_code=422, detail="size must be in [1, 50]")
+    criteria: dict[str, list[str]] = {"brain_region": [region]}
+    if cell_type:
+        criteria["cell_type"] = [cell_type]
+    cache_key = (f"{region}|{cell_type or ''}", size)
+    return _cached_search(
+        cache_key,
+        criteria=criteria,
+        size=size,
+        region_query=[region] + ([cell_type] if cell_type else []),
+        citation_note=(
+            f"NeuroMorpho.org filter: brain_region='{region}'"
+            + (f" AND cell_type='{cell_type}'" if cell_type else "")
+        ),
+    )
+
+
 @router.get("/ca3/sample", response_model=NeuronSearchResponse)
 def sample_ca3_pyramidals(size: int = 5) -> NeuronSearchResponse:
     """Real CA3 hippocampal pyramidal reconstructions.

@@ -120,6 +120,20 @@ export async function fetchCA3Sample(size = 5): Promise<NeuronSearchResponse> {
   return (await response.json()) as NeuronSearchResponse;
 }
 
+export async function fetchRegionSample(
+  region: string,
+  options: { cell_type?: string; size?: number } = {},
+): Promise<NeuronSearchResponse> {
+  const params = new URLSearchParams({ region, size: String(options.size ?? 10) });
+  if (options.cell_type) params.set('cell_type', options.cell_type);
+  const response = await fetch(`${API_BASE}/api/neurons/sample?${params}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchRegionSample(${region}): ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as NeuronSearchResponse;
+}
+
 export async function fetchMCPGate(name: string): Promise<MCPGateResponse> {
   const response = await fetch(`${API_BASE}/api/simulate/mcp/${encodeURIComponent(name)}`);
   if (!response.ok) {

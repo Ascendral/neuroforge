@@ -11,6 +11,7 @@ import {
   fetchCA3Sample,
   fetchHippocampalSample,
   fetchNeuron,
+  fetchRegionSample,
   fetchV1NeuronSample,
 } from '@/lib/api';
 import { NeuronSelectionCtx } from '@/lib/neuron-context';
@@ -81,42 +82,65 @@ export default function Page() {
       return null;
     };
 
+    // 8 anatomical populations to surface inside the brain shell. Each
+    // entry pairs a NeuroMorpho query with its Harvard-Oxford anchor label
+    // (left/right hemisphere split for bilateral structures).
+    const populations: Array<{
+      label: string;
+      module: string;
+      color: string;
+      bilateral: boolean;
+      leftLabel: string;
+      rightLabel?: string;
+      fetcher: () => Promise<{ results: typeof v1Cells extends infer T ? T : never } | null>;
+    }> = [];
+
+    const fetchSafe = (p: Promise<unknown>) =>
+      p.catch(() => null) as Promise<{
+        results: { neuron_id: number; neuron_name: string; archive: string; species: string; scientific_name: string; brain_region: string[]; cell_type: string[]; reference_doi: string[]; reference_pmid: string[]; png_url: string | null; source_url: string; swc_url: string }[];
+      } | null>;
+    let v1Cells: unknown;
+    void v1Cells;
+
     Promise.all([
-      fetchV1NeuronSample(5).catch(() => null),
-      fetchHippocampalSample(5).catch(() => null),
-      fetchCA3Sample(5).catch(() => null),
+      fetchSafe(fetchV1NeuronSample(10)),
+      fetchSafe(fetchHippocampalSample(10)),
+      fetchSafe(fetchCA3Sample(10)),
+      fetchSafe(fetchRegionSample('primary motor', { cell_type: 'pyramidal', size: 10 })),
+      fetchSafe(fetchRegionSample('prefrontal', { cell_type: 'pyramidal', size: 10 })),
+      fetchSafe(fetchRegionSample('thalamus', { size: 10 })),
+      fetchSafe(fetchRegionSample('amygdala', { size: 10 })),
+      fetchSafe(fetchRegionSample('striatum', { size: 10 })),
     ])
-      .then(([v1, hippo, ca3]) => {
+      .then(([v1, hippo, ca3, motor, pfc, thal, amyg, stri]) => {
         if (cancelled) return;
+
         const out: NeuronMarker[] = [];
-        const v1Centroid = lookupCentroid('Intracalcarine Cortex');
-        if (v1 && v1Centroid) {
-          v1.results.forEach((n) =>
-            out.push({ neuron: n, centroid_mni_mm: v1Centroid, module: 'hubel_wiesel', color: '#9bd2ff' }),
-          );
-        }
-        const hippoLeft = lookupCentroid('Left Hippocampus');
-        if (hippo && hippoLeft) {
-          hippo.results.forEach((n, i) =>
-            out.push({
-              neuron: n,
-              centroid_mni_mm: i % 2 === 0 ? hippoLeft : (lookupCentroid('Right Hippocampus') ?? hippoLeft),
-              module: 'hebbian',
-              color: '#7fff9b',
-            }),
-          );
-        }
-        const ca3Left = lookupCentroid('Left Hippocampus');
-        if (ca3 && ca3Left) {
-          ca3.results.forEach((n, i) =>
-            out.push({
-              neuron: n,
-              centroid_mni_mm: i % 2 === 0 ? ca3Left : (lookupCentroid('Right Hippocampus') ?? ca3Left),
-              module: 'hopfield',
-              color: '#ff2d2d',
-            }),
-          );
-        }
+        const push = (
+          sample: { results: NeuronMarker['neuron'][] } | null,
+          leftLabel: string,
+          color: string,
+          module: string,
+          rightLabel?: string,
+        ) => {
+          if (!sample) return;
+          const left = lookupCentroid(leftLabel);
+          const right = rightLabel ? lookupCentroid(rightLabel) : null;
+          sample.results.forEach((n, i) => {
+            const c = right && i % 2 === 1 ? right : left;
+            if (!c) return;
+            out.push({ neuron: n, centroid_mni_mm: c, module, color });
+          });
+        };
+
+        push(v1 as { results: NeuronMarker['neuron'][] } | null, 'Intracalcarine Cortex', '#9bd2ff', 'hubel_wiesel');
+        push(hippo as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#7fff9b', 'hebbian', 'Right Hippocampus');
+        push(ca3 as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#ff2d2d', 'hopfield', 'Right Hippocampus');
+        push(motor as { results: NeuronMarker['neuron'][] } | null, 'Precentral Gyrus', '#ffd86b', 'motor_cortex');
+        push(pfc as { results: NeuronMarker['neuron'][] } | null, 'Frontal Pole', '#d99bff', 'prefrontal');
+        push(thal as { results: NeuronMarker['neuron'][] } | null, 'Left Thalamus', '#ff9b6b', 'thalamus', 'Right Thalamus');
+        push(amyg as { results: NeuronMarker['neuron'][] } | null, 'Left Amygdala', '#ff6bd4', 'amygdala', 'Right Amygdala');
+        push(stri as { results: NeuronMarker['neuron'][] } | null, 'Left Caudate', '#6bffd4', 'striatum', 'Right Caudate');
         setMarkers(out);
       })
       .catch(() => {
@@ -295,18 +319,41 @@ export default function Page() {
                   <div className="pointer-events-none absolute bottom-4 left-4 space-y-1 font-mono text-[10px] leading-tight text-white/60">
                     <div className="flex items-center gap-2">
                       <span className="inline-block h-2 w-3 rounded bg-[#9bd2ff]" />
-                      <span>V1 (Hubel-Wiesel) — Intracalcarine Cortex</span>
+                      <span>V1 cortical pyramidal (Hubel-Wiesel)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="inline-block h-2 w-3 rounded bg-[#7fff9b]" />
-                      <span>Hippocampus pyramidals (Hebbian / LTP)</span>
+                      <span>Hippocampus pyramidal (Hebbian / LTP)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="inline-block h-2 w-3 rounded bg-accent" />
-                      <span>CA3 pyramidals (Hopfield attractor)</span>
+                      <span>CA3 pyramidal (Hopfield)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#ffd86b]" />
+                      <span>Motor cortex pyramidal (Precentral)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#d99bff]" />
+                      <span>Prefrontal pyramidal (Frontal Pole)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#ff9b6b]" />
+                      <span>Thalamic relay neuron</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#ff6bd4]" />
+                      <span>Amygdala</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block h-2 w-3 rounded bg-[#6bffd4]" />
+                      <span>Striatum (Caudate)</span>
                     </div>
                     <div className="mt-2 text-white/30">
                       neuron scale ×20 (real cells ~0.3 mm; brain ~140 mm)
+                    </div>
+                    <div className="text-white/30">
+                      every neuron is a real reconstruction from neuromorpho.org
                     </div>
                   </div>
                 )}
