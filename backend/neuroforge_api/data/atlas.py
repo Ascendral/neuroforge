@@ -225,6 +225,161 @@ COGNITIVE_FUNCTIONS: list[dict] = [
             "doi:10.1146/annurev.neuro.24.1.167"
         ),
     },
+    {
+        "name": "face recognition",
+        "description": "The Fusiform Face Area (FFA) responds preferentially to faces — discovered by Kanwisher et al.",
+        "atlas_labels": [
+            "Temporal Fusiform Cortex, posterior division",
+            "Occipital Fusiform Gyrus",
+        ],
+        "citation": (
+            "Kanwisher N, McDermott J, Chun MM. The fusiform face area: a module "
+            "in human extrastriate cortex specialized for face perception. "
+            "J Neurosci. 1997;17(11):4302-11. "
+            "doi:10.1523/JNEUROSCI.17-11-04302.1997"
+        ),
+    },
+    {
+        "name": "reading / visual word form",
+        "description": "The Visual Word Form Area (left occipitotemporal cortex) recognizes written words across font and case.",
+        "atlas_labels": [
+            "Temporal Occipital Fusiform Cortex",
+        ],
+        "citation": (
+            "Cohen L, Lehéricy S, Chochon F, Lemer C, Rivaud S, Dehaene S. "
+            "Language-specific tuning of visual cortex? Functional properties "
+            "of the Visual Word Form Area. Brain. 2002;125(5):1054-69. "
+            "doi:10.1093/brain/awf094"
+        ),
+    },
+    {
+        "name": "place / scene recognition",
+        "description": "The Parahippocampal Place Area (PPA) responds to environmental scenes and spatial layouts.",
+        "atlas_labels": [
+            "Parahippocampal Gyrus, posterior division",
+            "Lingual Gyrus",
+        ],
+        "citation": (
+            "Epstein R, Kanwisher N. A cortical representation of the local "
+            "visual environment. Nature. 1998;392(6676):598-601. "
+            "doi:10.1038/33402"
+        ),
+    },
+    {
+        "name": "number processing",
+        "description": "The Intraparietal Sulcus represents quantity and approximate number magnitude.",
+        "atlas_labels": [
+            "Superior Parietal Lobule",
+        ],
+        "citation": (
+            "Dehaene S, Piazza M, Pinel P, Cohen L. Three parietal circuits for "
+            "number processing. Cognit Neuropsychol. 2003;20(3-6):487-506. "
+            "doi:10.1080/02643290244000239"
+        ),
+    },
+    {
+        "name": "auditory perception",
+        "description": "Heschl's Gyrus is the primary auditory cortex — first cortical stage of hearing.",
+        "atlas_labels": [
+            "Heschl's Gyrus (includes H1 and H2)",
+        ],
+        "citation": (
+            "Hackett TA. Anatomical organization of the auditory cortex. "
+            "J Am Acad Audiol. 2008;19(10):774-89. "
+            "doi:10.3766/jaaa.19.10.5"
+        ),
+    },
+    {
+        "name": "empathy / pain affect",
+        "description": "Watching another person in pain activates the same anterior insula and ACC as feeling pain yourself.",
+        "atlas_labels": [
+            "Insular Cortex",
+            "Cingulate Gyrus, anterior division",
+        ],
+        "citation": (
+            "Singer T, Seymour B, O'Doherty J, Kaube H, Dolan RJ, Frith CD. "
+            "Empathy for pain involves the affective but not sensory components "
+            "of pain. Science. 2004;303(5661):1157-62. "
+            "doi:10.1126/science.1093535"
+        ),
+    },
+    {
+        "name": "theory of mind / social cognition",
+        "description": "Reasoning about others' mental states activates the temporoparietal junction and medial prefrontal cortex.",
+        "atlas_labels": [
+            "Frontal Pole",
+            "Superior Temporal Gyrus, posterior division",
+            "Angular Gyrus",
+        ],
+        "citation": (
+            "Saxe R, Kanwisher N. People thinking about thinking people: the "
+            "role of the temporo-parietal junction in 'theory of mind'. "
+            "NeuroImage. 2003;19(4):1835-42. doi:10.1016/S1053-8119(03)00230-1"
+        ),
+    },
+    {
+        "name": "subjective value / decision making",
+        "description": "Ventromedial prefrontal cortex (vmPFC) computes subjective value during choice.",
+        "atlas_labels": [
+            "Frontal Medial Cortex",
+            "Subcallosal Cortex",
+        ],
+        "citation": (
+            "Kable JW, Glimcher PW. The neural correlates of subjective value "
+            "during intertemporal choice. Nat Neurosci. 2007;10(12):1625-33. "
+            "doi:10.1038/nn2007"
+        ),
+    },
+    {
+        "name": "autobiographical memory",
+        "description": "Recalling personal past events recruits a network including mPFC, posterior cingulate, and lateral temporal cortex.",
+        "atlas_labels": [
+            "Frontal Medial Cortex",
+            "Cingulate Gyrus, posterior division",
+            "Middle Temporal Gyrus, posterior division",
+        ],
+        "citation": (
+            "Svoboda E, McKinnon MC, Levine B. The functional neuroanatomy of "
+            "autobiographical memory: a meta-analysis. Neuropsychologia. "
+            "2006;44(12):2189-2208. doi:10.1016/j.neuropsychologia.2006.05.023"
+        ),
+    },
+    {
+        "name": "language comprehension (Wernicke)",
+        "description": "Speech comprehension classically localized to left posterior superior temporal gyrus.",
+        "atlas_labels": [
+            "Superior Temporal Gyrus, posterior division",
+        ],
+        "citation": (
+            "Wernicke C. Der aphasische Symptomencomplex. Breslau: M. Cohn "
+            "& Weigert; 1874. (foundational classic; no DOI)"
+        ),
+    },
+    {
+        "name": "mirror system / action observation",
+        "description": "Watching another's action engages premotor + parietal regions overlapping with one's own action production.",
+        "atlas_labels": [
+            "Precentral Gyrus",
+            "Supramarginal Gyrus, anterior division",
+        ],
+        "citation": (
+            "Rizzolatti G, Craighero L. The mirror-neuron system. Annu Rev "
+            "Neurosci. 2004;27:169-92. "
+            "doi:10.1146/annurev.neuro.27.070203.144230"
+        ),
+    },
+    {
+        "name": "time perception",
+        "description": "Subjective time intervals are tracked by the anterior insula and ACC, with cerebellum + basal ganglia for sub-second timing.",
+        "atlas_labels": [
+            "Insular Cortex",
+            "Cingulate Gyrus, anterior division",
+        ],
+        "citation": (
+            "Wittmann M. The inner experience of time. Philos Trans R Soc Lond "
+            "B Biol Sci. 2009;364(1525):1955-67. doi:10.1098/rstb.2009.0029"
+        ),
+    },
 ]
 
 
