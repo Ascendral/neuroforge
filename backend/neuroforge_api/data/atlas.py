@@ -380,6 +380,147 @@ COGNITIVE_FUNCTIONS: list[dict] = [
             "B Biol Sci. 2009;364(1525):1955-67. doi:10.1098/rstb.2009.0029"
         ),
     },
+    {
+        "name": "taste perception",
+        "description": "Primary gustatory cortex sits in the anterior insula + frontal operculum. Distinguishes sweet/sour/salty/bitter/umami.",
+        "atlas_labels": [
+            "Insular Cortex",
+            "Frontal Opercular Cortex",
+        ],
+        "citation": (
+            "Small DM. Taste representation in the human insula. Brain Struct "
+            "Funct. 2010;214(5-6):551-61. doi:10.1007/s00429-010-0266-9"
+        ),
+    },
+    {
+        "name": "olfactory perception",
+        "description": "Smell bypasses thalamus and projects directly to piriform cortex (anterior temporal) and orbitofrontal cortex.",
+        "atlas_labels": [
+            "Frontal Orbital Cortex",
+            "Parahippocampal Gyrus, anterior division",
+        ],
+        "citation": (
+            "Sobel N et al. Sniffing and smelling: separate subsystems in the "
+            "human olfactory cortex. Nature. 1998;392(6673):282-6. "
+            "doi:10.1038/32654"
+        ),
+    },
+    {
+        "name": "disgust",
+        "description": "The insula — particularly anterior insula — produces both physical disgust (rotten food) and moral disgust (unfair behavior).",
+        "atlas_labels": [
+            "Insular Cortex",
+        ],
+        "citation": (
+            "Wicker B et al. Both of us disgusted in My insula: the common "
+            "neural basis of seeing and feeling disgust. Neuron. "
+            "2003;40(3):655-64. doi:10.1016/S0896-6273(03)00679-2"
+        ),
+    },
+    {
+        "name": "proprioception / body position",
+        "description": "Postcentral gyrus (primary somatosensory cortex) maps both touch and joint/limb position from the body.",
+        "atlas_labels": [
+            "Postcentral Gyrus",
+        ],
+        "citation": (
+            "Dijkerman HC, de Haan EH. Somatosensory processes subserving "
+            "perception and action. Behav Brain Sci. 2007;30(2):189-201. "
+            "doi:10.1017/S0140525X07001392"
+        ),
+    },
+    {
+        "name": "vestibular / balance",
+        "description": "The parietal operculum + posterior insula process head motion and gravity from the inner ear.",
+        "atlas_labels": [
+            "Parietal Opercular Cortex",
+            "Insular Cortex",
+        ],
+        "citation": (
+            "Lopez C, Blanke O, Mast FW. The human vestibular cortex revealed "
+            "by coordinate-based activation likelihood estimation meta-analysis. "
+            "Neuroscience. 2012;212:159-79. doi:10.1016/j.neuroscience.2012.03.028"
+        ),
+    },
+    {
+        "name": "pleasure / hedonic experience",
+        "description": "Hedonic hot-spots in the orbitofrontal cortex code 'liking'; the nucleus accumbens shell codes 'wanting' (motivation).",
+        "atlas_labels": [
+            "Frontal Orbital Cortex",
+            "Left Accumbens",
+            "Right Accumbens",
+        ],
+        "citation": (
+            "Berridge KC, Kringelbach ML. Affective neuroscience of pleasure: "
+            "reward in humans and animals. Psychopharmacology. 2008;199(3):457-80. "
+            "doi:10.1007/s00213-008-1099-6"
+        ),
+    },
+    {
+        "name": "inhibitory control / impulse suppression",
+        "description": "Right inferior frontal gyrus signals 'STOP'; activating during ignore/no-go responses.",
+        "atlas_labels": [
+            "Inferior Frontal Gyrus, pars opercularis",
+            "Inferior Frontal Gyrus, pars triangularis",
+        ],
+        "citation": (
+            "Aron AR, Robbins TW, Poldrack RA. Inhibition and the right inferior "
+            "frontal cortex: one decade on. Trends Cogn Sci. 2014;18(4):177-85. "
+            "doi:10.1016/j.tics.2013.12.003"
+        ),
+    },
+    {
+        "name": "mathematical reasoning",
+        "description": "Math activates a parietal-frontal network — bilateral IPS for quantity, dlPFC for working memory of intermediate steps.",
+        "atlas_labels": [
+            "Superior Parietal Lobule",
+            "Middle Frontal Gyrus",
+        ],
+        "citation": (
+            "Amalric M, Dehaene S. Origins of the brain networks for advanced "
+            "mathematics in expert mathematicians. Proc Natl Acad Sci USA. "
+            "2016;113(18):4909-17. doi:10.1073/pnas.1603205113"
+        ),
+    },
+    {
+        "name": "novelty detection / curiosity",
+        "description": "The hippocampus + VTA loop signals novelty — boosts dopamine for new experiences, drives exploration and memory formation.",
+        "atlas_labels": [
+            "Left Hippocampus",
+            "Right Hippocampus",
+        ],
+        "citation": (
+            "Bunzeck N, Düzel E. Absolute coding of stimulus novelty in the "
+            "human substantia nigra/VTA. Neuron. 2006;51(3):369-79. "
+            "doi:10.1016/j.neuron.2006.06.021"
+        ),
+    },
+    {
+        "name": "aggression",
+        "description": "A specific hypothalamic-amygdala-PAG circuit drives defensive vs. predatory aggression. Same pathway controlled in animals and humans.",
+        "atlas_labels": [
+            "Left Amygdala",
+            "Right Amygdala",
+        ],
+        "citation": (
+            "Anderson DJ, Adolphs R. A framework for studying emotions across "
+            "species. Cell. 2014;157(1):187-200. "
+            "doi:10.1016/j.cell.2014.03.003"
+        ),
+    },
+    {
+        "name": "memory consolidation (sleep)",
+        "description": "During NREM sleep, hippocampal sharp-wave ripples replay daytime experiences to neocortex — the canonical theory of how short-term memories become long-term.",
+        "atlas_labels": [
+            "Left Hippocampus",
+            "Right Hippocampus",
+            "Brain-Stem",
+        ],
+        "citation": (
+            "Diekelmann S, Born J. The memory function of sleep. Nat Rev "
+            "Neurosci. 2010;11(2):114-26. doi:10.1038/nrn2762"
+        ),
+    },
 ]
 
 
