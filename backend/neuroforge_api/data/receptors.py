@@ -48,6 +48,8 @@ class ReceptorEntry:
     n_subjects: int
     url: str
     citation: str
+    role: str          # plain-language: what does this receptor DO?
+    pharmacology: str  # plain-language: which drugs target it?
 
 
 RECEPTORS: tuple[ReceptorEntry, ...] = (
@@ -55,6 +57,8 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         key="D1",
         name="Dopamine D1 receptor",
         system="dopamine",
+        role="Excitatory dopamine receptor — when dopamine binds, the target neuron's activity goes UP. Dominates the 'direct pathway' of basal ganglia, which promotes movement and reward-driven action.",
+        pharmacology="Targeted by some experimental cognition-enhancers; reduced binding seen in Parkinson's disease and schizophrenia.",
         tracer="[11C]SCH23390",
         n_subjects=13,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/D1_SCH23390_hc13_kaller.nii",
@@ -64,6 +68,8 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         key="D2",
         name="Dopamine D2 receptor",
         system="dopamine",
+        role="Inhibitory dopamine receptor — when dopamine binds, the target neuron's activity goes DOWN. Dominates the 'indirect pathway' of basal ganglia (movement suppression). Densest in striatum.",
+        pharmacology="MAIN TARGET of all antipsychotics (haloperidol, olanzapine, risperidone). Also blocked by metoclopramide. Stimulated by L-DOPA's metabolites.",
         tracer="[11C]raclopride",
         n_subjects=7,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/D2_raclopride_hc7_alakurtti.nii",
@@ -73,6 +79,8 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         key="DAT",
         name="Dopamine transporter",
         system="dopamine",
+        role="Pumps dopamine BACK into the neuron after release, ending the signal. Highest density in striatum (where dopamine release is dense).",
+        pharmacology="Blocked by COCAINE and AMPHETAMINE — they prevent dopamine reuptake, raising synaptic dopamine. Also blocked by methylphenidate (Ritalin). Reduced binding is the gold-standard imaging marker for Parkinson's disease.",
         tracer="[123I]FP-CIT (SPECT)",
         n_subjects=174,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/DAT_fpcit_hc174_dukart_spect.nii",
@@ -82,6 +90,8 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         key="5HT1a",
         name="Serotonin 5-HT1A receptor",
         system="serotonin",
+        role="Inhibitory serotonin receptor. On serotonin neurons themselves it acts as an autoreceptor — silencing the neuron when serotonin levels rise (negative feedback). Densest in raphe nuclei + hippocampus.",
+        pharmacology="Targeted by buspirone (Buspar, anxiety) and vilazodone. Partial agonism here is one mechanism of newer antidepressants.",
         tracer="[11C]WAY-100635",
         n_subjects=36,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/5HT1a_way_hc36_savli.nii",
@@ -91,6 +101,8 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         key="5HT2a",
         name="Serotonin 5-HT2A receptor",
         system="serotonin",
+        role="Excitatory serotonin receptor in cortex (especially layer 5 pyramidals). Strongly modulates perception, mood, and cognition.",
+        pharmacology="ACTIVATED BY classic psychedelics: LSD, psilocybin (mushrooms), DMT, mescaline — their hallucinogenic effect is via this receptor. BLOCKED by atypical antipsychotics (clozapine, olanzapine, quetiapine) — this is part of why they cause less motor side-effect than D2-only blockers.",
         tracer="[11C]MDL-100907",
         n_subjects=19,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/5HT2a_alt_hc19_savli.nii",
@@ -100,6 +112,8 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         key="5HTT",
         name="Serotonin transporter",
         system="serotonin",
+        role="Pumps serotonin back into the neuron after release. Densest in raphe nuclei + thalamus + striatum. Sets baseline serotonin tone in cortex.",
+        pharmacology="THE TARGET of SSRIs: fluoxetine (Prozac), sertraline (Zoloft), citalopram (Celexa), escitalopram (Lexapro), paroxetine (Paxil). Also blocked by MDMA (releases serotonin in addition to blocking reuptake).",
         tracer="[11C]DASB",
         n_subjects=30,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/5HTT_dasb_hc30_savli.nii",
@@ -109,6 +123,8 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         key="GABAa",
         name="GABA-A receptor (benzodiazepine site)",
         system="GABA",
+        role="The MAIN INHIBITORY receptor in the brain. When GABA binds, chloride flows in and the neuron's activity drops. The brain's brake pedal — without it, runaway excitation = seizures.",
+        pharmacology="Enhanced by BENZODIAZEPINES (diazepam, alprazolam, lorazepam) — they don't activate it directly but boost GABA's effect (anxiolytic, sedative, anticonvulsant). Also enhanced by ALCOHOL, barbiturates, propofol, zolpidem (Ambien). General anesthetics work mostly here.",
         tracer="[11C]flumazenil",
         n_subjects=6,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/GABAa_flumazenil_hc6_dukart.nii",
@@ -118,6 +134,8 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         key="MU",
         name="Mu-opioid receptor",
         system="opioid",
+        role="Inhibitory receptor that produces analgesia, euphoria, and respiratory depression when activated. The brain's natural endorphins and enkephalins act here. Densest in striatum, thalamus, brainstem.",
+        pharmacology="THE TARGET of MORPHINE, heroin, fentanyl, oxycodone, methadone, codeine. Activation = pain relief + euphoria + addiction risk + respiratory depression (cause of overdose deaths). Blocked by naloxone (Narcan, opioid-overdose reversal) and naltrexone (addiction treatment).",
         tracer="[11C]carfentanil",
         n_subjects=204,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/MU_carfentanil_hc204_kantonen.nii",

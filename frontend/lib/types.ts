@@ -330,6 +330,8 @@ export interface ReceptorEntry {
   key: string;
   name: string;
   system: string;
+  role: string;
+  pharmacology: string;
   tracer: string;
   n_subjects: number;
   citation: string;

@@ -105,6 +105,8 @@ class ReceptorEntry(BaseModel):
     key: str
     name: str
     system: str
+    role: str
+    pharmacology: str
     tracer: str
     n_subjects: int
     citation: str
@@ -359,6 +361,8 @@ def _receptor_to_pydantic(r: receptors_module.ReceptorEntry) -> ReceptorEntry:
         key=r.key,
         name=r.name,
         system=r.system,
+        role=r.role,
+        pharmacology=r.pharmacology,
         tracer=r.tracer,
         n_subjects=r.n_subjects,
         citation=r.citation,
