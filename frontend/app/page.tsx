@@ -690,6 +690,55 @@ export default function Page() {
                       </CollapsibleSection>
                     )}
 
+                    <CollapsibleSection
+                      title="neuron color key"
+                      subtitle="120 cells"
+                    >
+                      <p className="font-mono text-[10px] leading-snug text-white/50">
+                        Each color = one anatomical population. Every cell is a real reconstruction
+                        from neuromorpho.org rendered at its region&apos;s MNI centroid.
+                      </p>
+                      <div className="space-y-1 font-mono text-[10px]">
+                        {[
+                          ['#9bd2ff', 'V1 cortical pyramidal', 'Hubel-Wiesel'],
+                          ['#7fff9b', 'Hippocampus pyramidal', 'Hebbian / LTP'],
+                          ['#ff2d2d', 'CA3 pyramidal', 'Hopfield'],
+                          ['#ffd86b', 'Motor cortex pyramidal', 'Precentral'],
+                          ['#d99bff', 'Prefrontal pyramidal', 'Frontal Pole'],
+                          ['#ff9b6b', 'Thalamic relay neuron', ''],
+                          ['#ff6bd4', 'Amygdala', ''],
+                          ['#6bffd4', 'Striatum', 'Caudate'],
+                          ['#ff8c5e', 'Cerebellum Purkinje cell', 'schematic'],
+                          ['#b5e85b', 'Dentate gyrus granule cell', ''],
+                          ['#ff6bb5', 'Olfactory bulb mitral cell', 'schematic'],
+                          ['#c45eff', 'Substantia nigra dopaminergic', 'schematic'],
+                        ].map(([color, name, note]) => (
+                          <div key={name} className="flex items-baseline gap-2">
+                            <span
+                              className="mt-1 inline-block h-2 w-3 shrink-0 rounded"
+                              style={{ background: color }}
+                            />
+                            <span className="text-white/85">{name}</span>
+                            {note && <span className="text-white/30">({note})</span>}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="space-y-0.5 border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                        <p>
+                          neuron scale: cortical ×12, subcortical ×6 (small regions like hippocampus
+                          would otherwise contain cells exceeding their real bounds)
+                        </p>
+                        <p>
+                          &quot;schematic&quot; = MNI centroid from Mai et al. 2015 stereotaxic atlas
+                          (structure not in Harvard-Oxford)
+                        </p>
+                        <p>
+                          firing animation: pulse propagates from soma at 250 µm/ms, 600 ms ISI
+                          (real APs ~500 µm/ms, ~15 ms ISI; scaled for sight)
+                        </p>
+                      </div>
+                    </CollapsibleSection>
+
                     {receptors && (
                       <CollapsibleSection
                         title="neurotransmitter receptors"
@@ -815,77 +864,6 @@ export default function Page() {
                         )}
                       </CollapsibleSection>
                     )}
-                  </div>
-                )}
-                {brain && (
-                  <div className="pointer-events-none absolute bottom-4 left-4 space-y-1 font-mono text-[10px] leading-tight text-white/60">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#9bd2ff]" />
-                      <span>V1 cortical pyramidal (Hubel-Wiesel)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#7fff9b]" />
-                      <span>Hippocampus pyramidal (Hebbian / LTP)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-accent" />
-                      <span>CA3 pyramidal (Hopfield)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#ffd86b]" />
-                      <span>Motor cortex pyramidal (Precentral)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#d99bff]" />
-                      <span>Prefrontal pyramidal (Frontal Pole)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#ff9b6b]" />
-                      <span>Thalamic relay neuron</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#ff6bd4]" />
-                      <span>Amygdala</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#6bffd4]" />
-                      <span>Striatum (Caudate)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#ff8c5e]" />
-                      <span>Cerebellum Purkinje cell</span>
-                      <span className="text-white/30">(schematic)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#b5e85b]" />
-                      <span>Dentate gyrus granule cell</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#ff6bb5]" />
-                      <span>Olfactory bulb mitral cell</span>
-                      <span className="text-white/30">(schematic)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-3 rounded bg-[#c45eff]" />
-                      <span>Substantia nigra dopaminergic</span>
-                      <span className="text-white/30">(schematic)</span>
-                    </div>
-                    <div className="mt-2 text-white/30">
-                      neuron scale: cortical ×12, subcortical ×6 (small regions
-                      like hippocampus would otherwise contain cells exceeding
-                      their real bounds)
-                    </div>
-                    <div className="text-white/30">
-                      &quot;schematic&quot; = MNI centroid from Mai et al. 2015 stereotaxic
-                      atlas (structure not in Harvard-Oxford)
-                    </div>
-                    <div className="text-white/30">
-                      firing animation: pulse propagates from soma at 250 µm/ms,
-                      600 ms ISI (real APs ~500 µm/ms, ~15 ms ISI; scaled for sight)
-                    </div>
-                    <div className="text-white/30">
-                      every neuron is a real reconstruction from neuromorpho.org
-                    </div>
                   </div>
                 )}
                 {clickedRegion && (
