@@ -284,6 +284,33 @@ export interface PauliNucleiResponse {
   citation: string;
 }
 
+export interface DifumoComponent {
+  component_id: number;
+  name: string;
+  yeo_network_id: number;
+  yeo_network_name: string;
+  color: string;
+  voxel_count: number;
+  centroid_mni_mm: number[];
+}
+
+export interface DifumoResponse {
+  components: DifumoComponent[];
+  n_components: number;
+  citation: string;
+}
+
+export interface CerebellumMeshResponse {
+  label: string;
+  voxel_count: number;
+  centroid_mni_mm: number[];
+  vertex_count: number;
+  face_count: number;
+  vertices_flat: number[];
+  faces_flat: number[];
+  citation: string;
+}
+
 export interface BrainRegion {
   region_id: number;
   label: string;

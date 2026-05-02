@@ -12,6 +12,8 @@ import {
   type TractCurve,
 } from '@/components/viewer/BrainCanvas';
 import type {
+  CerebellumMeshResponse,
+  DifumoResponse,
   FunctionalNetworksResponse,
   PauliNucleiResponse,
   SchaeferParcelsResponse,
@@ -24,6 +26,8 @@ import {
   fetchCognitiveFunctions,
   fetchHippocampalSample,
   fetchNeuron,
+  fetchCerebellumMesh,
+  fetchDifumo,
   fetchFunctionalNetworks,
   fetchPauliNuclei,
   fetchReceptorMap,
@@ -86,6 +90,9 @@ export default function Page() {
   const [schaeferVisible, setSchaeferVisible] = useState(false);
   const [pauli, setPauli] = useState<PauliNucleiResponse | null>(null);
   const [pauliVisible, setPauliVisible] = useState(false);
+  const [cerebellum, setCerebellum] = useState<CerebellumMeshResponse | null>(null);
+  const [difumo, setDifumo] = useState<DifumoResponse | null>(null);
+  const [difumoVisible, setDifumoVisible] = useState(false);
 
   // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
@@ -100,8 +107,10 @@ export default function Page() {
       fetchFunctionalNetworks().catch(() => null),
       fetchSchaeferParcels().catch(() => null),
       fetchPauliNuclei().catch(() => null),
+      fetchCerebellumMesh().catch(() => null),
+      fetchDifumo().catch(() => null),
     ])
-      .then(([mesh, regs, funs, recs, trks, sub, nets, sch, pau]) => {
+      .then(([mesh, regs, funs, recs, trks, sub, nets, sch, pau, cer, dif]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
@@ -112,6 +121,8 @@ export default function Page() {
         if (nets) setYeoNetworks(nets);
         if (sch) setSchaefer(sch);
         if (pau) setPauli(pau);
+        if (cer) setCerebellum(cer);
+        if (dif) setDifumo(dif);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -419,6 +430,8 @@ export default function Page() {
                     networks={networksVisible && yeoNetworks ? yeoNetworks.networks : []}
                     schaeferParcels={schaeferVisible && schaefer ? schaefer.parcels : []}
                     pauliNuclei={pauliVisible && pauli ? pauli.nuclei : []}
+                    cerebellum={cerebellum}
+                    difumoComponents={difumoVisible && difumo ? difumo.components : []}
                     onRegionClick={handleRegionClick}
                     functionHighlights={
                       activeFunction
@@ -597,6 +610,50 @@ export default function Page() {
                         </p>
                         <p className="font-mono text-[10px] text-white/40">
                           Schaefer et al. Cereb Cortex. 2018. doi:10.1093/cercor/bhx179
+                        </p>
+                      </CollapsibleSection>
+                    )}
+
+                    {difumo && (
+                      <CollapsibleSection
+                        title="DiFuMo 64 functional dictionary"
+                        subtitle={`${difumo.n_components}`}
+                        rightSlot={
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDifumoVisible((v) => !v);
+                            }}
+                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
+                              difumoVisible
+                                ? 'border-[#5eebff] bg-[#5eebff]/10 text-white'
+                                : 'border-white/20 text-white/60 hover:bg-white/5'
+                            }`}
+                          >
+                            {difumoVisible ? 'hide on brain' : 'show on brain'}
+                          </span>
+                        }
+                      >
+                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                          64 fine-grained &quot;functional modes&quot; learned from 2,192 fMRI scans
+                          (HCP, OASIS, Connectome). Each component is a coactivating brain region
+                          with a plain-language anatomical name; spheres are colored by which Yeo
+                          network they belong to.
+                        </p>
+                        <div className="max-h-[180px] space-y-0.5 overflow-y-auto pr-1 font-mono text-[10px]">
+                          {difumo.components.map((c) => (
+                            <div key={c.component_id} className="flex items-baseline gap-2">
+                              <span
+                                className="inline-block h-2 w-3 rounded"
+                                style={{ background: c.color }}
+                              />
+                              <span className="text-white/80">{c.name}</span>
+                              <span className="text-white/40">{c.yeo_network_name}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                          Dadi et al. NeuroImage. 2020. doi:10.1016/j.neuroimage.2020.117126
                         </p>
                       </CollapsibleSection>
                     )}

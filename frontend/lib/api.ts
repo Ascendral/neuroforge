@@ -2,6 +2,8 @@ import type {
   BrainMeshResponse,
   BrainRegionsResponse,
   CognitiveFunctionsResponse,
+  CerebellumMeshResponse,
+  DifumoResponse,
   FunctionalNetworksResponse,
   PauliNucleiResponse,
   ReceptorListResponse,
@@ -248,4 +250,22 @@ export async function fetchPauliNuclei(): Promise<PauliNucleiResponse> {
     throw new Error(`fetchPauliNuclei: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as PauliNucleiResponse;
+}
+
+export async function fetchCerebellumMesh(): Promise<CerebellumMeshResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/cerebellum-mesh`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchCerebellumMesh: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as CerebellumMeshResponse;
+}
+
+export async function fetchDifumo(): Promise<DifumoResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/difumo`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchDifumo: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as DifumoResponse;
 }

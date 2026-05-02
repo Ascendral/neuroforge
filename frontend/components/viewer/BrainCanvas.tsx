@@ -8,6 +8,8 @@ import * as THREE from 'three';
 import { useNeuronSelection } from '@/lib/neuron-context';
 import type {
   BrainMeshResponse,
+  CerebellumMeshResponse,
+  DifumoComponent,
   FunctionalNetwork,
   NeuronResponse,
   NeuronSummary,
@@ -204,6 +206,36 @@ function TractTube({ curve }: { curve: TractCurve }) {
   );
 }
 
+function CerebellumNode({ mesh }: { mesh: CerebellumMeshResponse }) {
+  const { positions, indices } = useMemo(() => {
+    return {
+      positions: new Float32Array(mesh.vertices_flat),
+      indices: new Uint32Array(mesh.faces_flat),
+    };
+  }, [mesh.vertices_flat, mesh.faces_flat]);
+  const geomRef = useRef<THREE.BufferGeometry>(null);
+  useEffect(() => {
+    geomRef.current?.computeVertexNormals();
+  }, [positions, indices]);
+  return (
+    <mesh>
+      <bufferGeometry ref={geomRef}>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="index" args={[indices, 1]} />
+      </bufferGeometry>
+      <meshStandardMaterial
+        color="#b8b8c0"
+        roughness={0.85}
+        metalness={0.05}
+        side={THREE.DoubleSide}
+        transparent
+        opacity={0.18}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
 function PauliNucleusNode({ nucleus }: { nucleus: PauliNucleus }) {
   const { positions, indices } = useMemo(() => {
     return {
@@ -317,6 +349,8 @@ interface BrainCanvasProps {
   networks?: FunctionalNetwork[];
   schaeferParcels?: SchaeferParcel[];
   pauliNuclei?: PauliNucleus[];
+  cerebellum?: CerebellumMeshResponse | null;
+  difumoComponents?: DifumoComponent[];
 }
 
 export function BrainCanvas({
@@ -334,6 +368,8 @@ export function BrainCanvas({
   networks = [],
   schaeferParcels = [],
   pauliNuclei = [],
+  cerebellum = null,
+  difumoComponents = [],
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -376,12 +412,32 @@ export function BrainCanvas({
       {subcorticalMeshes.map((sub) => (
         <SubcorticalMeshNode key={sub.label} mesh={sub} />
       ))}
+      {cerebellum && <CerebellumNode mesh={cerebellum} />}
       {networks.map((net) => (
         <NetworkMeshNode key={net.id} network={net} />
       ))}
       {pauliNuclei.map((n) => (
         <PauliNucleusNode key={n.abbrev} nucleus={n} />
       ))}
+      {difumoComponents.length > 0 && (
+        <group>
+          {difumoComponents.map((c) => (
+            <mesh
+              key={`difumo-${c.component_id}`}
+              position={[c.centroid_mni_mm[0], c.centroid_mni_mm[1], c.centroid_mni_mm[2]]}
+            >
+              <sphereGeometry args={[2.6, 12, 12]} />
+              <meshStandardMaterial
+                color={c.color}
+                emissive={c.color}
+                emissiveIntensity={0.85}
+                transparent
+                opacity={0.95}
+              />
+            </mesh>
+          ))}
+        </group>
+      )}
       {schaeferParcels.length > 0 && (
         <group>
           {schaeferParcels.map((p) => (

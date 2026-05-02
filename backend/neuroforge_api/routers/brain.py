@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from neuroforge_api.data import atlas as atlas_module
+from neuroforge_api.data import cerebellum as cerebellum_module
+from neuroforge_api.data import difumo as difumo_module
 from neuroforge_api.data import networks as networks_module
 from neuroforge_api.data import pauli as pauli_module
 from neuroforge_api.data import receptors as receptors_module
@@ -193,6 +195,33 @@ class PauliNucleusEntry(BaseModel):
 
 class PauliNucleiResponse(BaseModel):
     nuclei: list[PauliNucleusEntry]
+    citation: str
+
+
+class CerebellumResponse(BaseModel):
+    label: str
+    voxel_count: int
+    centroid_mni_mm: list[float]
+    vertex_count: int
+    face_count: int
+    vertices_flat: list[float]
+    faces_flat: list[int]
+    citation: str
+
+
+class DifumoComponent(BaseModel):
+    component_id: int
+    name: str
+    yeo_network_id: int
+    yeo_network_name: str
+    color: str
+    voxel_count: int
+    centroid_mni_mm: list[float]
+
+
+class DifumoResponse(BaseModel):
+    components: list[DifumoComponent]
+    n_components: int
     citation: str
 
 
@@ -575,3 +604,56 @@ def get_pauli_nuclei() -> PauliNucleiResponse:
             )
         )
     return PauliNucleiResponse(nuclei=out, citation=PAULI_CITATION)
+
+
+CEREBELLUM_CITATION = (
+    "Diedrichsen J, Balsters JH, Flavell J, Cussans E, Ramnani N. "
+    "A probabilistic MR atlas of the human cerebellum. NeuroImage. "
+    "2009;46(1):39-46. doi:10.1016/j.neuroimage.2008.11.020"
+)
+
+
+@router.get("/cerebellum-mesh", response_model=CerebellumResponse | None)
+def get_cerebellum_mesh() -> CerebellumResponse | None:
+    """Triangulated cerebellum surface mesh from Diedrichsen 2009 SUIT atlas."""
+    m = cerebellum_module.cerebellum_mesh()
+    if m is None:
+        raise HTTPException(status_code=502, detail="cerebellum mesh extraction failed")
+    return CerebellumResponse(
+        label=m.label,
+        voxel_count=m.voxel_count,
+        centroid_mni_mm=list(m.centroid_mni_mm),
+        vertex_count=int(m.vertices.shape[0]),
+        face_count=int(m.faces.shape[0]),
+        vertices_flat=m.vertices.astype(float).flatten().tolist(),
+        faces_flat=m.faces.astype(int).flatten().tolist(),
+        citation=CEREBELLUM_CITATION,
+    )
+
+
+DIFUMO_CITATION = (
+    "Dadi K, Varoquaux G, Machlouzarides-Shalit A, Gorgolewski KJ, "
+    "Wassermann D, Thirion B, Mensch A. Fine-grain atlases of functional "
+    "modes for fMRI analysis. NeuroImage. 2020;221:117126. "
+    "doi:10.1016/j.neuroimage.2020.117126 (n=2,192 subjects)"
+)
+
+
+@router.get("/difumo", response_model=DifumoResponse)
+def get_difumo() -> DifumoResponse:
+    """64-component DiFuMo functional dictionary atlas."""
+    comps = difumo_module.difumo_components()
+    out: list[DifumoComponent] = []
+    for c in comps:
+        out.append(
+            DifumoComponent(
+                component_id=c.component_id,
+                name=c.name,
+                yeo_network_id=c.yeo_network_id,
+                yeo_network_name=c.yeo_network_name,
+                color=c.color,
+                voxel_count=c.voxel_count,
+                centroid_mni_mm=list(c.centroid_mni_mm),
+            )
+        )
+    return DifumoResponse(components=out, n_components=len(out), citation=DIFUMO_CITATION)
