@@ -751,12 +751,27 @@ export default function Page() {
                           what it does + which drugs target it.
                         </p>
                         {(() => {
-                          const systemOrder = ['dopamine', 'serotonin', 'GABA', 'opioid'];
+                          const systemOrder = [
+                            'dopamine',
+                            'norepinephrine',
+                            'serotonin',
+                            'glutamate',
+                            'GABA',
+                            'acetylcholine',
+                            'cannabinoid',
+                            'opioid',
+                            'histamine',
+                          ];
                           const systemLabels: Record<string, string> = {
-                            dopamine: 'Dopamine',
-                            serotonin: 'Serotonin',
+                            dopamine: 'Dopamine (reward, movement)',
+                            norepinephrine: 'Norepinephrine (arousal, attention)',
+                            serotonin: 'Serotonin (mood)',
+                            glutamate: 'Glutamate (excitation, memory)',
                             GABA: 'GABA (inhibition)',
-                            opioid: 'Opioid (analgesia / reward)',
+                            acetylcholine: 'Acetylcholine (attention, memory)',
+                            cannabinoid: 'Cannabinoid (THC target)',
+                            opioid: 'Opioid (analgesia, reward)',
+                            histamine: 'Histamine (wakefulness)',
                           };
                           const grouped: Record<string, typeof receptors.receptors> = {};
                           for (const r of receptors.receptors) {
