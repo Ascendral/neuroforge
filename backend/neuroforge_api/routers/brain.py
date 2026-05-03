@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from neuroforge_api.data import allen_genes as allen_genes_module
 from neuroforge_api.data import atlas as atlas_module
 from neuroforge_api.data import cerebellum as cerebellum_module
 from neuroforge_api.data import difumo as difumo_module
@@ -759,3 +760,115 @@ def get_hcp1065() -> HCP1065Response:
             )
         )
     return HCP1065Response(tracts=out, citation=HCP1065_CITATION)
+
+
+ALLEN_CITATION = (
+    "Hawrylycz MJ et al. An anatomically comprehensive atlas of the adult "
+    "human brain transcriptome. Nature. 2012;489(7416):391-9. "
+    "doi:10.1038/nature11405. "
+    "Pipeline: Markello RD et al. Standardizing workflows in imaging "
+    "transcriptomics with the abagen toolbox. eLife. 2021;10:e72129. "
+    "doi:10.7554/eLife.72129. "
+    "Source: 6 Allen donors, ~58k probes → ~15.6k genes, mapped to "
+    "Desikan-Killiany 83 regions."
+)
+
+
+class AllenGene(BaseModel):
+    symbol: str
+    system: str
+    role: str
+    description: str
+
+
+class AllenGeneListResponse(BaseModel):
+    genes: list[AllenGene]
+    available: bool
+    citation: str
+    note: str
+
+
+class AllenRegion(BaseModel):
+    region_id: int
+    label: str
+    hemisphere: str
+    structure: str
+    centroid_mni_mm: list[float]
+    expression_normalized: float
+    expression_raw: float
+
+
+class AllenGeneExpressionResponse(BaseModel):
+    gene: AllenGene
+    raw_min: float
+    raw_max: float
+    regions: list[AllenRegion]
+    citation: str
+
+
+@router.get("/allen-genes", response_model=AllenGeneListResponse)
+def list_allen_genes() -> AllenGeneListResponse:
+    """List the curated set of neurochemically meaningful genes available
+    via the Allen Human Brain microarray dataset, mapped onto DK regions."""
+    available = allen_genes_module.expression_available()
+    return AllenGeneListResponse(
+        genes=[
+            AllenGene(symbol=g.symbol, system=g.system, role=g.role, description=g.description)
+            for g in allen_genes_module.curated_genes()
+        ],
+        available=available,
+        citation=ALLEN_CITATION,
+        note=(
+            "Click any gene to see its expression mapped onto cortical regions, "
+            "scaled 0-1 within that gene. Values are donor-averaged microarray "
+            "intensities processed by abagen 0.1.3 with intensity-based filtering, "
+            "differential-stability probe collapse, and nearest-region "
+            "interpolation for regions with no tissue sample."
+        ),
+    )
+
+
+@router.get("/allen-genes/{symbol}", response_model=AllenGeneExpressionResponse)
+def get_allen_gene(symbol: str) -> AllenGeneExpressionResponse:
+    """Per-region normalized expression for a single gene."""
+    if not allen_genes_module.expression_available():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Allen expression cache not built. Run "
+                "scripts/build_allen_cache.py (requires ~4 GB Allen download)."
+            ),
+        )
+    expr = allen_genes_module.gene_expression(symbol)
+    if expr is None:
+        raise HTTPException(status_code=404, detail=f"gene {symbol!r} not found")
+    region_info = {r.region_id: r for r in allen_genes_module.all_regions()}
+    out_regions: list[AllenRegion] = []
+    for rid, norm in sorted(expr.region_values.items()):
+        info = region_info.get(rid)
+        if info is None:
+            continue
+        raw = expr.raw_min + norm * (expr.raw_max - expr.raw_min)
+        out_regions.append(
+            AllenRegion(
+                region_id=info.region_id,
+                label=info.label,
+                hemisphere=info.hemisphere,
+                structure=info.structure,
+                centroid_mni_mm=list(info.centroid_mni_mm),
+                expression_normalized=norm,
+                expression_raw=raw,
+            )
+        )
+    return AllenGeneExpressionResponse(
+        gene=AllenGene(
+            symbol=expr.gene.symbol,
+            system=expr.gene.system,
+            role=expr.gene.role,
+            description=expr.gene.description,
+        ),
+        raw_min=expr.raw_min,
+        raw_max=expr.raw_max,
+        regions=out_regions,
+        citation=ALLEN_CITATION,
+    )

@@ -12,11 +12,15 @@ import {
   type TractCurve,
 } from '@/components/viewer/BrainCanvas';
 import type {
+  AllenGeneExpressionResponse,
+  AllenGeneListResponse,
   CerebellumMeshResponse,
   DifumoResponse,
   FunctionalNetworksResponse,
+  HCP1065Response,
   PauliNucleiResponse,
   SchaeferParcelsResponse,
+  Yeo17Response,
 } from '@/lib/types';
 import { NeuronCanvas } from '@/components/viewer/NeuronCanvas';
 import {
@@ -26,9 +30,12 @@ import {
   fetchCognitiveFunctions,
   fetchHippocampalSample,
   fetchNeuron,
+  fetchAllenGeneExpression,
+  fetchAllenGenes,
   fetchCerebellumMesh,
   fetchDifumo,
   fetchFunctionalNetworks,
+  fetchHCP1065,
   fetchPauliNuclei,
   fetchReceptorMap,
   fetchReceptors,
@@ -37,6 +44,7 @@ import {
   fetchSubcorticalMeshes,
   fetchV1NeuronSample,
   fetchWhiteMatterTracts,
+  fetchYeo17,
 } from '@/lib/api';
 import { NeuronSelectionCtx } from '@/lib/neuron-context';
 import type {
@@ -93,6 +101,14 @@ export default function Page() {
   const [cerebellum, setCerebellum] = useState<CerebellumMeshResponse | null>(null);
   const [difumo, setDifumo] = useState<DifumoResponse | null>(null);
   const [difumoVisible, setDifumoVisible] = useState(false);
+  const [yeo17, setYeo17] = useState<Yeo17Response | null>(null);
+  const [yeo17Visible, setYeo17Visible] = useState(false);
+  const [hcp1065, setHcp1065] = useState<HCP1065Response | null>(null);
+  const [hcp1065Visible, setHcp1065Visible] = useState(false);
+  const [hcp1065Group, setHcp1065Group] = useState<string | null>(null);
+  const [allenGenes, setAllenGenes] = useState<AllenGeneListResponse | null>(null);
+  const [activeGene, setActiveGene] = useState<AllenGeneExpressionResponse | null>(null);
+  const [activeGeneLoading, setActiveGeneLoading] = useState<string | null>(null);
 
   // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
@@ -109,8 +125,11 @@ export default function Page() {
       fetchPauliNuclei().catch(() => null),
       fetchCerebellumMesh().catch(() => null),
       fetchDifumo().catch(() => null),
+      fetchYeo17().catch(() => null),
+      fetchHCP1065().catch(() => null),
+      fetchAllenGenes().catch(() => null),
     ])
-      .then(([mesh, regs, funs, recs, trks, sub, nets, sch, pau, cer, dif]) => {
+      .then(([mesh, regs, funs, recs, trks, sub, nets, sch, pau, cer, dif, y17, hcp, allen]) => {
         if (cancelled) return;
         setBrain(mesh);
         setRegions(regs);
@@ -123,6 +142,9 @@ export default function Page() {
         if (pau) setPauli(pau);
         if (cer) setCerebellum(cer);
         if (dif) setDifumo(dif);
+        if (y17) setYeo17(y17);
+        if (hcp) setHcp1065(hcp);
+        if (allen) setAllenGenes(allen);
       })
       .catch((err: unknown) => {
         if (!cancelled) setBrainError(err instanceof Error ? err.message : String(err));
@@ -432,6 +454,14 @@ export default function Page() {
                     pauliNuclei={pauliVisible && pauli ? pauli.nuclei : []}
                     cerebellum={cerebellum}
                     difumoComponents={difumoVisible && difumo ? difumo.components : []}
+                    yeo17Networks={yeo17Visible && yeo17 ? yeo17.networks : []}
+                    hcpTracts={
+                      hcp1065Visible && hcp1065
+                        ? hcp1065Group
+                          ? hcp1065.tracts.filter((t) => t.group === hcp1065Group)
+                          : hcp1065.tracts
+                        : []
+                    }
                     onRegionClick={handleRegionClick}
                     functionHighlights={
                       activeFunction
@@ -460,9 +490,9 @@ export default function Page() {
                         : []
                     }
                     regionIntensities={
-                      activeReceptor
-                        ? ([...activeReceptor.cortical, ...activeReceptor.subcortical]
-                            .filter((r) => r.centroid_mni_mm)
+                      activeGene
+                        ? (activeGene.regions
+                            .filter((r) => r.centroid_mni_mm && r.centroid_mni_mm.length === 3)
                             .map(
                               (r) =>
                                 ({
@@ -472,11 +502,27 @@ export default function Page() {
                                     number,
                                     number,
                                   ],
-                                  normalized: r.normalized,
+                                  normalized: r.expression_normalized,
                                 }) as RegionIntensity,
                             ) as RegionIntensity[])
-                        : []
+                        : activeReceptor
+                          ? ([...activeReceptor.cortical, ...activeReceptor.subcortical]
+                              .filter((r) => r.centroid_mni_mm)
+                              .map(
+                                (r) =>
+                                  ({
+                                    label: r.label,
+                                    centroid_mni_mm: r.centroid_mni_mm as [
+                                      number,
+                                      number,
+                                      number,
+                                    ],
+                                    normalized: r.normalized,
+                                  }) as RegionIntensity,
+                              ) as RegionIntensity[])
+                          : []
                     }
+                    intensityColor={activeGene ? '#ff66cc' : '#5eebff'}
                   />
                 )}
                 {functions && view === 'brain' && (
@@ -654,6 +700,193 @@ export default function Page() {
                         </div>
                         <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
                           Dadi et al. NeuroImage. 2020. doi:10.1016/j.neuroimage.2020.117126
+                        </p>
+                      </CollapsibleSection>
+                    )}
+
+                    {yeo17 && (
+                      <CollapsibleSection
+                        title="Yeo 17-network (finer)"
+                        subtitle={`${yeo17.networks.length}`}
+                        rightSlot={
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setYeo17Visible((v) => !v);
+                            }}
+                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
+                              yeo17Visible
+                                ? 'border-[#c43afa] bg-[#c43afa]/10 text-white'
+                                : 'border-white/20 text-white/60 hover:bg-white/5'
+                            }`}
+                          >
+                            {yeo17Visible ? 'hide on brain' : 'show on brain'}
+                          </span>
+                        }
+                      >
+                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                          The 17-network split from the same Yeo 2011 paper. Each of the 7 large
+                          networks is subdivided into 2-3 sub-networks (e.g. Default Mode A/B/C,
+                          Visual Central/Peripheral). Colors come straight from the published LUT.
+                        </p>
+                        <div className="space-y-0.5 font-mono text-[10px]">
+                          {yeo17.networks.map((n) => (
+                            <div key={n.network_id} className="flex items-baseline gap-2">
+                              <span
+                                className="inline-block h-2 w-3 rounded"
+                                style={{ background: n.color }}
+                              />
+                              <span className="text-white/80">{n.short_name}</span>
+                              <span className="text-white/50">{n.full_name}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                          Yeo et al. J Neurophysiol. 2011. doi:10.1152/jn.00338.2011
+                        </p>
+                      </CollapsibleSection>
+                    )}
+
+                    {hcp1065 && (
+                      <CollapsibleSection
+                        title="HCP-1065 white-matter tracts"
+                        subtitle={`${hcp1065.tracts.length}`}
+                        rightSlot={
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHcp1065Visible((v) => !v);
+                            }}
+                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
+                              hcp1065Visible
+                                ? 'border-[#7fff9b] bg-[#7fff9b]/10 text-white'
+                                : 'border-white/20 text-white/60 hover:bg-white/5'
+                            }`}
+                          >
+                            {hcp1065Visible ? 'hide on brain' : 'show on brain'}
+                          </span>
+                        }
+                      >
+                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                          80 named fiber bundles averaged over 1,065 HCP young-adult subjects.
+                          Each tract is rendered as the centerline of its empirical voxel-occupancy
+                          distribution (PCA-binned mean per length-bin). Click a group to filter.
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          <button
+                            onClick={() => setHcp1065Group(null)}
+                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
+                              hcp1065Group === null
+                                ? 'border-white bg-white/10 text-white'
+                                : 'border-white/20 text-white/60 hover:bg-white/5'
+                            }`}
+                          >
+                            all
+                          </button>
+                          {Array.from(new Set(hcp1065.tracts.map((t) => t.group))).map((g) => {
+                            const color = hcp1065.tracts.find((t) => t.group === g)?.color ?? '#888';
+                            const isActive = hcp1065Group === g;
+                            return (
+                              <button
+                                key={g}
+                                onClick={() => setHcp1065Group(isActive ? null : g)}
+                                className={`flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[9px] ${
+                                  isActive
+                                    ? 'border-white bg-white/10 text-white'
+                                    : 'border-white/20 text-white/60 hover:bg-white/5'
+                                }`}
+                              >
+                                <span
+                                  className="inline-block h-2 w-2 rounded"
+                                  style={{ background: color }}
+                                />
+                                {g}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                          Yeh et al. NeuroImage. 2018. doi:10.1016/j.neuroimage.2018.05.027
+                          {' · '}
+                          Atlas: doi:10.5281/zenodo.3627772
+                        </p>
+                      </CollapsibleSection>
+                    )}
+
+                    {allenGenes && (
+                      <CollapsibleSection
+                        title="Allen brain gene expression"
+                        subtitle={`${allenGenes.genes.length} curated`}
+                      >
+                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                          {allenGenes.note}
+                        </p>
+                        {!allenGenes.available && (
+                          <p className="rounded border border-amber-500/40 bg-amber-500/10 p-2 font-mono text-[10px] text-amber-200">
+                            Cache not built yet. Run the abagen pipeline to enable this layer.
+                          </p>
+                        )}
+                        {allenGenes.available && (
+                          <div className="space-y-2">
+                            {Array.from(new Set(allenGenes.genes.map((g) => g.system))).map(
+                              (system) => (
+                                <div key={system}>
+                                  <div className="mb-1 font-mono text-[9px] uppercase tracking-wide text-white/40">
+                                    {system}
+                                  </div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {allenGenes.genes
+                                      .filter((g) => g.system === system)
+                                      .map((g) => {
+                                        const isActive = activeGene?.gene.symbol === g.symbol;
+                                        const isLoading = activeGeneLoading === g.symbol;
+                                        return (
+                                          <button
+                                            key={g.symbol}
+                                            disabled={isLoading}
+                                            onClick={() => {
+                                              if (isActive) {
+                                                setActiveGene(null);
+                                                return;
+                                              }
+                                              setActiveGeneLoading(g.symbol);
+                                              fetchAllenGeneExpression(g.symbol)
+                                                .then((d) => setActiveGene(d))
+                                                .catch(() => setActiveGene(null))
+                                                .finally(() => setActiveGeneLoading(null));
+                                            }}
+                                            title={g.description}
+                                            className={`rounded border px-2 py-0.5 font-mono text-[10px] ${
+                                              isActive
+                                                ? 'border-[#ff66cc] bg-[#ff66cc]/15 text-white'
+                                                : 'border-white/20 text-white/70 hover:bg-white/5'
+                                            } ${isLoading ? 'opacity-40' : ''}`}
+                                          >
+                                            {g.symbol}
+                                          </button>
+                                        );
+                                      })}
+                                  </div>
+                                </div>
+                              ),
+                            )}
+                            {activeGene && (
+                              <div className="rounded border border-[#ff66cc]/40 bg-black/60 p-2 font-mono text-[10px] leading-snug">
+                                <div className="mb-1 text-white">
+                                  {activeGene.gene.symbol} · {activeGene.gene.role}
+                                </div>
+                                <p className="mb-2 text-white/70">{activeGene.gene.description}</p>
+                                <div className="text-white/40">
+                                  raw range: {activeGene.raw_min.toFixed(2)} →{' '}
+                                  {activeGene.raw_max.toFixed(2)} (z-scored microarray) ·{' '}
+                                  {activeGene.regions.length} regions
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                          {allenGenes.citation}
                         </p>
                       </CollapsibleSection>
                     )}

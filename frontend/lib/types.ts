@@ -284,6 +284,74 @@ export interface PauliNucleiResponse {
   citation: string;
 }
 
+export interface AllenGene {
+  symbol: string;
+  system: string;
+  role: string;
+  description: string;
+}
+
+export interface AllenGeneListResponse {
+  genes: AllenGene[];
+  available: boolean;
+  citation: string;
+  note: string;
+}
+
+export interface AllenRegion {
+  region_id: number;
+  label: string;
+  hemisphere: string;
+  structure: string;
+  centroid_mni_mm: number[];
+  expression_normalized: number;
+  expression_raw: number;
+}
+
+export interface AllenGeneExpressionResponse {
+  gene: AllenGene;
+  raw_min: number;
+  raw_max: number;
+  regions: AllenRegion[];
+  citation: string;
+}
+
+export interface Yeo17Network {
+  network_id: number;
+  short_name: string;
+  full_name: string;
+  parent_network: string;
+  color: string;
+  voxel_count: number;
+  centroid_mni_mm: number[];
+  vertex_count: number;
+  face_count: number;
+  vertices_flat: number[];
+  faces_flat: number[];
+}
+
+export interface Yeo17Response {
+  networks: Yeo17Network[];
+  citation: string;
+}
+
+export interface HCPTract {
+  name: string;
+  filename: string;
+  group: string;
+  color: string;
+  voxel_count: number;
+  centerline_flat: number[];
+  n_points: number;
+  bbox_min_mm: number[];
+  bbox_max_mm: number[];
+}
+
+export interface HCP1065Response {
+  tracts: HCPTract[];
+  citation: string;
+}
+
 export interface DifumoComponent {
   component_id: number;
   name: string;

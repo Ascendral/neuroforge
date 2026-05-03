@@ -11,6 +11,8 @@ import type {
   CerebellumMeshResponse,
   DifumoComponent,
   FunctionalNetwork,
+  HCPTract,
+  Yeo17Network,
   NeuronResponse,
   NeuronSummary,
   PauliNucleus,
@@ -298,6 +300,62 @@ function NetworkMeshNode({ network }: { network: FunctionalNetwork }) {
   );
 }
 
+function Yeo17MeshNode({ network }: { network: Yeo17Network }) {
+  const { positions, indices } = useMemo(() => {
+    return {
+      positions: new Float32Array(network.vertices_flat),
+      indices: new Uint32Array(network.faces_flat),
+    };
+  }, [network.vertices_flat, network.faces_flat]);
+  const geomRef = useRef<THREE.BufferGeometry>(null);
+  useEffect(() => {
+    geomRef.current?.computeVertexNormals();
+  }, [positions, indices]);
+  return (
+    <mesh>
+      <bufferGeometry ref={geomRef}>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="index" args={[indices, 1]} />
+      </bufferGeometry>
+      <meshStandardMaterial
+        color={network.color}
+        emissive={network.color}
+        emissiveIntensity={0.35}
+        roughness={0.7}
+        side={THREE.DoubleSide}
+        transparent
+        opacity={0.32}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+function HCPTractTube({ tract }: { tract: HCPTract }) {
+  const tubeGeom = useMemo(() => {
+    const flat = tract.centerline_flat;
+    if (flat.length < 9) return null;
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i < flat.length; i += 3) {
+      pts.push(new THREE.Vector3(flat[i], flat[i + 1], flat[i + 2]));
+    }
+    const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
+    return new THREE.TubeGeometry(path, Math.max(32, pts.length * 4), 0.9, 8, false);
+  }, [tract.centerline_flat]);
+  if (!tubeGeom) return null;
+  return (
+    <mesh geometry={tubeGeom}>
+      <meshStandardMaterial
+        color={tract.color}
+        emissive={tract.color}
+        emissiveIntensity={0.45}
+        transparent
+        opacity={0.85}
+      />
+    </mesh>
+  );
+}
+
 function SubcorticalMeshNode({ mesh }: { mesh: SubcorticalMesh }) {
   const { positions, indices } = useMemo(() => {
     return {
@@ -351,6 +409,8 @@ interface BrainCanvasProps {
   pauliNuclei?: PauliNucleus[];
   cerebellum?: CerebellumMeshResponse | null;
   difumoComponents?: DifumoComponent[];
+  yeo17Networks?: Yeo17Network[];
+  hcpTracts?: HCPTract[];
 }
 
 export function BrainCanvas({
@@ -370,6 +430,8 @@ export function BrainCanvas({
   pauliNuclei = [],
   cerebellum = null,
   difumoComponents = [],
+  yeo17Networks = [],
+  hcpTracts = [],
 }: BrainCanvasProps) {
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
@@ -415,6 +477,12 @@ export function BrainCanvas({
       {cerebellum && <CerebellumNode mesh={cerebellum} />}
       {networks.map((net) => (
         <NetworkMeshNode key={net.id} network={net} />
+      ))}
+      {yeo17Networks.map((net) => (
+        <Yeo17MeshNode key={`y17-${net.network_id}`} network={net} />
+      ))}
+      {hcpTracts.map((t) => (
+        <HCPTractTube key={`hcp-${t.filename}`} tract={t} />
       ))}
       {pauliNuclei.map((n) => (
         <PauliNucleusNode key={n.abbrev} nucleus={n} />

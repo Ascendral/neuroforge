@@ -1,10 +1,14 @@
 import type {
+  AllenGeneExpressionResponse,
+  AllenGeneListResponse,
   BrainMeshResponse,
   BrainRegionsResponse,
   CognitiveFunctionsResponse,
   CerebellumMeshResponse,
   DifumoResponse,
   FunctionalNetworksResponse,
+  HCP1065Response,
+  Yeo17Response,
   PauliNucleiResponse,
   ReceptorListResponse,
   SchaeferParcelsResponse,
@@ -259,6 +263,42 @@ export async function fetchCerebellumMesh(): Promise<CerebellumMeshResponse> {
     throw new Error(`fetchCerebellumMesh: ${response.status} ${text.slice(0, 200)}`);
   }
   return (await response.json()) as CerebellumMeshResponse;
+}
+
+export async function fetchAllenGenes(): Promise<AllenGeneListResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/allen-genes`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchAllenGenes: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as AllenGeneListResponse;
+}
+
+export async function fetchAllenGeneExpression(symbol: string): Promise<AllenGeneExpressionResponse> {
+  const response = await fetch(`${API_BASE}/api/brain/allen-genes/${encodeURIComponent(symbol)}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchAllenGeneExpression(${symbol}): ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as AllenGeneExpressionResponse;
+}
+
+export async function fetchYeo17(): Promise<Yeo17Response> {
+  const response = await fetch(`${API_BASE}/api/brain/yeo17`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchYeo17: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as Yeo17Response;
+}
+
+export async function fetchHCP1065(): Promise<HCP1065Response> {
+  const response = await fetch(`${API_BASE}/api/brain/hcp1065`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`fetchHCP1065: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as HCP1065Response;
 }
 
 export async function fetchDifumo(): Promise<DifumoResponse> {
