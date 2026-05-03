@@ -18,6 +18,10 @@ build/
 backend/data/neurons.sqlite
 backend/data/swc_cache/*
 !backend/data/swc_cache/.gitkeep
+backend/data_cache/
+
+# TS build info
+*.tsbuildinfo
 
 # Editors / OS
 .DS_Store

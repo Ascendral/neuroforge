@@ -8,10 +8,12 @@ from pydantic import BaseModel
 from neuroforge_api.data import atlas as atlas_module
 from neuroforge_api.data import cerebellum as cerebellum_module
 from neuroforge_api.data import difumo as difumo_module
+from neuroforge_api.data import hcp1065 as hcp1065_module
 from neuroforge_api.data import networks as networks_module
 from neuroforge_api.data import pauli as pauli_module
 from neuroforge_api.data import receptors as receptors_module
 from neuroforge_api.data import schaefer as schaefer_module
+from neuroforge_api.data import yeo17 as yeo17_module
 
 router = APIRouter(prefix="/api/brain", tags=["brain"])
 
@@ -657,3 +659,103 @@ def get_difumo() -> DifumoResponse:
             )
         )
     return DifumoResponse(components=out, n_components=len(out), citation=DIFUMO_CITATION)
+
+
+YEO17_CITATION = (
+    "Yeo BTT, Krienen FM, Sepulcre J, Sabuncu MR, Lashkari D, Hollinshead M, "
+    "Roffman JL, Smoller JW, Zöllei L, Polimeni JR, Fischl B, Liu H, "
+    "Buckner RL. The organization of the human cerebral cortex estimated by "
+    "intrinsic functional connectivity. J Neurophysiol. 2011;106(3):1125-65. "
+    "doi:10.1152/jn.00338.2011 (17-network solution; n=1,000 subjects)"
+)
+
+
+class Yeo17Network(BaseModel):
+    network_id: int
+    short_name: str
+    full_name: str
+    parent_network: str
+    color: str
+    voxel_count: int
+    centroid_mni_mm: list[float]
+    vertex_count: int
+    face_count: int
+    vertices_flat: list[float]
+    faces_flat: list[int]
+
+
+class Yeo17Response(BaseModel):
+    networks: list[Yeo17Network]
+    citation: str
+
+
+@router.get("/yeo17", response_model=Yeo17Response)
+def get_yeo17() -> Yeo17Response:
+    """Yeo 2011 17-network functional parcellation with per-network meshes."""
+    nets = yeo17_module.all_yeo17_networks()
+    out: list[Yeo17Network] = []
+    for n in nets:
+        out.append(
+            Yeo17Network(
+                network_id=n.network_id,
+                short_name=n.short_name,
+                full_name=n.full_name,
+                parent_network=n.parent_network,
+                color=n.color,
+                voxel_count=n.voxel_count,
+                centroid_mni_mm=list(n.centroid_mni_mm),
+                vertex_count=int(n.vertices.shape[0]),
+                face_count=int(n.faces.shape[0]),
+                vertices_flat=n.vertices.astype(float).flatten().tolist(),
+                faces_flat=n.faces.astype(int).flatten().tolist(),
+            )
+        )
+    return Yeo17Response(networks=out, citation=YEO17_CITATION)
+
+
+HCP1065_CITATION = (
+    "Yeh F-C, Panesar S, Fernandes D, Meola A, Yoshino M, Fernandez-Miranda JC, "
+    "Vettel JM, Verstynen T. Population-averaged atlas of the macroscale human "
+    "structural connectome and its network topology. NeuroImage. 2018;178:57-68. "
+    "doi:10.1016/j.neuroimage.2018.05.027. "
+    "Atlas data: doi:10.5281/zenodo.3627772 (n=1,065 HCP-YA subjects)"
+)
+
+
+class HCPTract(BaseModel):
+    name: str
+    filename: str
+    group: str
+    color: str
+    voxel_count: int
+    centerline_flat: list[float]   # (M*3,) flat MNI mm
+    n_points: int
+    bbox_min_mm: list[float]
+    bbox_max_mm: list[float]
+
+
+class HCP1065Response(BaseModel):
+    tracts: list[HCPTract]
+    citation: str
+
+
+@router.get("/hcp1065", response_model=HCP1065Response)
+def get_hcp1065() -> HCP1065Response:
+    """80 named white-matter tracts averaged over 1,065 HCP subjects, as centerline polylines."""
+    ts = hcp1065_module.all_hcp1065_tracts()
+    out: list[HCPTract] = []
+    for t in ts:
+        out.append(
+            HCPTract(
+                name=t.name,
+                filename=t.filename,
+                group=t.group,
+                color=t.color,
+                voxel_count=t.voxel_count,
+                centerline_flat=t.centerline.astype(float).flatten().tolist(),
+                n_points=int(t.centerline.shape[0]),
+                bbox_min_mm=list(t.bbox_min_mm),
+                bbox_max_mm=list(t.bbox_max_mm),
+            )
+        )
+    return HCP1065Response(tracts=out, citation=HCP1065_CITATION)
