@@ -530,7 +530,7 @@ export function BrainCanvas({
         faces_flat={mesh.left.faces_flat}
         destrieux_label_id={mesh.left.destrieux_label_id}
         color="#d8d8d8"
-        opacity={0.12}
+        opacity={0.06}
         onRegionClick={
           onRegionClick
             ? ({ destrieuxId, point }) =>
@@ -547,7 +547,7 @@ export function BrainCanvas({
         faces_flat={mesh.right.faces_flat}
         destrieux_label_id={mesh.right.destrieux_label_id}
         color="#bfbfbf"
-        opacity={0.12}
+        opacity={0.06}
         onRegionClick={
           onRegionClick
             ? ({ destrieuxId, point }) =>
