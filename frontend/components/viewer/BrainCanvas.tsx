@@ -75,10 +75,7 @@ function HemisphereMesh({
       }}
     >
       <bufferGeometry ref={geomRef}>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="index" args={[indices, 1]} />
       </bufferGeometry>
       <meshStandardMaterial
@@ -436,8 +433,12 @@ export function BrainCanvas({
   const center = useMemo(() => {
     // Compute combined bbox center across both hemispheres
     const v = [...mesh.left.vertices_flat, ...mesh.right.vertices_flat];
-    let minX = Infinity, minY = Infinity, minZ = Infinity;
-    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      minZ = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity,
+      maxZ = -Infinity;
     for (let i = 0; i < v.length; i += 3) {
       minX = Math.min(minX, v[i]);
       maxX = Math.max(maxX, v[i]);
@@ -585,9 +586,7 @@ export function BrainCanvas({
           }
           return null;
         })}
-      {markers.length > 0 && (!swcMap || swcMap.size === 0) && (
-        <MarkerCluster markers={markers} />
-      )}
+      {markers.length > 0 && (!swcMap || swcMap.size === 0) && <MarkerCluster markers={markers} />}
       {functionHighlights.map((h, i) => (
         <mesh key={`${h.label}-${i}`} position={h.centroid_mni_mm}>
           <sphereGeometry args={[10, 24, 24]} />

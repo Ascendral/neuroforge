@@ -40,10 +40,7 @@ function buildSegments(points: NeuronPoint[]): Segment[] {
     if (length === 0) continue;
 
     const position = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-    const quaternion = new THREE.Quaternion().setFromUnitVectors(
-      Y_AXIS,
-      dir.clone().normalize(),
-    );
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(Y_AXIS, dir.clone().normalize());
     const radius = Math.max((parent.radius + child.radius) * 0.5, 0.05);
 
     segments.push({
@@ -75,11 +72,16 @@ function somaCenter(points: NeuronPoint[]): { center: THREE.Vector3; radius: num
 function colorForType(type: number): string {
   // Black/white default with red accent for soma (CLAUDE.md UI rule).
   switch (type) {
-    case 1: return '#ff2d2d'; // soma — red accent
-    case 2: return '#9bd2ff'; // axon — pale blue
-    case 3: return '#ffffff'; // basal dendrite — white
-    case 4: return '#cfcfcf'; // apical dendrite — light gray
-    default: return '#7f7f7f';
+    case 1:
+      return '#ff2d2d'; // soma — red accent
+    case 2:
+      return '#9bd2ff'; // axon — pale blue
+    case 3:
+      return '#ffffff'; // basal dendrite — white
+    case 4:
+      return '#cfcfcf'; // apical dendrite — light gray
+    default:
+      return '#7f7f7f';
   }
 }
 

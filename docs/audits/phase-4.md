@@ -6,9 +6,11 @@
 **Cross-model audit:** PENDING — Alex to run independent audit on the Phase 4 diff before merging Phase 5 work. **This is the first phase that runs real physics, so the audit gate is materially heavier than phases 0-3.**
 
 ## Scope of Phase 4
+
 First real biophysics. Single-compartment Hodgkin-Huxley simulator using Brian2 with the original 1952 squid-giant-axon parameters; FastAPI POST endpoint; frontend "run hh" button; FiringPlot wired to live data. Per ARCHITECTURE.md, real-time WebSocket spike streaming was descoped to Phase 4.5 — HTTP POST returning the full trace is sufficient for verification and doesn't fabricate any simulation data.
 
 ## What got built
+
 - `backend/neuroforge_api/simulators/hodgkin_huxley.py` — Brian2 model with the canonical H-H 1952 rate equations in modern shifted-potential form. Parameters: C_m=1 µF, ḡ_Na=120 mS, ḡ_K=36 mS, g_L=0.3 mS, E_Na=+50 mV, E_K=-77 mV, E_L=-54.387 mV. V_rest=-65 mV. Uses `exponential_euler` integrator, dt=0.01 ms by default. Singularities at V=-40 mV (α_m) and V=-55 mV (α_n) are regularized with a 1e-9 mV bias to the numerator — preserves the analytic L'Hôpital limit and prevents NaN if integration ever lands exactly at the removable singular point.
 - `backend/neuroforge_api/models/simulation.py` — `HHRequest` (duration, stimulus_uA, start, end, dt, record_every_n) and `HHResponse` (times_ms, voltage_mV, stimulus_uA, spike_times_ms, dt_ms, citation).
 - `backend/neuroforge_api/routers/simulate.py` — POST `/api/simulate/hh`. Translates request to `simulate_hh()`, returns aligned arrays + the full Hodgkin-Huxley 1952 citation string.
@@ -20,10 +22,12 @@ First real biophysics. Single-compartment Hodgkin-Huxley simulator using Brian2 
 ## Verified against canonical H-H physics — 2026-04-30
 
 ### Backend test suite
+
 ```
 $ pytest neuroforge_api/tests -q
 24 passed in 10.75s
 ```
+
 - 7 new physics tests (`test_hodgkin_huxley.py`):
   - `test_resting_steady_state_gating_values` — m∞(-65), h∞(-65), n∞(-65) match published values.
   - `test_rests_at_minus_65_with_no_stimulus` — V stays within ±0.5 mV of rest, no spikes.
@@ -35,6 +39,7 @@ $ pytest neuroforge_api/tests -q
 - 2 endpoint tests (`test_simulate_endpoint.py`): real POST to TestClient, schema validation, citation string check.
 
 ### Live HTTP smoke test
+
 ```
 $ curl -s -X POST -H 'Content-Type: application/json' \
        -d '{"duration_ms":80,"stimulus_uA":10,"stimulus_start_ms":10,"stimulus_end_ms":70}' \
@@ -47,6 +52,7 @@ citation: "Hodgkin AL, Huxley AF. A quantitative description of membrane
            current and its application to conduction and excitation in nerve.
            J Physiol. 1952;117(4):500-44. doi:10.1113/jphysiol.1952.sp004764"
 ```
+
 - AP peak +40.04 mV — within published canonical overshoot range (+30 to +50 mV).
 - AHP trough -76.06 mV — consistent with K-channel-driven afterhyperpolarization toward E_K = -77 mV.
 - 5 spikes over 60 ms of stimulation = 83 Hz steady-state firing, ISI≈14.7-15 ms (regular).
@@ -54,7 +60,9 @@ citation: "Hodgkin AL, Huxley AF. A quantitative description of membrane
 - Stimulus on/off transients reflected correctly (spike train aligned with the 10-70 ms stimulus window).
 
 ### Browser verification (preview screenshot)
+
 With "stim µA" = 10 and "run hh" clicked:
+
 - Plot renders the actual returned trace: 5 AP spikes with the canonical shape (rapid up-stroke, +40 mV peak, fast down-stroke, AHP undershoot below resting, recovery).
 - Red vertical lines mark the 5 detected spike times.
 - Blue stimulus envelope on the bottom strip outlines the 10-70 ms square pulse.
@@ -62,11 +70,13 @@ With "stim µA" = 10 and "run hh" clicked:
 - Citation rendered under the stats: full 1952 paper reference with the resolvable DOI.
 
 ### Linters
+
 - `ruff check neuroforge_api` — clean
 - `pnpm typecheck` — clean (TS strict)
 - `pnpm lint` — clean
 
 ## Anti-theater self-checks
+
 - **No hand-rolled ODE.** The simulation runs through Brian2's `NeuronGroup` + `exponential_euler` integrator. The stack-locked simulation engine is honored.
 - **No fabricated trace.** The `FiringPlot` empty branch shows "no simulation yet — click run hh" and renders nothing else. Once a request returns, the plot renders strictly the arrays from `HHResponse`. No fallback "demo trace" is ever drawn.
 - **No fake spikes.** `spike_times_ms` come from a Brian2 `SpikeMonitor` watching a `v > 0 mV` threshold during the live integration. Frontend draws spike markers at those times only.
@@ -87,6 +97,7 @@ With "stim µA" = 10 and "run hh" clicked:
 > Audit this diff for: hardcoded fake firing patterns, mock returns presented as real, dead code paths, claims that don't match implementation, fabricated citations, parameters that drift from the cited 1952 paper.
 >
 > Specifically check the physics:
+>
 > 1. Are the rate equations α_m, β_m, α_h, β_h, α_n, β_n in `simulators/hodgkin_huxley.py` consistent with the original Hodgkin & Huxley 1952 paper (modern shifted-potential form)?
 > 2. Are C_m, ḡ_Na, ḡ_K, g_L, E_Na, E_K, E_L set to the values stated in the 1952 paper?
 > 3. Does the resting potential numerically converge to -65 mV when E_L = -54.387 mV?
@@ -99,4 +110,5 @@ With "stim µA" = 10 and "run hh" clicked:
 > Report only theater. Be brutal.
 
 ### Verdict
+
 _Pending Alex's cross-model audit + manual stimulus sweep + DOI-resolution check._

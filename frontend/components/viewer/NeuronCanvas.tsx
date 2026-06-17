@@ -34,7 +34,11 @@ export function NeuronCanvas({ neuron, onSegmentClick }: NeuronCanvasProps) {
   return (
     <Canvas
       camera={{
-        position: [center.x + cameraDistance, center.y + cameraDistance * 0.3, center.z + cameraDistance],
+        position: [
+          center.x + cameraDistance,
+          center.y + cameraDistance * 0.3,
+          center.z + cameraDistance,
+        ],
         fov: 40,
         near: 0.1,
         far: cameraDistance * 100,

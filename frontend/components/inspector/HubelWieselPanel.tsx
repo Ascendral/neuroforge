@@ -145,15 +145,16 @@ export function HubelWieselPanel() {
     return {
       simplePath: buildTuningPath(response.tuning_orientations_deg, response.tuning_simple),
       complexPath: buildTuningPath(response.tuning_orientations_deg, response.tuning_complex),
-      preferredX:
-        PAD_L + (response.preferred_orientation_deg / 180) * innerW,
+      preferredX: PAD_L + (response.preferred_orientation_deg / 180) * innerW,
     };
   }, [response, innerW]);
 
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">V1 — Hubel & Wiesel 1962</h2>
+        <h2 className="text-xs uppercase tracking-widest text-white/40">
+          V1 — Hubel & Wiesel 1962
+        </h2>
         <span className="font-mono text-[10px] text-white/30">Gabor + energy model</span>
       </div>
 
@@ -169,39 +170,86 @@ export function HubelWieselPanel() {
         className="rounded border border-white/10 bg-black"
       >
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
-        <line x1={PAD_L} x2={PAD_L + innerW} y1={PAD_T + innerH} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
+        <line
+          x1={PAD_L}
+          x2={PAD_L + innerW}
+          y1={PAD_T + innerH}
+          y2={PAD_T + innerH}
+          stroke="rgba(255,255,255,0.3)"
+        />
         {[0, 45, 90, 135].map((deg) => {
           const x = PAD_L + (deg / 180) * innerW;
           return (
             <g key={deg}>
-              <line x1={x} x2={x} y1={PAD_T + innerH} y2={PAD_T + innerH + 3} stroke="rgba(255,255,255,0.4)" />
-              <text x={x} y={PAD_T + innerH + 14} fontSize={9} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+              <line
+                x1={x}
+                x2={x}
+                y1={PAD_T + innerH}
+                y2={PAD_T + innerH + 3}
+                stroke="rgba(255,255,255,0.4)"
+              />
+              <text
+                x={x}
+                y={PAD_T + innerH + 14}
+                fontSize={9}
+                textAnchor="middle"
+                fill="rgba(255,255,255,0.5)"
+                fontFamily="monospace"
+              >
                 {deg}°
               </text>
             </g>
           );
         })}
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">resp</text>
+        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+          resp
+        </text>
 
         {!computed && (
-          <text x={PAD_L + innerW / 2} y={PAD_T + innerH / 2 + 3} fontSize={10} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontFamily="monospace">
+          <text
+            x={PAD_L + innerW / 2}
+            y={PAD_T + innerH / 2 + 3}
+            fontSize={10}
+            textAnchor="middle"
+            fill="rgba(255,255,255,0.35)"
+            fontFamily="monospace"
+          >
             no run yet — click compute
           </text>
         )}
 
         {computed && (
           <>
-            <line x1={computed.preferredX} x2={computed.preferredX} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,45,45,0.4)" strokeDasharray="2 3" />
-            <path d={computed.complexPath} fill="none" stroke="rgba(155,210,255,0.85)" strokeWidth={1.4} />
+            <line
+              x1={computed.preferredX}
+              x2={computed.preferredX}
+              y1={PAD_T}
+              y2={PAD_T + innerH}
+              stroke="rgba(255,45,45,0.4)"
+              strokeDasharray="2 3"
+            />
+            <path
+              d={computed.complexPath}
+              fill="none"
+              stroke="rgba(155,210,255,0.85)"
+              strokeWidth={1.4}
+            />
             <path d={computed.simplePath} fill="none" stroke="#ffffff" strokeWidth={1.4} />
           </>
         )}
       </svg>
 
       <div className="flex items-baseline gap-3 text-[10px] font-mono text-white/40">
-        <span><span className="inline-block w-3 border-t border-white align-middle" /> simple</span>
-        <span><span className="inline-block w-3 border-t border-[#9bd2ff] align-middle" /> complex</span>
-        <span><span className="inline-block w-3 border-t border-dashed border-accent align-middle" /> preferred</span>
+        <span>
+          <span className="inline-block w-3 border-t border-white align-middle" /> simple
+        </span>
+        <span>
+          <span className="inline-block w-3 border-t border-[#9bd2ff] align-middle" /> complex
+        </span>
+        <span>
+          <span className="inline-block w-3 border-t border-dashed border-accent align-middle" />{' '}
+          preferred
+        </span>
       </div>
 
       <div className="space-y-2 font-mono text-xs">
@@ -229,8 +277,8 @@ export function HubelWieselPanel() {
 
         {response && (
           <p className="text-[10px] leading-snug text-white/40">
-            CNN lineage: LeCun 1989 cited Hubel &amp; Wiesel directly. The first conv-layer
-            filter of any modern CNN (VGG, ResNet) converges to a Gabor like the one above.
+            CNN lineage: LeCun 1989 cited Hubel &amp; Wiesel directly. The first conv-layer filter
+            of any modern CNN (VGG, ResNet) converges to a Gabor like the one above.
           </p>
         )}
 
@@ -255,9 +303,7 @@ export function HubelWieselPanel() {
 
         {v1Error && <p className="text-xs text-accent">{v1Error}</p>}
         {!v1Sample && !v1Error && (
-          <p className="font-mono text-[10px] text-white/40">
-            loading from neuromorpho.org…
-          </p>
+          <p className="font-mono text-[10px] text-white/40">loading from neuromorpho.org…</p>
         )}
 
         {v1Sample && (

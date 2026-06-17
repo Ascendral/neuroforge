@@ -187,7 +187,20 @@ export default function Page() {
 
     const fetchSafe = (p: Promise<unknown>) =>
       p.catch(() => null) as Promise<{
-        results: { neuron_id: number; neuron_name: string; archive: string; species: string; scientific_name: string; brain_region: string[]; cell_type: string[]; reference_doi: string[]; reference_pmid: string[]; png_url: string | null; source_url: string; swc_url: string }[];
+        results: {
+          neuron_id: number;
+          neuron_name: string;
+          archive: string;
+          species: string;
+          scientific_name: string;
+          brain_region: string[];
+          cell_type: string[];
+          reference_doi: string[];
+          reference_pmid: string[];
+          png_url: string | null;
+          source_url: string;
+          swc_url: string;
+        }[];
       } | null>;
     let v1Cells: unknown;
     void v1Cells;
@@ -224,9 +237,9 @@ export default function Page() {
         // bounds. Cortex has more room; cortical pyramidals can stay bigger.
         // Hippocampus / amygdala / thalamus / striatum are tight subcortical
         // structures (~13-22 mm wide) so we use 0.006 → cells ~2-6 mm.
-        const SCALE_CORTICAL = 0.012;     // V1, motor, prefrontal
-        const SCALE_SUBCORTICAL = 0.006;  // hippocampus, amygdala, thalamus, striatum
-        const SCALE_SCHEMATIC = 0.008;    // cerebellum, olfactory, SN, dentate
+        const SCALE_CORTICAL = 0.012; // V1, motor, prefrontal
+        const SCALE_SUBCORTICAL = 0.006; // hippocampus, amygdala, thalamus, striatum
+        const SCALE_SCHEMATIC = 0.008; // cerebellum, olfactory, SN, dentate
 
         const push = (
           sample: { results: NeuronMarker['neuron'][] } | null,
@@ -262,20 +275,100 @@ export default function Page() {
           });
         };
 
-        push(v1 as { results: NeuronMarker['neuron'][] } | null, 'Intracalcarine Cortex', '#9bd2ff', 'hubel_wiesel', SCALE_CORTICAL);
-        push(hippo as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#7fff9b', 'hebbian', SCALE_SUBCORTICAL, 'Right Hippocampus');
-        push(ca3 as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#ff2d2d', 'hopfield', SCALE_SUBCORTICAL, 'Right Hippocampus');
-        push(motor as { results: NeuronMarker['neuron'][] } | null, 'Precentral Gyrus', '#ffd86b', 'motor_cortex', SCALE_CORTICAL);
-        push(pfc as { results: NeuronMarker['neuron'][] } | null, 'Frontal Pole', '#d99bff', 'prefrontal', SCALE_CORTICAL);
-        push(thal as { results: NeuronMarker['neuron'][] } | null, 'Left Thalamus', '#ff9b6b', 'thalamus', SCALE_SUBCORTICAL, 'Right Thalamus');
-        push(amyg as { results: NeuronMarker['neuron'][] } | null, 'Left Amygdala', '#ff6bd4', 'amygdala', SCALE_SUBCORTICAL, 'Right Amygdala');
-        push(stri as { results: NeuronMarker['neuron'][] } | null, 'Left Caudate', '#6bffd4', 'striatum', SCALE_SUBCORTICAL, 'Right Caudate');
+        push(
+          v1 as { results: NeuronMarker['neuron'][] } | null,
+          'Intracalcarine Cortex',
+          '#9bd2ff',
+          'hubel_wiesel',
+          SCALE_CORTICAL,
+        );
+        push(
+          hippo as { results: NeuronMarker['neuron'][] } | null,
+          'Left Hippocampus',
+          '#7fff9b',
+          'hebbian',
+          SCALE_SUBCORTICAL,
+          'Right Hippocampus',
+        );
+        push(
+          ca3 as { results: NeuronMarker['neuron'][] } | null,
+          'Left Hippocampus',
+          '#ff2d2d',
+          'hopfield',
+          SCALE_SUBCORTICAL,
+          'Right Hippocampus',
+        );
+        push(
+          motor as { results: NeuronMarker['neuron'][] } | null,
+          'Precentral Gyrus',
+          '#ffd86b',
+          'motor_cortex',
+          SCALE_CORTICAL,
+        );
+        push(
+          pfc as { results: NeuronMarker['neuron'][] } | null,
+          'Frontal Pole',
+          '#d99bff',
+          'prefrontal',
+          SCALE_CORTICAL,
+        );
+        push(
+          thal as { results: NeuronMarker['neuron'][] } | null,
+          'Left Thalamus',
+          '#ff9b6b',
+          'thalamus',
+          SCALE_SUBCORTICAL,
+          'Right Thalamus',
+        );
+        push(
+          amyg as { results: NeuronMarker['neuron'][] } | null,
+          'Left Amygdala',
+          '#ff6bd4',
+          'amygdala',
+          SCALE_SUBCORTICAL,
+          'Right Amygdala',
+        );
+        push(
+          stri as { results: NeuronMarker['neuron'][] } | null,
+          'Left Caudate',
+          '#6bffd4',
+          'striatum',
+          SCALE_SUBCORTICAL,
+          'Right Caudate',
+        );
 
         // Schematic placements (no Harvard-Oxford label exists for these).
-        pushSchematic(purk as { results: NeuronMarker['neuron'][] } | null, cerebellum, '#ff8c5e', 'cerebellum_purkinje', SCALE_SCHEMATIC);
-        push(dg as { results: NeuronMarker['neuron'][] } | null, 'Left Hippocampus', '#b5e85b', 'dentate_granule', SCALE_SUBCORTICAL, 'Right Hippocampus');
-        pushSchematic(olf as { results: NeuronMarker['neuron'][] } | null, olfactoryL, '#ff6bb5', 'olfactory_mitral', SCALE_SCHEMATIC, olfactoryR);
-        pushSchematic(sn as { results: NeuronMarker['neuron'][] } | null, substantiaNigraL, '#c45eff', 'substantia_nigra_dopa', SCALE_SUBCORTICAL, substantiaNigraR);
+        pushSchematic(
+          purk as { results: NeuronMarker['neuron'][] } | null,
+          cerebellum,
+          '#ff8c5e',
+          'cerebellum_purkinje',
+          SCALE_SCHEMATIC,
+        );
+        push(
+          dg as { results: NeuronMarker['neuron'][] } | null,
+          'Left Hippocampus',
+          '#b5e85b',
+          'dentate_granule',
+          SCALE_SUBCORTICAL,
+          'Right Hippocampus',
+        );
+        pushSchematic(
+          olf as { results: NeuronMarker['neuron'][] } | null,
+          olfactoryL,
+          '#ff6bb5',
+          'olfactory_mitral',
+          SCALE_SCHEMATIC,
+          olfactoryR,
+        );
+        pushSchematic(
+          sn as { results: NeuronMarker['neuron'][] } | null,
+          substantiaNigraL,
+          '#c45eff',
+          'substantia_nigra_dopa',
+          SCALE_SUBCORTICAL,
+          substantiaNigraR,
+        );
 
         setMarkers(out);
       })
@@ -357,9 +450,7 @@ export default function Page() {
         if (!candidate?.centroid_mni_mm) continue;
         const c = candidate.centroid_mni_mm;
         const d = Math.sqrt(
-          (c[0] - info.point[0]) ** 2 +
-            (c[1] - info.point[1]) ** 2 +
-            (c[2] - info.point[2]) ** 2,
+          (c[0] - info.point[0]) ** 2 + (c[1] - info.point[1]) ** 2 + (c[2] - info.point[2]) ** 2,
         );
         if (!best || d < best.distance_mm) {
           best = { module: m.module, ho_label: lbl, distance_mm: d };
@@ -379,9 +470,7 @@ export default function Page() {
         <header className="flex items-baseline justify-between border-b border-white/10 px-6 py-4">
           <div className="flex items-baseline gap-3">
             <h1 className="text-xl font-semibold tracking-tight">NeuroForge</h1>
-            <span className="text-xs text-white/40">
-              fsaverage5 + harvard-oxford + 6 modules
-            </span>
+            <span className="text-xs text-white/40">fsaverage5 + harvard-oxford + 6 modules</span>
           </div>
           <div className="flex items-center gap-3 text-xs">
             <button
@@ -415,8 +504,8 @@ export default function Page() {
             )}
             {view === 'brain' && brain && (
               <div className="text-white/60">
-                fsaverage5 ·{' '}
-                {(brain.left.vertex_count + brain.right.vertex_count).toLocaleString()} vertices
+                fsaverage5 · {(brain.left.vertex_count + brain.right.vertex_count).toLocaleString()}{' '}
+                vertices
                 {markers.length > 0 && (
                   <>
                     {' · '}
@@ -497,11 +586,7 @@ export default function Page() {
                               (r) =>
                                 ({
                                   label: r.label,
-                                  centroid_mni_mm: r.centroid_mni_mm as [
-                                    number,
-                                    number,
-                                    number,
-                                  ],
+                                  centroid_mni_mm: r.centroid_mni_mm as [number, number, number],
                                   normalized: r.expression_normalized,
                                 }) as RegionIntensity,
                             ) as RegionIntensity[])
@@ -512,11 +597,7 @@ export default function Page() {
                                 (r) =>
                                   ({
                                     label: r.label,
-                                    centroid_mni_mm: r.centroid_mni_mm as [
-                                      number,
-                                      number,
-                                      number,
-                                    ],
+                                    centroid_mni_mm: r.centroid_mni_mm as [number, number, number],
                                     normalized: r.normalized,
                                   }) as RegionIntensity,
                               ) as RegionIntensity[])
@@ -533,8 +614,8 @@ export default function Page() {
                       defaultOpen
                     >
                       <p className="font-mono text-[10px] leading-snug text-white/50">
-                        Click any function. Brain regions associated with it will glow yellow.
-                        Each entry cites its foundational discovery paper.
+                        Click any function. Brain regions associated with it will glow yellow. Each
+                        entry cites its foundational discovery paper.
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {functions.functions.map((f) => {
@@ -559,17 +640,14 @@ export default function Page() {
                           <div className="mb-1 text-white">{activeFunction.name}</div>
                           <div className="mb-2 text-white/60">{activeFunction.description}</div>
                           <div className="mb-1 text-white/40">
-                            regions (
-                            {activeFunction.region_centroids.filter((r) => r.found).length}/
-                            {activeFunction.atlas_labels.length}):
+                            regions ({activeFunction.region_centroids.filter((r) => r.found).length}
+                            /{activeFunction.atlas_labels.length}):
                           </div>
                           <ul className="mb-2 space-y-0.5">
                             {activeFunction.region_centroids.map((r) => (
                               <li
                                 key={r.label}
-                                className={
-                                  r.found ? 'text-white/80' : 'text-white/30 line-through'
-                                }
+                                className={r.found ? 'text-white/80' : 'text-white/30 line-through'}
                               >
                                 {r.label}
                               </li>
@@ -603,13 +681,13 @@ export default function Page() {
                         }
                       >
                         <p className="font-mono text-[10px] leading-snug text-white/50">
-                          16 deep subcortical nuclei. <span className="text-white/80">VTA</span> makes
-                          the dopamine for reward; <span className="text-white/80">SNc</span> makes the
-                          dopamine for movement (degenerates in Parkinson&apos;s).{' '}
-                          <span className="text-white/80">GPi/GPe</span> are the basal ganglia output;{' '}
-                          <span className="text-white/80">HTH</span> is the hypothalamus (sleep,
-                          appetite, hormones); <span className="text-white/80">MN</span> is the
-                          mammillary nucleus in the Papez memory circuit.
+                          16 deep subcortical nuclei. <span className="text-white/80">VTA</span>{' '}
+                          makes the dopamine for reward; <span className="text-white/80">SNc</span>{' '}
+                          makes the dopamine for movement (degenerates in Parkinson&apos;s).{' '}
+                          <span className="text-white/80">GPi/GPe</span> are the basal ganglia
+                          output; <span className="text-white/80">HTH</span> is the hypothalamus
+                          (sleep, appetite, hormones); <span className="text-white/80">MN</span> is
+                          the mammillary nucleus in the Papez memory circuit.
                         </p>
                         <div className="space-y-0.5 font-mono text-[10px]">
                           {pauli.nuclei.map((n) => (
@@ -768,8 +846,8 @@ export default function Page() {
                         }
                       >
                         <p className="font-mono text-[10px] leading-snug text-white/50">
-                          80 named fiber bundles averaged over 1,065 HCP young-adult subjects.
-                          Each tract is rendered as the centerline of its empirical voxel-occupancy
+                          80 named fiber bundles averaged over 1,065 HCP young-adult subjects. Each
+                          tract is rendered as the centerline of its empirical voxel-occupancy
                           distribution (PCA-binned mean per length-bin). Click a group to filter.
                         </p>
                         <div className="flex flex-wrap gap-1">
@@ -784,7 +862,8 @@ export default function Page() {
                             all
                           </button>
                           {Array.from(new Set(hcp1065.tracts.map((t) => t.group))).map((g) => {
-                            const color = hcp1065.tracts.find((t) => t.group === g)?.color ?? '#888';
+                            const color =
+                              hcp1065.tracts.find((t) => t.group === g)?.color ?? '#888';
                             const isActive = hcp1065Group === g;
                             return (
                               <button
@@ -912,8 +991,8 @@ export default function Page() {
                         }
                       >
                         <p className="font-mono text-[10px] leading-snug text-white/50">
-                          7 large-scale brain systems discovered by clustering resting-state activity
-                          across 1,000 subjects. Each network has a clear function:
+                          7 large-scale brain systems discovered by clustering resting-state
+                          activity across 1,000 subjects. Each network has a clear function:
                         </p>
                         <div className="space-y-1 font-mono text-[10px]">
                           {yeoNetworks.networks.map((n) => (
@@ -974,16 +1053,13 @@ export default function Page() {
                           ))}
                         </div>
                         <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
-                          schematic Bezier centerlines (not fiber-resolved). Catani &amp; Thiebaut de
-                          Schotten. Cortex. 2008. doi:10.1016/j.cortex.2008.05.004
+                          schematic Bezier centerlines (not fiber-resolved). Catani &amp; Thiebaut
+                          de Schotten. Cortex. 2008. doi:10.1016/j.cortex.2008.05.004
                         </p>
                       </CollapsibleSection>
                     )}
 
-                    <CollapsibleSection
-                      title="neuron color key"
-                      subtitle="120 cells"
-                    >
+                    <CollapsibleSection title="neuron color key" subtitle="120 cells">
                       <p className="font-mono text-[10px] leading-snug text-white/50">
                         Each color = one anatomical population. Every cell is a real reconstruction
                         from neuromorpho.org rendered at its region&apos;s MNI centroid.
@@ -1019,8 +1095,8 @@ export default function Page() {
                           would otherwise contain cells exceeding their real bounds)
                         </p>
                         <p>
-                          &quot;schematic&quot; = MNI centroid from Mai et al. 2015 stereotaxic atlas
-                          (structure not in Harvard-Oxford)
+                          &quot;schematic&quot; = MNI centroid from Mai et al. 2015 stereotaxic
+                          atlas (structure not in Harvard-Oxford)
                         </p>
                         <p>
                           firing animation: pulse propagates from soma at 250 µm/ms, 600 ms ISI
@@ -1078,8 +1154,7 @@ export default function Page() {
                                     </div>
                                     <div className="flex flex-wrap gap-1">
                                       {grouped[sys].map((r) => {
-                                        const isActive =
-                                          activeReceptor?.receptor.key === r.key;
+                                        const isActive = activeReceptor?.receptor.key === r.key;
                                         return (
                                           <button
                                             key={r.key}
@@ -1091,9 +1166,7 @@ export default function Page() {
                                               }
                                               setReceptorLoading(true);
                                               try {
-                                                setActiveReceptor(
-                                                  await fetchReceptorMap(r.key),
-                                                );
+                                                setActiveReceptor(await fetchReceptorMap(r.key));
                                               } catch {
                                                 /* ignore */
                                               } finally {
@@ -1146,18 +1219,13 @@ export default function Page() {
                                 top regions (mean PET signal)
                               </div>
                               <ul className="mt-0.5 space-y-0.5">
-                                {[
-                                  ...activeReceptor.cortical,
-                                  ...activeReceptor.subcortical,
-                                ]
+                                {[...activeReceptor.cortical, ...activeReceptor.subcortical]
                                   .sort((a, b) => b.mean - a.mean)
                                   .slice(0, 6)
                                   .map((r) => (
                                     <li key={r.label} className="text-white/70">
                                       {r.label}{' '}
-                                      <span className="text-white/40">
-                                        ({r.mean.toFixed(2)})
-                                      </span>
+                                      <span className="text-white/40">({r.mean.toFixed(2)})</span>
                                     </li>
                                   ))}
                               </ul>
@@ -1177,8 +1245,7 @@ export default function Page() {
                     <div className="mb-2 break-words text-white">{clickedRegion.label}</div>
                     <div className="text-white/40">click @ MNI mm</div>
                     <div className="mb-2 text-white/80">
-                      ({clickedRegion.point[0].toFixed(1)},{' '}
-                      {clickedRegion.point[1].toFixed(1)},{' '}
+                      ({clickedRegion.point[0].toFixed(1)}, {clickedRegion.point[1].toFixed(1)},{' '}
                       {clickedRegion.point[2].toFixed(1)})
                     </div>
                     {clickedRegion.nearestModule ? (

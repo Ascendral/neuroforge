@@ -46,7 +46,9 @@ export function McCullochPittsPanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">McCulloch-Pitts 1943 — threshold logic</h2>
+        <h2 className="text-xs uppercase tracking-widest text-white/40">
+          McCulloch-Pitts 1943 — threshold logic
+        </h2>
         <span className="font-mono text-[10px] text-white/30">historical abstraction</span>
       </div>
 
@@ -81,7 +83,11 @@ export function McCullochPittsPanel() {
                 <div key={i} className="contents">
                   <div className="text-white">{row.join(' ')}</div>
                   <div className="text-white/60">{result.expected[i]}</div>
-                  <div className={result.expected[i] === result.produced[i] ? 'text-[#9bd2ff]' : 'text-accent'}>
+                  <div
+                    className={
+                      result.expected[i] === result.produced[i] ? 'text-[#9bd2ff]' : 'text-accent'
+                    }
+                  >
                     {result.produced[i]} {result.expected[i] === result.produced[i] ? '✓' : '✗'}
                   </div>
                 </div>
@@ -103,7 +109,9 @@ export function McCullochPittsPanel() {
 
       <div className="space-y-2 border-t border-white/10 pt-3">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-xs uppercase tracking-widest text-white/40">XOR — single-layer impossibility</h3>
+          <h3 className="text-xs uppercase tracking-widest text-white/40">
+            XOR — single-layer impossibility
+          </h3>
           <button
             onClick={onRunXorSearch}
             disabled={running}

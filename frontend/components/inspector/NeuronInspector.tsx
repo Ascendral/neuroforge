@@ -71,7 +71,13 @@ export function NeuronInspector({ neuron, selected }: NeuronInspectorProps) {
           <MetaRow label="species" value={neuron.species || '—'} />
           <MetaRow
             label="scientific"
-            value={neuron.scientific_name ? <em className="not-italic">{neuron.scientific_name}</em> : '—'}
+            value={
+              neuron.scientific_name ? (
+                <em className="not-italic">{neuron.scientific_name}</em>
+              ) : (
+                '—'
+              )
+            }
           />
           <MetaRow
             label="region"

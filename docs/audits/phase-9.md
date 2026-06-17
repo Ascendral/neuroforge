@@ -6,12 +6,15 @@
 **Cross-model audit:** PENDING
 
 ## Naming
+
 Module-name-first: **McCulloch-Pitts 1943 (Threshold Logic + XOR Impossibility)**.
 
 ## Scope
+
 Sixth and final canonical module from the original plan: the historical-abstraction bookend. Symbolic threshold-logic neuron computing canonical Boolean gates (AND, OR, NOT, NAND, NOR), plus a brute-force search confirming the Minsky-Papert 1969 result that no single-layer M-P neuron computes XOR. No NeuroMorpho data anchor — M-P is a pure mathematical abstraction; honest about that.
 
 ## What got built
+
 - `backend/neuroforge_api/simulators/mcp.py`:
   - `mp_neuron(weights, threshold, inputs)` — y = 1 iff Σ wᵢ xᵢ ≥ θ.
   - `truth_table(n_inputs)` — all 2ⁿ binary combinations.
@@ -30,10 +33,12 @@ Sixth and final canonical module from the original plan: the historical-abstract
 ## Verified — 2026-04-30
 
 ### Backend tests
+
 ```
 $ pytest neuroforge_api/tests -q
 68 passed in 13.51s
 ```
+
 - 8 new M-P tests:
   - `test_each_gate_truth_table` (parametrized × 5) — every gate produces its full expected truth table.
   - `test_xor_has_no_single_layer_solution` — the search returns `no_solution=True`, `best_match_correct < 4` (in fact = 3, since one corner can always be missed).
@@ -42,6 +47,7 @@ $ pytest neuroforge_api/tests -q
   - `test_endpoint_xor_search` — `no_solution=True`, citation contains "Minsky".
 
 ### Live HTTP smoke test
+
 ```
 $ curl -s 'http://localhost:8000/api/simulate/mcp/AND'
 AND passes=True produced=[0, 0, 0, 1] expected=[0, 0, 0, 1] weights=[1.0, 1.0] threshold=2.0
@@ -51,6 +57,7 @@ XOR no_solution=True tried=2197 best=3/4 best_w=[-3.0, -3.0] best_t=-3.0
 ```
 
 ### Browser verification (DOM-confirmed, screenshot)
+
 - McCulloch-Pitts panel renders with the AND truth table:
   - A B | expect | produced
   - 0 0 | 0 | 0 ✓
@@ -63,17 +70,20 @@ XOR no_solution=True tried=2197 best=3/4 best_w=[-3.0, -3.0] best_t=-3.0
 - Citation rendered: "McCulloch WS, Pitts W. A logical calculus of the ideas immanent in nervous activity. Bull Math Biophys. 1943;5(4):115-133. doi:10.1007/BF02478259. Minsky M, Papert S. Perceptrons. MIT Press, 1969 (single-layer XOR impossibility). Rumelhart DE, Hinton GE, Williams RJ. Learning representations by back-propagating errors. Nature. 1986;323(6088):533-536. doi:10.1038/323533a0 (multi-layer escape)."
 
 ### Linters
+
 - `ruff check neuroforge_api` — clean
 - `pnpm typecheck` — clean
 - `pnpm lint` — clean
 
 ## Anti-theater self-checks
+
 - **No fabricated truth tables.** Each gate's `expected` tuple in `GATES` is the canonical Boolean function output. The `produced` tuple is the live result of running `mp_neuron` for each row of the truth table. The frontend renders both and visibly shows ✓/✗ — if a gate fails, that would be visible.
 - **Empirical XOR proof, not just a citation.** Rather than asserting "Minsky-Papert says XOR can't be computed," the search actually exhausts 2,197 (w₁, w₂, θ) integer-stepped triples and reports the best partial match (3/4). The test asserts this empirically. Anyone can re-run with a wider grid to convince themselves.
 - **Honest historical framing.** The panel header says "historical abstraction" and the position in the inspector follows chronology (1943 first). M-P is not anchored to a specific cell from NeuroMorpho — that would be theater since the model is symbolic, not biophysical. The action-potential-threshold concept that motivates M-P is already implemented and cited (Hodgkin-Huxley 1952, Phase 4).
 - **Real citations.** McCulloch-Pitts 1943 DOI `10.1007/BF02478259` resolves. Rumelhart-Hinton-Williams 1986 DOI `10.1038/323533a0` resolves. Minsky-Papert 1969 is a book (no DOI), cited by full title.
 
 ## Honest limitations
+
 1. **No live "design your own gate" tool.** The user picks from 5 fixed gates; can't enter custom weights/threshold and see the resulting truth table. UI enhancement, not a science gap.
 2. **XOR search is integer-stepped.** A finer grid (or a continuous LP) would give a sharper empirical proof but doesn't change the theoretical conclusion (which Minsky-Papert proved via geometric argument: XOR is not linearly separable in input space).
 3. **No multi-layer demo.** A two-layer M-P network solving XOR would be a natural follow-up showing the Rumelhart-Hinton-Williams 1986 escape. Cited but not implemented.
@@ -83,6 +93,7 @@ XOR no_solution=True tried=2197 best=3/4 best_w=[-3.0, -3.0] best_t=-3.0
 > Audit this diff for: hardcoded gate outputs, fabricated XOR proof, dead code, citation drift.
 >
 > Specifically:
+>
 > 1. Does `mp_neuron` actually compute `1 iff Σ wᵢ xᵢ ≥ θ`?
 > 2. Does each gate's hand-set (w, θ) actually produce its claimed truth table when run through `mp_neuron`?
 > 3. Does `search_xor_single_layer` actually iterate all 2,197 triples and check each, or is the `no_solution=True` value short-circuited?
@@ -94,19 +105,20 @@ XOR no_solution=True tried=2197 best=3/4 best_w=[-3.0, -3.0] best_t=-3.0
 > Report only theater. Be brutal.
 
 ### Verdict
+
 _Pending Alex's cross-model audit + manual gate sweep + DOI resolution._
 
 ---
 
 ## Original 6-module plan: COMPLETE
 
-| Module | Phase | Anchor | Status |
-|---|---|---|---|
-| 1. McCulloch-Pitts 1943 | 9 | Action-potential threshold | ✓ |
-| 2. Hebbian + LTP (Hebb 1949 / Bliss-Lømo 1973) | 7 | Hippocampal pyramidals | ✓ |
-| 3. Hodgkin-Huxley 1952 | 4 | Squid giant axon | ✓ |
-| 4. STDP (Bi & Poo 1998) | 5 | Hippocampal pairs | ✓ |
-| 5. Hubel-Wiesel 1962 | 6 | V1 simple/complex cells | ✓ |
-| 6. Hopfield 1982 | 8 | CA3 attractor recall | ✓ |
+| Module                                         | Phase | Anchor                     | Status |
+| ---------------------------------------------- | ----- | -------------------------- | ------ |
+| 1. McCulloch-Pitts 1943                        | 9     | Action-potential threshold | ✓      |
+| 2. Hebbian + LTP (Hebb 1949 / Bliss-Lømo 1973) | 7     | Hippocampal pyramidals     | ✓      |
+| 3. Hodgkin-Huxley 1952                         | 4     | Squid giant axon           | ✓      |
+| 4. STDP (Bi & Poo 1998)                        | 5     | Hippocampal pairs          | ✓      |
+| 5. Hubel-Wiesel 1962                           | 6     | V1 simple/complex cells    | ✓      |
+| 6. Hopfield 1982                               | 8     | CA3 attractor recall       | ✓      |
 
 68/68 backend tests passing. ruff/typecheck/lint all clean. Allen Brain Atlas integration **never attempted** — the project shipped on NeuroMorpho.org alone, with the deferred decision honestly documented across every audit doc.

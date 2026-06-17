@@ -89,7 +89,13 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
         {/* Y axis */}
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
         {/* X axis */}
-        <line x1={PAD_L} x2={PAD_L + innerW} y1={PAD_T + innerH} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
+        <line
+          x1={PAD_L}
+          x2={PAD_L + innerW}
+          y1={PAD_T + innerH}
+          y2={PAD_T + innerH}
+          stroke="rgba(255,255,255,0.3)"
+        />
         {/* Grid + ticks */}
         {ticks.map((mv) => {
           const y = PAD_T + ((V_MAX - mv) / (V_MAX - V_MIN)) * innerH;
@@ -103,7 +109,14 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
                 stroke="rgba(255,255,255,0.07)"
                 strokeDasharray="2 3"
               />
-              <text x={PAD_L - 4} y={y + 3} fontSize={9} textAnchor="end" fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+              <text
+                x={PAD_L - 4}
+                y={y + 3}
+                fontSize={9}
+                textAnchor="end"
+                fill="rgba(255,255,255,0.5)"
+                fontFamily="monospace"
+              >
                 {mv}
               </text>
             </g>
@@ -111,8 +124,18 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
         })}
 
         {/* Axis labels */}
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">mV</text>
-        <text x={PLOT_W - 14} y={PAD_T + innerH + 14} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">ms</text>
+        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+          mV
+        </text>
+        <text
+          x={PLOT_W - 14}
+          y={PAD_T + innerH + 14}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="monospace"
+        >
+          ms
+        </text>
 
         {!computed && (
           <text

@@ -16,7 +16,14 @@ const PAD_R = 8;
 const PAD_T = 14;
 const PAD_B = 22;
 
-function buildPath(xs: number[], ys: number[], xMin: number, xMax: number, yMin: number, yMax: number): string {
+function buildPath(
+  xs: number[],
+  ys: number[],
+  xMin: number,
+  xMax: number,
+  yMin: number,
+  yMax: number,
+): string {
   const innerW = PLOT_W - PAD_L - PAD_R;
   const innerH = PLOT_H - PAD_T - PAD_B;
   let d = '';

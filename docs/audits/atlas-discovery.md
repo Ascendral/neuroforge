@@ -10,18 +10,20 @@ This is a discovery doc. Nothing was rendered, scaffolded, or claimed to work. R
 ## Probes
 
 ### Allen Brain Atlas API — `api.brain-map.org`
-| Probe | Result |
-|---|---|
-| `Ontology/query.json` (list ontologies) | 200 OK. 17+ ontologies returned. **Ontology id 7 = "Human Brain Atlas"**, id 1 = "Mouse Brain Atlas". |
-| `Structure/query.json?criteria=[ontology_id$eq7]` | 200 OK. **1,839 human-atlas structures** in the ontology. |
-| Sample human structures at depth 3 | Real, canonical: `Cx` cerebral cortex, `CxN` cerebral nuclei, `TH` thalamus, `SbT` subthalamus, `ET` epithalamus, `Hy` hypothalamus, `Cb` cerebellum, `MTg` midbrain tegmentum, … |
+
+| Probe                                             | Result                                                                                                                                                                            |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Ontology/query.json` (list ontologies)           | 200 OK. 17+ ontologies returned. **Ontology id 7 = "Human Brain Atlas"**, id 1 = "Mouse Brain Atlas".                                                                             |
+| `Structure/query.json?criteria=[ontology_id$eq7]` | 200 OK. **1,839 human-atlas structures** in the ontology.                                                                                                                         |
+| Sample human structures at depth 3                | Real, canonical: `Cx` cerebral cortex, `CxN` cerebral nuclei, `TH` thalamus, `SbT` subthalamus, `ET` epithalamus, `Hy` hypothalamus, `Cb` cerebellum, `MTg` midbrain tegmentum, … |
 
 ### Allen mesh download — `download.alleninstitute.org/informatics-archive/current-release/`
-| Path | HTTP | Notes |
-|---|---|---|
-| `current-release/` (directory listing) | 200 | Children: `brain_observatory/`, `mouse_annotation/`, `mouse_ccf/`, `rna_seq/` |
-| `mouse_ccf/annotation/ccf_2017/structure_meshes/997.obj` | 200 (HEAD) | Mouse CCF root structure mesh — exists. |
-| **`human_brain_atlas/`** | — | **Does not exist.** No `human_*` directory at this path. |
+
+| Path                                                     | HTTP       | Notes                                                                         |
+| -------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------- |
+| `current-release/` (directory listing)                   | 200        | Children: `brain_observatory/`, `mouse_annotation/`, `mouse_ccf/`, `rna_seq/` |
+| `mouse_ccf/annotation/ccf_2017/structure_meshes/997.obj` | 200 (HEAD) | Mouse CCF root structure mesh — exists.                                       |
+| **`human_brain_atlas/`**                                 | —          | **Does not exist.** No `human_*` directory at this path.                      |
 
 ### Verdict on "Allen all the way down" for human brain
 
@@ -36,22 +38,26 @@ I did not invent this finding. I probed and the directory either exists or doesn
 ## Three honest paths from here
 
 ### Path 1 — Pivot to mouse, stay no-fuzz
+
 Use Allen Mouse CCFv3 throughout: per-region 3D meshes, atlas ontology, mouse-specific cell types from Allen Cell Types Database, mouse SWC reconstructions (already heavily represented in NeuroMorpho — neuron 102367 from the V1 module is mouse, from the Allen Cell Types archive). Single coordinate system, single ontology. Works perfectly.
 
-**Cost:** the project ships as a *mouse* brain atlas, not a human one. The user asked for "human brain" — going mouse instead is a meaningful scope change, but it's the only no-fuzz option that delivers actual whole-brain 3D rendering with real region IDs and real cell drill-in.
+**Cost:** the project ships as a _mouse_ brain atlas, not a human one. The user asked for "human brain" — going mouse instead is a meaningful scope change, but it's the only no-fuzz option that delivers actual whole-brain 3D rendering with real region IDs and real cell drill-in.
 
 ### Path 2 — Human brain, accept atlas fusion
+
 Use **MNI152** (or **fsaverage** from FreeSurfer) for the human brain surface mesh, plus a parcellation atlas (**AAL**, **Desikan-Killiany**, or **Glasser HCP MMP 1.0**). Map NeuroMorpho's free-text `brain_region` tags onto the parcellation labels through a hand-curated mapping table.
 
 **Cost:** the mapping table is the fuzziness the user explicitly rejected. Free-text tags like `"neocortex / occipital / primary visual / layer 4"` and atlas labels like `Glasser_V1` or `AAL_Calcarine_R` need a translation layer. Some neurons land cleanly, others ambiguously. This is what the user's "no fuzz" rule explicitly rules out.
 
 License notes (still unverified at network cost):
+
 - MNI152 (BIC McGill ICBM152) — generally CC, requires citation
 - fsaverage (FreeSurfer) — academic-free, NIH-funded
 - AAL — academic-free
 - Glasser HCP MMP 1.0 — Connectome Coordination Facility, requires DUA for full data
 
 ### Path 3 — Cancel the atlas pivot for now
+
 Keep NeuroForge as the per-module deep-dive it currently is (6 modules, real cell metadata, real physics). Don't promise a whole-brain map at all. Document the discovery finding so a future contributor doesn't re-investigate.
 
 **Cost:** does not deliver the visual map the user described. But it preserves the no-fuzz commitment without overpromising.
@@ -67,6 +73,7 @@ Keep NeuroForge as the per-module deep-dive it currently is (6 modules, real cel
 I am NOT pivoting unilaterally. This doc surfaces the choice. The user picks.
 
 ## What this doc deliberately does NOT do
+
 - Claim Allen has human mesh data when it doesn't.
 - Suggest scraping unofficial / academic sources to fake a unified atlas.
 - Start scaffolding any frontend/backend code for a brain-shell viewer.

@@ -274,11 +274,15 @@ export async function fetchAllenGenes(): Promise<AllenGeneListResponse> {
   return (await response.json()) as AllenGeneListResponse;
 }
 
-export async function fetchAllenGeneExpression(symbol: string): Promise<AllenGeneExpressionResponse> {
+export async function fetchAllenGeneExpression(
+  symbol: string,
+): Promise<AllenGeneExpressionResponse> {
   const response = await fetch(`${API_BASE}/api/brain/allen-genes/${encodeURIComponent(symbol)}`);
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`fetchAllenGeneExpression(${symbol}): ${response.status} ${text.slice(0, 200)}`);
+    throw new Error(
+      `fetchAllenGeneExpression(${symbol}): ${response.status} ${text.slice(0, 200)}`,
+    );
   }
   return (await response.json()) as AllenGeneExpressionResponse;
 }

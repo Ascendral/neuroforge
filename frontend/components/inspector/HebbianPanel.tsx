@@ -17,7 +17,13 @@ const PAD_R = 8;
 const PAD_T = 12;
 const PAD_B = 22;
 
-function buildLogPath(xs: number[], ys: number[], xMax: number, yMin: number, yMax: number): string {
+function buildLogPath(
+  xs: number[],
+  ys: number[],
+  xMax: number,
+  yMin: number,
+  yMax: number,
+): string {
   const innerW = PLOT_W - PAD_L - PAD_R;
   const innerH = PLOT_H - PAD_T - PAD_B;
   let d = '';
@@ -99,7 +105,9 @@ export function HebbianPanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">Hebbian / LTP — Hebb 1949 · Bliss-Lømo 1973 · Oja 1982</h2>
+        <h2 className="text-xs uppercase tracking-widest text-white/40">
+          Hebbian / LTP — Hebb 1949 · Bliss-Lømo 1973 · Oja 1982
+        </h2>
       </div>
 
       <svg
@@ -109,20 +117,59 @@ export function HebbianPanel() {
         className="rounded border border-white/10 bg-black"
       >
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
-        <line x1={PAD_L} x2={PAD_L + innerW} y1={PAD_T + innerH} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">||w||</text>
-        <text x={PLOT_W - 24} y={PAD_T + innerH + 14} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">iter</text>
+        <line
+          x1={PAD_L}
+          x2={PAD_L + innerW}
+          y1={PAD_T + innerH}
+          y2={PAD_T + innerH}
+          stroke="rgba(255,255,255,0.3)"
+        />
+        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+          ||w||
+        </text>
+        <text
+          x={PLOT_W - 24}
+          y={PAD_T + innerH + 14}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="monospace"
+        >
+          iter
+        </text>
 
         {!computed && (
-          <text x={PAD_L + innerW / 2} y={PAD_T + innerH / 2 + 4} fontSize={10} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontFamily="monospace">
+          <text
+            x={PAD_L + innerW / 2}
+            y={PAD_T + innerH / 2 + 4}
+            fontSize={10}
+            textAnchor="middle"
+            fill="rgba(255,255,255,0.35)"
+            fontFamily="monospace"
+          >
             no run yet — click compute
           </text>
         )}
 
         {computed && (
           <>
-            <line x1={PAD_L} x2={PAD_L + innerW} y1={computed.oneY} y2={computed.oneY} stroke="rgba(155,210,255,0.25)" strokeDasharray="2 3" />
-            <text x={PAD_L - 4} y={computed.oneY + 3} fontSize={9} textAnchor="end" fill="rgba(155,210,255,0.6)" fontFamily="monospace">1</text>
+            <line
+              x1={PAD_L}
+              x2={PAD_L + innerW}
+              y1={computed.oneY}
+              y2={computed.oneY}
+              stroke="rgba(155,210,255,0.25)"
+              strokeDasharray="2 3"
+            />
+            <text
+              x={PAD_L - 4}
+              y={computed.oneY + 3}
+              fontSize={9}
+              textAnchor="end"
+              fill="rgba(155,210,255,0.6)"
+              fontFamily="monospace"
+            >
+              1
+            </text>
             <path d={computed.ojaPath} fill="none" stroke="#9bd2ff" strokeWidth={1.4} />
             <path d={computed.hebbPath} fill="none" stroke="#ff2d2d" strokeWidth={1.4} />
           </>
@@ -130,8 +177,14 @@ export function HebbianPanel() {
       </svg>
 
       <div className="flex items-baseline gap-3 text-[10px] font-mono text-white/40">
-        <span><span className="inline-block w-3 border-t border-accent align-middle" /> pure Hebb (runaway)</span>
-        <span><span className="inline-block w-3 border-t border-[#9bd2ff] align-middle" /> Oja (stable at ‖w‖=1)</span>
+        <span>
+          <span className="inline-block w-3 border-t border-accent align-middle" /> pure Hebb
+          (runaway)
+        </span>
+        <span>
+          <span className="inline-block w-3 border-t border-[#9bd2ff] align-middle" /> Oja (stable
+          at ‖w‖=1)
+        </span>
       </div>
 
       <div className="space-y-2 font-mono text-xs">
@@ -173,23 +226,33 @@ export function HebbianPanel() {
           <dl className="space-y-1 text-white/70">
             <div className="flex gap-2">
               <dt className="w-32 text-white/40">final ‖w‖ (Hebb)</dt>
-              <dd className="text-accent">{response.hebb_norm[response.hebb_norm.length - 1].toExponential(2)}</dd>
+              <dd className="text-accent">
+                {response.hebb_norm[response.hebb_norm.length - 1].toExponential(2)}
+              </dd>
             </div>
             <div className="flex gap-2">
               <dt className="w-32 text-white/40">final ‖w‖ (Oja)</dt>
-              <dd className="text-[#9bd2ff]">{response.oja_norm[response.oja_norm.length - 1].toFixed(4)}</dd>
+              <dd className="text-[#9bd2ff]">
+                {response.oja_norm[response.oja_norm.length - 1].toFixed(4)}
+              </dd>
             </div>
             <div className="flex gap-2">
               <dt className="w-32 text-white/40">final angle Hebb°</dt>
-              <dd className="text-white">{response.hebb_angle_deg[response.hebb_angle_deg.length - 1].toFixed(2)}</dd>
+              <dd className="text-white">
+                {response.hebb_angle_deg[response.hebb_angle_deg.length - 1].toFixed(2)}
+              </dd>
             </div>
             <div className="flex gap-2">
               <dt className="w-32 text-white/40">final angle Oja°</dt>
-              <dd className="text-white">{response.oja_angle_deg[response.oja_angle_deg.length - 1].toFixed(2)}</dd>
+              <dd className="text-white">
+                {response.oja_angle_deg[response.oja_angle_deg.length - 1].toFixed(2)}
+              </dd>
             </div>
             <div className="flex gap-2">
               <dt className="w-32 text-white/40">PC direction</dt>
-              <dd className="text-white/70">[{response.principal_direction.map((v) => v.toFixed(3)).join(', ')}]</dd>
+              <dd className="text-white/70">
+                [{response.principal_direction.map((v) => v.toFixed(3)).join(', ')}]
+              </dd>
             </div>
           </dl>
         )}
@@ -203,7 +266,9 @@ export function HebbianPanel() {
 
       <div className="space-y-2 border-t border-white/10 pt-3">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-xs uppercase tracking-widest text-white/40">Real hippocampal pyramidals</h3>
+          <h3 className="text-xs uppercase tracking-widest text-white/40">
+            Real hippocampal pyramidals
+          </h3>
           {sample && (
             <span className="font-mono text-[10px] text-white/30">
               {sample.total_matching.toLocaleString()} on neuromorpho.org
@@ -252,11 +317,21 @@ export function HebbianPanel() {
                   </div>
                   <div className="space-x-2">
                     {n.reference_doi.length > 0 && (
-                      <a href={`https://doi.org/${n.reference_doi[0]}`} target="_blank" rel="noreferrer" className="text-white/70 underline-offset-2 hover:underline">
+                      <a
+                        href={`https://doi.org/${n.reference_doi[0]}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-white/70 underline-offset-2 hover:underline"
+                      >
                         doi:{n.reference_doi[0]}
                       </a>
                     )}
-                    <a href={n.source_url} target="_blank" rel="noreferrer" className="text-white/40 underline-offset-2 hover:underline">
+                    <a
+                      href={n.source_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-white/40 underline-offset-2 hover:underline"
+                    >
                       neuromorpho ↗
                     </a>
                   </div>

@@ -6,9 +6,11 @@
 **Cross-model audit:** PENDING — Alex to run independent GPT-4 / fresh Claude session on the Phase 1 diff before merging Phase 2 work.
 
 ## Scope of Phase 1
+
 NeuroMorpho.org REST client, SWC parser, SQLite cache, `GET /api/neurons/{id}` endpoint. End-to-end fetch of a real reconstructed neuron from the live public API.
 
 ## What got built
+
 - `backend/neuroforge_api/sources/neuromorpho.py` — client for `/api/neuron/id/{id}`, paginated `/api/neuron`, and CNG SWC download from `dableFiles/{archive_lower}/CNG version/{name}.CNG.swc`. Typed via `NeuroMorphoNeuron` dataclass.
 - `backend/neuroforge_api/parsers/swc.py` — strict SWC parser into `SwcMorphology`. Validates field count, numeric parses, no duplicate ids, no forward parent references. Type-aware accessors for soma / axon / dendrite points.
 - `backend/neuroforge_api/db.py` + `models/neuron.py` — SQLite (SQLAlchemy 2.0 declarative) cache table `neurons` storing `metadata_json` + `swc_text` + `fetched_at`. Test-isolated via `reset_for_tests`.
@@ -18,6 +20,7 @@ NeuroMorpho.org REST client, SWC parser, SQLite cache, `GET /api/neurons/{id}` e
 ## Verified against real data — 2026-04-30
 
 ### Live endpoint output
+
 ```
 $ curl -s http://localhost:8000/api/neurons/1 | jq summary
 neuron_id=1 name=cnic_001 archive=Wearne_Hof species=monkey
@@ -32,25 +35,30 @@ first_3_points=[
   {id:3, type:1, x:-0.67,y:-8.12,z:0.0, radius:8.1498, parent_id:1},
 ]
 ```
+
 Coordinates byte-for-byte match the real `cnic_001.CNG.swc` content fetched directly from neuromorpho.org during API probing. The DOIs are live in CrossRef.
 
 ### Test results
+
 ```
 $ pytest neuroforge_api/tests -v
 15 passed in 4.93s
 ```
+
 - 1 health
 - 6 SWC parser unit tests (incl. one parsing the first 12 real cnic_001 data points)
 - 5 live integration tests against neuromorpho.org (real neuron fetch, real list page, real SWC download, real 404 handling, URL format)
 - 2 end-to-end endpoint tests through TestClient on isolated SQLite (real fetch + cache reuse)
 
 ### Linter
+
 ```
 $ ruff check neuroforge_api
 All checks passed!
 ```
 
 ## Theater checks (self-audit, NOT a substitute for cross-model audit)
+
 - No mock NeuroMorpho responses anywhere. Every test that exercises the client hits the real public API and is auto-skipped (with reason logged) only if the network is unreachable.
 - No hardcoded neuron data. The 12-line SWC sample in `test_swc_parser.py` is annotated as the real first 12 lines of cnic_001 from a documented URL on a documented date — and is also exercised by `test_download_and_parse_real_swc_for_neuron_1` which fetches the full file from upstream and parses 1,274 real points.
 - No fake citations. DOIs come from upstream `reference_doi`. They were not invented.
@@ -58,6 +66,7 @@ All checks passed!
 - No `# TODO: hardcoded`, `# FAKE`, `# MOCK` markers. Pre-commit hook would block them.
 
 ## Known limitations
+
 - Cache has no TTL / invalidation. Phase 2+ may need a "force refresh" path if upstream metadata changes (rare).
 - `list_neurons` does not yet expose filter parameters (brain region, species) — only pagination. Filter API needed for Module 2/4 (hippocampal pyramidals) and Module 5 (Allen V1 alternative).
 - Allen Brain Atlas integration still unbuilt. Phase 0 audit recommended option (b): direct REST to `api.brain-map.org`. Decision still pending Alex's confirmation; not blocking Phase 2.
@@ -75,4 +84,5 @@ Paste the Phase 1 diff into a fresh GPT-4 / Opus session with this prompt:
 Append the verdict (PASS/FAIL + findings) below before opening any Phase 2 PR.
 
 ### Verdict
+
 _Pending Alex's cross-model audit run._

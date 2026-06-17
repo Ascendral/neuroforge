@@ -162,7 +162,7 @@ export function NeuronGlyph({
   // Stable per-neuron phase offset so neurons don't fire in lockstep.
   const phase_ms = useMemo(() => {
     const seed = neuron.neuron_id;
-    return (Math.sin(seed * 7919) * 100000) % (period_ms);
+    return (Math.sin(seed * 7919) * 100000) % period_ms;
   }, [neuron.neuron_id, period_ms]);
 
   const uniforms = useRef({
@@ -191,7 +191,7 @@ export function NeuronGlyph({
     uniforms.current.time_ms.value = tMs;
     somaUniforms.current.time_ms.value = tMs;
     if (somaRef.current) {
-      const t = ((tMs + phase_ms) % period_ms);
+      const t = (tMs + phase_ms) % period_ms;
       const flashDur = 120;
       const u = Math.min(t / flashDur, 1);
       const flash = u < 1 ? Math.exp(-u * 4) : 0;

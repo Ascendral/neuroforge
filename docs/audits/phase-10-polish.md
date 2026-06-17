@@ -6,13 +6,16 @@
 **Cross-model audit:** PENDING
 
 ## Naming
+
 This is the **Polish + Wiring** commit. Two scope-bundled deliverables:
+
 1. Citation infrastructure (BibTeX endpoint + DOI verifier + README)
 2. Click-to-render wiring from every panel's neuron list into the 3D viewer.
 
 ## Scope
 
 ### Citation infrastructure (was option (b))
+
 - `backend/neuroforge_api/citations.py` — single source of truth for every cited work in NeuroForge: 15 references (12 with DOIs + 3 books) covering all 6 modules.
 - `backend/neuroforge_api/routers/citations.py` — `GET /api/citations` returns the JSON list, `GET /api/citations/bibtex` returns a plain-text BibTeX dump.
 - `scripts/verify_dois.py` — runs against `api.crossref.org/works/{DOI}` for every cited DOI; prints the canonical title returned. Exits non-zero on any unregistered DOI.
@@ -20,6 +23,7 @@ This is the **Polish + Wiring** commit. Two scope-bundled deliverables:
 - `README.md` — rewritten with module index table, API surface, citation export instructions, anti-theater protocol notes.
 
 ### Module-to-3D wiring (was option (c))
+
 - `frontend/lib/neuron-context.tsx` — React context exposing `selectNeuron(id)` setter and `selectedId` to any nested component.
 - `frontend/app/page.tsx` — lifted `neuronId` state to the page root, refetches `/api/neurons/{id}` whenever it changes, provides the context to the inspector subtree.
 - `frontend/components/inspector/HubelWieselPanel.tsx`, `HebbianPanel.tsx`, `HopfieldPanel.tsx` — each panel's neuron-list entries now expose:
@@ -31,13 +35,16 @@ This is the **Polish + Wiring** commit. Two scope-bundled deliverables:
 ## Verified — 2026-04-30
 
 ### Backend tests
+
 ```
 $ pytest neuroforge_api/tests -q
 74 passed in 14.33s
 ```
+
 6 new citation tests, all passing.
 
 ### DOI verification (live, against Crossref)
+
 ```
 $ python scripts/verify_dois.py
 OK   200  10.1113/jphysiol.1952.sp004764  →  A quantitative description of membrane current ...
@@ -61,16 +68,19 @@ All 12 DOIs resolved.
 This is exactly the kind of "anti-theater detour" the project's CLAUDE.md asks for: do not declare DOIs verified when they 403'd, do not fudge the verifier to silently coerce 403→pass, instead use the right tool (Crossref) and document why.
 
 ### Browser verification — module-to-3D wiring
+
 - Page reloaded after the wiring change. Inspector now contains 15 click-to-render buttons (5 V1 + 5 hippocampal + 5 CA3 neurons), each with `title="render this neuron in the 3D viewer"`.
 - Clicked "n419" in the hippocampal sample list (Hebbian panel, neuron_id=100, rat CA1 pyramidal from Turner archive).
-- **Result (DOM-confirmed):** header updated to `n419 · rat · hippocampus / CA1`. NEURON section in inspector now shows: name=n419, id=#100, species=rat, scientific=*Rattus norvegicus*, region=hippocampus/CA1, cell type=pyramidal/principal cell, points=4,229. The Hebbian panel's hippocampus list drove the entire app state.
+- **Result (DOM-confirmed):** header updated to `n419 · rat · hippocampus / CA1`. NEURON section in inspector now shows: name=n419, id=#100, species=rat, scientific=_Rattus norvegicus_, region=hippocampus/CA1, cell type=pyramidal/principal cell, points=4,229. The Hebbian panel's hippocampus list drove the entire app state.
 
 ### Linters
+
 - `ruff check neuroforge_api` — clean
 - `pnpm typecheck` — clean (TS strict)
 - `pnpm lint` — clean
 
 ### BibTeX dump (sample)
+
 ```
 $ curl -s 'http://localhost:8000/api/citations/bibtex' | head -20
 @article{hodgkin1952quantitative,
@@ -83,12 +93,14 @@ $ curl -s 'http://localhost:8000/api/citations/bibtex' | head -20
 ```
 
 ## Anti-theater self-checks
+
 - **No fabricated citations.** Every reference's metadata is verified against Crossref live; `scripts/verify_dois.py` is reproducible.
 - **No fake "click to render" wiring.** The button calls `selectNeuron(id)` which updates a real `useState` whose change triggers a real `fetchNeuron(id)` HTTP call to the backend, which calls neuromorpho.org and returns the actual SWC. The "▸ rendered" indicator only appears for the truly currently-rendered neuron (state is the source of truth).
 - **README claims are checkable.** Every API endpoint listed is implemented; every test count is the actual `pytest -q` output; every DOI count is the count of `Reference` objects with non-None DOI.
 - **No silent DOI fudging.** When the doi.org HEAD verifier hit 403s, I did not change the assertion to "skip 403" — I switched to the canonical existence probe (Crossref) and documented why above.
 
 ## Honest limitations / what wasn't done
+
 1. **3D viewer's empty-state on slow fetch.** When `neuronId` changes, there's a brief window where the canvas is dark while `fetchNeuron` is in flight. The page shows a "loading neuron N from neuromorpho.org…" message, but the 3D side itself goes black. Not a bug; an opportunity for a transient skeleton.
 2. **No client-side cache.** Switching back to a previously-viewed neuron triggers a fresh GET (the backend SQLite cache makes this fast: ~50ms hit, ~2-5s miss).
 3. **Frontend tests still absent.** Same status as every prior phase.
@@ -99,6 +111,7 @@ $ curl -s 'http://localhost:8000/api/citations/bibtex' | head -20
 > Audit this diff for: hardcoded BibTeX, fabricated citation metadata, dead code, drift between citation registry and the actual modules using them, click-handler wiring that is decorative.
 >
 > Specifically:
+>
 > 1. Does `scripts/verify_dois.py` actually hit Crossref for every entry in `REFERENCES`? Run it.
 > 2. Does each panel's neuron-name button actually call `selectNeuron(n.neuron_id)`, and does the page-level effect actually re-fetch when `neuronId` changes? Open DevTools Network and click around — should see a `GET /api/neurons/{newid}` for each click.
 > 3. Does every entry in `REFERENCES` correspond to an actual module that imports / cites it? See `test_simulator_modules_are_referenced_in_used_by`.
@@ -109,4 +122,5 @@ $ curl -s 'http://localhost:8000/api/citations/bibtex' | head -20
 > Report only theater. Be brutal.
 
 ### Verdict
+
 _Pending Alex's cross-model audit + manual click-through + BibTeX parse._

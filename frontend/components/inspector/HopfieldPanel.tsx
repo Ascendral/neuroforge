@@ -151,12 +151,35 @@ export function HopfieldPanel() {
         className="rounded border border-white/10 bg-black"
       >
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
-        <line x1={PAD_L} x2={PAD_L + innerW} y1={PAD_T + innerH} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">E</text>
-        <text x={PLOT_W - 24} y={PAD_T + innerH + 14} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">step</text>
+        <line
+          x1={PAD_L}
+          x2={PAD_L + innerW}
+          y1={PAD_T + innerH}
+          y2={PAD_T + innerH}
+          stroke="rgba(255,255,255,0.3)"
+        />
+        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+          E
+        </text>
+        <text
+          x={PLOT_W - 24}
+          y={PAD_T + innerH + 14}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="monospace"
+        >
+          step
+        </text>
 
         {!energyPath && (
-          <text x={PAD_L + innerW / 2} y={PAD_T + innerH / 2 + 4} fontSize={10} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontFamily="monospace">
+          <text
+            x={PAD_L + innerW / 2}
+            y={PAD_T + innerH / 2 + 4}
+            fontSize={10}
+            textAnchor="middle"
+            fill="rgba(255,255,255,0.35)"
+            fontFamily="monospace"
+          >
             no run yet — click recall
           </text>
         )}
@@ -180,7 +203,9 @@ export function HopfieldPanel() {
             }}
             className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
           />
-          <span className="text-white/30">→ {Math.round(Math.sqrt(nNeurons))}×{Math.round(Math.sqrt(nNeurons))}</span>
+          <span className="text-white/30">
+            → {Math.round(Math.sqrt(nNeurons))}×{Math.round(Math.sqrt(nNeurons))}
+          </span>
         </label>
         <label className="flex items-baseline gap-2">
           <span className="w-16 text-white/40">K</span>
@@ -203,7 +228,9 @@ export function HopfieldPanel() {
             max={1}
             step={0.05}
             value={corruption}
-            onChange={(e) => setCorruption(Math.max(0, Math.min(1, parseFloat(e.target.value) || 0)))}
+            onChange={(e) =>
+              setCorruption(Math.max(0, Math.min(1, parseFloat(e.target.value) || 0)))
+            }
             className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
           />
           <button
@@ -221,13 +248,24 @@ export function HopfieldPanel() {
           <dl className="space-y-1 text-white/70">
             <div className="flex gap-2">
               <dt className="w-24 text-white/40">α (K/N)</dt>
-              <dd className={response.target_capacity_alpha > response.critical_capacity ? 'text-accent' : 'text-white'}>
-                {response.target_capacity_alpha.toFixed(3)} {response.target_capacity_alpha > response.critical_capacity ? '(over critical)' : ''}
+              <dd
+                className={
+                  response.target_capacity_alpha > response.critical_capacity
+                    ? 'text-accent'
+                    : 'text-white'
+                }
+              >
+                {response.target_capacity_alpha.toFixed(3)}{' '}
+                {response.target_capacity_alpha > response.critical_capacity
+                  ? '(over critical)'
+                  : ''}
               </dd>
             </div>
             <div className="flex gap-2">
               <dt className="w-24 text-white/40">overlap</dt>
-              <dd className={response.converged ? 'text-[#9bd2ff]' : 'text-accent'}>{response.final_overlap.toFixed(3)}</dd>
+              <dd className={response.converged ? 'text-[#9bd2ff]' : 'text-accent'}>
+                {response.final_overlap.toFixed(3)}
+              </dd>
             </div>
             <div className="flex gap-2">
               <dt className="w-24 text-white/40">converged</dt>
@@ -236,7 +274,8 @@ export function HopfieldPanel() {
             <div className="flex gap-2">
               <dt className="w-24 text-white/40">ΔE</dt>
               <dd className="text-white">
-                {response.energies[0].toFixed(2)} → {response.energies[response.energies.length - 1].toFixed(2)}
+                {response.energies[0].toFixed(2)} →{' '}
+                {response.energies[response.energies.length - 1].toFixed(2)}
               </dd>
             </div>
           </dl>
@@ -300,11 +339,21 @@ export function HopfieldPanel() {
                   </div>
                   <div className="space-x-2">
                     {n.reference_doi.length > 0 && (
-                      <a href={`https://doi.org/${n.reference_doi[0]}`} target="_blank" rel="noreferrer" className="text-white/70 underline-offset-2 hover:underline">
+                      <a
+                        href={`https://doi.org/${n.reference_doi[0]}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-white/70 underline-offset-2 hover:underline"
+                      >
                         doi:{n.reference_doi[0]}
                       </a>
                     )}
-                    <a href={n.source_url} target="_blank" rel="noreferrer" className="text-white/40 underline-offset-2 hover:underline">
+                    <a
+                      href={n.source_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-white/40 underline-offset-2 hover:underline"
+                    >
                       neuromorpho ↗
                     </a>
                   </div>

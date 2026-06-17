@@ -6,14 +6,14 @@ Interactive neuroscience-grounded AI lab. Loads real reconstructed neurons from 
 
 Six canonical modules live, plus citation export and DOI verification.
 
-| Module | Phase | Source paper | Real-data anchor (NeuroMorpho) |
-|---|---|---|---|
-| McCulloch-Pitts (1943) | 9 | doi:10.1007/BF02478259 | (symbolic — flagged as historical abstraction) |
-| Hebbian + LTP (1949 / 1973) | 7 | doi:10.1113/jphysiol.1973.sp010273 + 10.1007/BF00275687 | 18,421 hippocampal pyramidals |
-| Hodgkin-Huxley (1952) | 4 | doi:10.1113/jphysiol.1952.sp004764 | (squid giant axon — Brian2 single-compartment) |
-| Hubel-Wiesel V1 (1962) | 6 | doi:10.1113/jphysiol.1962.sp006837 | 9,553 primary visual cortex |
-| Hopfield (1982) | 8 | doi:10.1073/pnas.79.8.2554 (Nobel 2024) | 1,279 CA3 pyramidals |
-| STDP (Bi & Poo 1998) | 5 | doi:10.1523/JNEUROSCI.18-24-10464.1998 | (hippocampal pair recordings) |
+| Module                      | Phase | Source paper                                            | Real-data anchor (NeuroMorpho)                 |
+| --------------------------- | ----- | ------------------------------------------------------- | ---------------------------------------------- |
+| McCulloch-Pitts (1943)      | 9     | doi:10.1007/BF02478259                                  | (symbolic — flagged as historical abstraction) |
+| Hebbian + LTP (1949 / 1973) | 7     | doi:10.1113/jphysiol.1973.sp010273 + 10.1007/BF00275687 | 18,421 hippocampal pyramidals                  |
+| Hodgkin-Huxley (1952)       | 4     | doi:10.1113/jphysiol.1952.sp004764                      | (squid giant axon — Brian2 single-compartment) |
+| Hubel-Wiesel V1 (1962)      | 6     | doi:10.1113/jphysiol.1962.sp006837                      | 9,553 primary visual cortex                    |
+| Hopfield (1982)             | 8     | doi:10.1073/pnas.79.8.2554 (Nobel 2024)                 | 1,279 CA3 pyramidals                           |
+| STDP (Bi & Poo 1998)        | 5     | doi:10.1523/JNEUROSCI.18-24-10464.1998                  | (hippocampal pair recordings)                  |
 
 74 / 74 backend tests passing. ruff / typecheck / eslint clean. All 12 cited DOIs verified resolvable via Crossref.
 
@@ -55,21 +55,21 @@ pnpm dev   # serves on :3000
 
 ## API
 
-| Endpoint | Method | Returns |
-|---|---|---|
-| `/health` | GET | `{"status":"ok","version":"0.0.0"}` |
-| `/api/neurons/{id}` | GET | Full reconstructed neuron with parsed SWC points + metadata + citation |
-| `/api/neurons/v1/sample` | GET | First N V1 reconstructions from NeuroMorpho |
-| `/api/neurons/hippocampus/sample` | GET | First N hippocampal pyramidals |
-| `/api/neurons/ca3/sample` | GET | First N CA3 pyramidals |
-| `/api/simulate/hh` | POST | Hodgkin-Huxley membrane trace under step current |
-| `/api/simulate/stdp` | POST | Bi-Poo STDP weight change for one pre/post pair |
-| `/api/simulate/v1` | POST | V1 Gabor + orientation tuning curve |
-| `/api/simulate/hebbian` | POST | Pure Hebb vs Oja weight trajectories |
-| `/api/simulate/hopfield` | POST | Hopfield retrieval from a corrupted pattern |
-| `/api/simulate/mcp/{gate}` | GET | M-P truth table for AND/OR/NOT/NAND/NOR/xor-search |
-| `/api/citations` | GET | JSON list of all cited references |
-| `/api/citations/bibtex` | GET | BibTeX dump of every cited reference |
+| Endpoint                          | Method | Returns                                                                |
+| --------------------------------- | ------ | ---------------------------------------------------------------------- |
+| `/health`                         | GET    | `{"status":"ok","version":"0.0.0"}`                                    |
+| `/api/neurons/{id}`               | GET    | Full reconstructed neuron with parsed SWC points + metadata + citation |
+| `/api/neurons/v1/sample`          | GET    | First N V1 reconstructions from NeuroMorpho                            |
+| `/api/neurons/hippocampus/sample` | GET    | First N hippocampal pyramidals                                         |
+| `/api/neurons/ca3/sample`         | GET    | First N CA3 pyramidals                                                 |
+| `/api/simulate/hh`                | POST   | Hodgkin-Huxley membrane trace under step current                       |
+| `/api/simulate/stdp`              | POST   | Bi-Poo STDP weight change for one pre/post pair                        |
+| `/api/simulate/v1`                | POST   | V1 Gabor + orientation tuning curve                                    |
+| `/api/simulate/hebbian`           | POST   | Pure Hebb vs Oja weight trajectories                                   |
+| `/api/simulate/hopfield`          | POST   | Hopfield retrieval from a corrupted pattern                            |
+| `/api/simulate/mcp/{gate}`        | GET    | M-P truth table for AND/OR/NOT/NAND/NOR/xor-search                     |
+| `/api/citations`                  | GET    | JSON list of all cited references                                      |
+| `/api/citations/bibtex`           | GET    | BibTeX dump of every cited reference                                   |
 
 Swagger UI at `http://localhost:8000/docs`.
 

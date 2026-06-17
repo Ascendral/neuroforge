@@ -6,9 +6,11 @@
 **Cross-model audit:** PENDING — Alex to run independent audit on the Phase 2 diff before merging Phase 3 work.
 
 ## Scope of Phase 2
+
 Frontend 3D viewer that fetches a real neuron from the Phase 1 backend and renders its actual SWC reconstruction in WebGL. Click-to-log point IDs. Camera controls (orbit / zoom / pan). No inspector panel yet (Phase 3).
 
 ## What got built
+
 - `frontend/lib/types.ts` — TS mirror of backend `NeuronResponse` / `NeuronPoint`. Single source of truth still lives in `backend/neuroforge_api/models/neuron.py`.
 - `frontend/lib/api.ts` — `fetchNeuron(id)` against `NEXT_PUBLIC_API_BASE` (defaults to `http://localhost:8000`).
 - `frontend/components/viewer/SWCNeuron.tsx` — soma rendered as a `<mesh>` sphere at the centroid of all type-1 points; non-root points rendered as instanced cylinder segments from each child to its parent. Color scheme is anti-theater UI rule: red soma (#ff2d2d accent), white basal dendrites, light gray apical, pale blue axon, gray for unknown types. Click handlers wire through to `onSegmentClick`.
@@ -18,20 +20,24 @@ Frontend 3D viewer that fetches a real neuron from the Phase 1 backend and rende
 ## Verified against real data — 2026-04-30
 
 ### Browser verification (preview_screenshot at :3000)
+
 - Page loads, `fetch('/api/neurons/1')` returns the cached real neuron from Phase 1's SQLite cache (already populated by Phase 1 tests).
 - 3D scene renders the actual cnic_001 morphology: red soma sphere at origin, dendrites branching outward in the published reconstruction pattern of a Rhesus monkey prefrontal layer-3 pyramidal cell. Branches are visible white tubes against black background.
 - Header: `cnic_001 · monkey · neocortex / prefrontal / layer 3 · 1,274 points`
 - Source card: `neuromorpho.org · Wearne_Hof · neuron 1` and `doi: 10.1016/S0306-4522(02)00305-6` — the real, resolvable upstream DOI.
 
 ### Coordinate sanity
+
 Verified live extent matches expected pyramidal-neuron scale:
-- x ∈ [-140.81, 149.13]  (width ≈ 290 µm)
-- y ∈ [-214.07, 167.78]  (height ≈ 382 µm)
-- z ∈ [-17.5, 97.84]     (depth ≈ 115 µm)
+
+- x ∈ [-140.81, 149.13] (width ≈ 290 µm)
+- y ∈ [-214.07, 167.78] (height ≈ 382 µm)
+- z ∈ [-17.5, 97.84] (depth ≈ 115 µm)
 - soma radius = 8.1498 µm
-These are real reconstructed coordinates, not synthetic.
+  These are real reconstructed coordinates, not synthetic.
 
 ### Static checks
+
 - `pnpm typecheck` — clean (TS strict)
 - `pnpm lint` — clean (next eslint)
 
@@ -43,7 +49,7 @@ These are real reconstructed coordinates, not synthetic.
 
 3. **No automated frontend tests yet.** vitest harness not set up. Phase 2 is verified by browser observation + static checks. Frontend test infra is queued for Phase 3 alongside the inspector component.
 
-4. **Per-instance click resolution is by-segment, not by-point.** The user clicks a segment (parent→child cylinder); we report the *child's* `id`/`type`/`parent_id`. That matches the plan ("Click on any segment → console log point ID, type, parent") but is worth flagging.
+4. **Per-instance click resolution is by-segment, not by-point.** The user clicks a segment (parent→child cylinder); we report the _child's_ `id`/`type`/`parent_id`. That matches the plan ("Click on any segment → console log point ID, type, parent") but is worth flagging.
 
 ## Anti-theater self-checks
 
@@ -68,4 +74,5 @@ Paste the Phase 2 diff into a fresh GPT-4 / Opus session with this prompt:
 Append the verdict (PASS/FAIL + findings) below before opening any Phase 3 PR.
 
 ### Verdict
+
 _Pending Alex's cross-model audit + manual click verification._

@@ -6,9 +6,11 @@
 **Cross-model audit:** PENDING — Alex to run independent audit on the Phase 3 diff before merging Phase 4 work.
 
 ## Scope of Phase 3
+
 Side-panel inspector showing real upstream metadata, last-clicked point info, source citations with resolvable links, and an honest empty firing-plot placeholder (no fake membrane traces).
 
 ## What got built
+
 - `frontend/components/inspector/CitationCard.tsx` — archive, neuron link to NeuroMorpho `neuron_info.jsp`, raw SWC URL, all `reference_doi` rendered as `https://doi.org/{doi}` anchors, all `reference_pmid` as `https://pubmed.ncbi.nlm.nih.gov/{pmid}/` anchors. No fabricated identifiers.
 - `frontend/components/inspector/FiringPlot.tsx` — SVG with mV/ms axes and an explicit caption "phase 4 wires hodgkin-huxley". No synthetic trace. No mock spikes.
 - `frontend/components/inspector/NeuronInspector.tsx` — right-side `<aside>`, three sections: Neuron metadata, Selection (point id / type label / parent), Membrane potential, Source. All values pulled from the `NeuronResponse` already verified live in Phase 1/2.
@@ -17,6 +19,7 @@ Side-panel inspector showing real upstream metadata, last-clicked point info, so
 ## Verified against real data — 2026-04-30
 
 ### Browser screenshot
+
 - Header: `cnic_001 · monkey · neocortex / prefrontal / layer 3`
 - Left pane: 3D viewer rendering the real reconstructed pyramidal neuron (red soma, dendritic tree)
 - Right pane (inspector):
@@ -27,6 +30,7 @@ Side-panel inspector showing real upstream metadata, last-clicked point info, so
   - REFERENCES: 2 DOIs and 2 PMIDs
 
 ### Live anchor verification (read from rendered DOM)
+
 ```
 neuromorpho.org/neuron_info.jsp?neuron_id=1                                cnic_001 (#1)
 neuromorpho.org/dableFiles/wearne_hof/CNG%20version/cnic_001.CNG.swc       (raw SWC)
@@ -35,14 +39,17 @@ doi.org/10.1093/cercor/13.9.950                                             (Cer
 pubmed.ncbi.nlm.nih.gov/12204204/                                           (PMID 12204204)
 pubmed.ncbi.nlm.nih.gov/12902394/                                           (PMID 12902394)
 ```
+
 Every URL is canonical and resolvable. No invented DOIs or PMIDs.
 
 ### Static checks
+
 - `pnpm typecheck` — clean
 - `pnpm lint` — clean
 - No console errors
 
 ## Anti-theater self-checks
+
 - **No fake DOIs.** Every DOI rendered comes from `neuron.reference_doi` populated upstream by NeuroMorpho.org. Same for PMIDs.
 - **No fake firing trace.** `FiringPlot` shows axes only and an explicit "phase 4 wires hodgkin-huxley" caption. No `Math.sin(t)` masquerading as a membrane potential.
 - **No filler metadata.** When a field is missing upstream (e.g., empty `cell_type`), the inspector renders "—" instead of inventing a value. Verified in code path; not exercised in this neuron because all fields are present.
@@ -65,4 +72,5 @@ Every URL is canonical and resolvable. No invented DOIs or PMIDs.
 > Report only theater. Be brutal.
 
 ### Verdict
+
 _Pending Alex's cross-model audit + manual click + link-resolution check._
