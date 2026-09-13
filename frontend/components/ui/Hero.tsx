@@ -69,7 +69,7 @@ export function Hero({
       )}
       <div className="absolute inset-y-0 right-0 flex w-[58%] flex-col justify-center gap-3 px-8">
         <span className="kicker">{kicker}</span>
-        <h2 className="display text-white" style={{ fontSize: 34, lineHeight: 1.05 }}>
+        <h2 className="display text-white" style={{ fontSize: 'clamp(18px, 2.4vw, 34px)', lineHeight: 1.05 }}>
           {title}
         </h2>
         {subtitle && (

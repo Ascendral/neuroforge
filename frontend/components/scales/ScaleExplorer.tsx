@@ -224,7 +224,7 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
         />
       )}
       {/* ladder */}
-      <div className="hairline-b flex items-stretch gap-2 px-5 py-3">
+      <div className="hairline-b flex items-stretch gap-2 overflow-x-auto px-5 py-3">
         {graph.levels.map((l) => {
           const on = l.level === level;
           return (
