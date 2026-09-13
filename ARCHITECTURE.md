@@ -1,124 +1,113 @@
 # NeuroForge — Architecture
 
-## What it is
+## The organizing idea: one ladder, two sides
 
-Interactive 3D neuroscience-grounded AI lab. Loads real reconstructed neurons from public databases, renders their actual SWC geometry as clickable 3D meshes, runs biophysically accurate firing simulations using published parameters, and shows the lineage from biological neurons to AI computational models. Six modules covering the foundational neuro↔AI bridges.
+Every artifact in the app sits on one of five rungs, on the brain side or the AI side. The rung is the unit of navigation; the cross-side link is the unit of content.
 
-## Stack (LOCKED — see CLAUDE.md)
+| rung | brain              | AI                    | live models on this rung                     |
+| ---- | ------------------ | --------------------- | -------------------------------------------- |
+| 1    | organ              | deployed system       | —                                            |
+| 2    | region / network   | architecture          | dopamine RPE (VTA/SNc)                       |
+| 3    | circuit            | block internals       | modern Hopfield ≡ attention, V1, Hopfield    |
+| 4    | cell               | unit                  | Hodgkin-Huxley, McCulloch-Pitts              |
+| 5    | synapse / molecule | parameter             | synapse kinetics, STDP, Hebbian/Oja          |
 
-- Backend: Python 3.12, FastAPI, Brian2 (CPU), Allen SDK, SQLite, NumPy/SciPy
-- Frontend: Next.js 14 App Router, TS strict, React 18, R3F + drei + Three.js, Tailwind + shadcn/ui, Zustand, TanStack Query
-- Monorepo: pnpm workspaces
+Cross-side links carry an evidence tag — `equivalence` (proved same mathematics), `strong` (quantitative/causal evidence), `analogy` (conceptual only), `none` (no counterpart; the note explains why). The registry tests reject nodes that lack citations, lack a link or none-note, claim `equivalence` without the proof attached, or anchor to atlas labels that do not exist.
 
 ## Data flow
 
 ```
-[NeuroMorpho.org / Allen Brain Atlas / ModelDB]
-              │
-              ▼
-   backend/neuroforge_api/sources/   (HTTP clients)
-              │
-              ▼
-   backend/neuroforge_api/parsers/swc.py
-              │
-              ▼
-   SQLite cache (backend/data/neurons.sqlite)
-              │
-              ▼
-   FastAPI routers (REST + WebSocket)
-              │
-   HTTP/WS    │
-              ▼
-   frontend/lib/api.ts, frontend/lib/ws.ts
-              │
-              ▼
-   React Three Fiber canvas
-              │
-       ┌──────┴──────┐
-       ▼             ▼
-   3D mesh        Inspector panel
-   (SWC tubes)    (citations, params, firing plot)
+ nilearn / OSF / Zenodo / GitHub releases          neuromorpho.org REST
+ (fsaverage, Harvard-Oxford, Pauli, Diedrichsen,   (search + SWC)
+  Yeo, Schaefer, DiFuMo, HCP-1065, Hansen PET,
+  Allen microarray)                                        │
+              │                                            ▼
+              ▼                                  parsers/swc.py → SQLite cache
+   data/atlas.py, pauli.py, cerebellum.py, …               │
+              │                                            │
+              ▼                                            ▼
+   data/scales.py  ──anchors resolved──▶  routers/scales.py  ◀── data/research_timeline.py
+   (66 nodes, 35 edges,                   /api/scales/graph
+    68 cross-side links)                  /api/research/timeline
+                                                    │
+   simulators/*  ──▶  routers/simulate.py           │
+   (9 models)         /api/simulate/*               │
+                                                    ▼
+                               frontend/lib/api.ts → page.tsx
+                                                    │
+        ┌──────────────┬──────────────┬─────────────┼──────────────┐
+        ▼              ▼              ▼             ▼              ▼
+   BrainCanvas     ScaleExplorer   AISchematic   TimelineView   NeuronCanvas
+   (R3F, atlases,  (two columns,   (SVG, every   (72 milestones, (R3F SWC)
+    real cells,     links by        box a node,   jump-to-node)
+    highlights)     evidence)       every arrow
+                        │           an edge)
+                        └──────┬────────┘
+                               ▼
+                           NodeDetail
+              (what / does / how, numbers, anchors → brain,
+               real cells, bridge cards, zoom in/out, live model)
 ```
 
 ## Backend layout
 
 ```
-backend/
-├── pyproject.toml
-├── neuroforge_api/
-│   ├── main.py              # FastAPI app entry
-│   ├── config.py
-│   ├── db.py                # SQLite session
-│   ├── models/              # pydantic + SQLAlchemy
-│   ├── sources/             # neuromorpho.py, allen.py, modeldb.py
-│   ├── parsers/             # swc.py
-│   ├── simulators/          # mcculloch_pitts, hebbian, hodgkin_huxley, stdp, hubel_wiesel, hopfield
-│   ├── routers/             # neurons, simulate, ws
-│   └── tests/
-└── data/
-    ├── neurons.sqlite
-    └── swc_cache/
+backend/neuroforge_api/
+├── main.py                 # FastAPI app; routers: neurons, simulate, citations, brain, scales
+├── citations.py            # module bibliography (BibTeX export + DOI gate)
+├── data/
+│   ├── scales.py           # THE multi-scale registry (brain + AI nodes, edges, cites, analogs)
+│   ├── research_timeline.py
+│   ├── atlas.py            # fsaverage / Destrieux / Harvard-Oxford, cognitive functions, tracts
+│   ├── pauli.py cerebellum.py networks.py yeo17.py schaefer.py difumo.py hcp1065.py
+│   ├── receptors.py        # Hansen 2022 PET maps (19 receptors)
+│   └── allen_genes.py
+├── simulators/
+│   ├── hodgkin_huxley.py stdp.py hebbian.py hopfield.py hubel_wiesel.py mcp.py
+│   ├── modern_hopfield.py  # Ramsauer 2021: update ≡ attention; capacity sweep
+│   ├── dopamine_rpe.py     # Schultz 1997 TD(0)
+│   └── synapse.py          # Destexhe 1994 + Jahr-Stevens 1990
+├── routers/  neurons.py simulate.py citations.py brain.py scales.py
+├── models/   neuron.py simulation.py
+├── sources/  neuromorpho.py
+├── parsers/  swc.py
+└── tests/    (116)
 ```
 
 ## Frontend layout
 
 ```
 frontend/
-├── package.json
-├── app/
-│   ├── layout.tsx
-│   ├── page.tsx             # main lab UI
-│   └── modules/{mcp,hebbian,hh,stdp,hubel-wiesel,hopfield}/page.tsx
+├── app/page.tsx                    # views: brain | scales | ai schematic | timeline | neuron
 ├── components/
-│   ├── viewer/              # NeuronCanvas, SWCNeuron, ClickableSegment, Controls
-│   ├── inspector/           # NeuronInspector, CitationCard, FiringPlot
-│   ├── modules/             # ModuleSelector, ParamSliders
-│   └── ui/                  # shadcn primitives
-├── lib/                     # api.ts, ws.ts, swc-parser.ts, types.ts
-└── store/                   # zustand
+│   ├── viewer/    BrainCanvas, NeuronCanvas, SWCNeuron, NeuronGlyph
+│   ├── scales/    ScaleExplorer, AISchematic, NodeDetail, TimelineView, LinePlot, strength.ts
+│   ├── inspector/ NeuronInspector, FiringPlot, CitationCard,
+│   │              HHPanel, STDPPanel, HebbianPanel, HopfieldPanel, ModernHopfieldPanel,
+│   │              DopaminePanel, SynapsePanel, HubelWieselPanel, McCullochPittsPanel
+│   └── ui/        CollapsibleSection
+└── lib/           api.ts, types.ts, neuron-context.tsx
 ```
 
-## Six modules
+## Adding a node (the only way content grows)
 
-| #   | Module                                      | Anchor                      | Real data                                     | AI lineage                              | Limit shown                                |
-| --- | ------------------------------------------- | --------------------------- | --------------------------------------------- | --------------------------------------- | ------------------------------------------ |
-| 1   | McCulloch-Pitts (1943)                      | Action potential threshold  | None (symbolic, flagged historical)           | Foundation of NNs                       | Cannot solve XOR                           |
-| 2   | Hebbian + LTP (Hebb 1949 / Bliss-Lømo 1973) | Hippocampal LTP             | NeuroMorpho hippocampal pyramidals            | Hopfield, SOMs                          | Runaway potentiation                       |
-| 3   | Hodgkin-Huxley (1952)                       | Squid giant axon            | Real cortical pyramidal SWC + 1952 ODE params | SNNs, neuromorphic chips                | Compute cost                               |
-| 4   | STDP (Bi & Poo 1998)                        | Hippocampal pair recordings | NeuroMorpho hippocampal + Bi-Poo curve        | Loihi 2                                 | Local rule, no global credit assignment    |
-| 5   | Hubel-Wiesel (1962)                         | Cat V1 simple/complex cells | Allen Brain Atlas V1 neurons                  | First conv layer of CNNs                | Linear filter, missing cortical complexity |
-| 6   | Hopfield (1982)                             | Hippocampal CA3 attractors  | NeuroMorpho CA3 reconstructions               | Modern Hopfield → transformer attention | Capacity ~0.14N, spurious attractors       |
+1. Add a `Node(...)` to `BRAIN` or `AI` in `data/scales.py` with `description`, `function`, `mechanism`, `cites`, and either `analogs=(Analog(target, strength, note, cites),)` or `no_analog_note`.
+2. Brain nodes: add `ho_labels` / `pauli` / `cerebellum` anchors and a `neuromorpho` query if real cells exist. Optional `widget` if a simulator applies.
+3. `pytest neuroforge_api/tests/test_scales.py` — integrity gate.
+4. `python scripts/verify_dois.py` — every DOI must resolve.
+5. For an AI node, add a slot in `AISchematic.tsx` `LAYOUT` (otherwise it is listed in the "not placed" strip, never hidden).
 
-## v0.1.0 scope (locked)
+## Gates
 
-- Brain regions: **neocortex + hippocampus only** (everything above lives in these two)
-- Web-only (no Tauri yet)
-- Brian2 CPU only (no CUDA / GPU)
-- Repo visibility decision deferred until Phase 0 local scaffold runs
+- `scripts/verify_dois.py` — Crossref then DataCite; all three registries.
+- `tests/test_scales.py` — registry integrity (see above).
+- Simulator tests compare against published values (HH resting potential, STDP window, Schultz panels, Jahr-Stevens closed form, attention equivalence to 1e-12, capacity crossover).
+- ruff + eslint + prettier + tsc on every push; pytest on every push.
+- Pre-commit hook blocks `# TODO: hardcoded`, `# FAKE`, `# MOCK` without tracked justification.
+- Audit log per sprint in `docs/audits/`.
 
-## Phased build
+## Scope decisions
 
-- **Phase 0** — scaffolding (this commit)
-- **Phase 1** — NeuroMorpho client + SWC parser + SQLite cache
-- **Phase 2** — 3D renderer (R3F SWC mesh, click→inspector)
-- **Phase 3** — Inspector panel + citation cards + empty firing plot
-- **Phase 4** — Hodgkin-Huxley simulator (Brian2)
-- **Phase 5** — STDP module
-- **Phase 6** — Hebbian module
-- **Phase 7** — Hubel-Wiesel module
-- **Phase 8** — Hopfield module
-- **Phase 9** — McCulloch-Pitts module (symbolic, flagged historical)
-- **Phase 10** — Polish, citation export (BibTeX), full README, tag v0.1.0
-
-Each phase requires: tests pass → manual verification with real data → cross-model audit → audit log committed in `docs/audits/` → commit.
-
-## CI checks
-
-- `scripts/verify_dois.py` — fetches every DOI in citations index, fails build on 404
-- `scripts/verify_call_graph.py` — fails if any "learning" function is unreachable from imports
-- ruff + eslint + prettier on every push
-- pytest + vitest on every push
-
-## Pre-commit hook
-
-Blocks staged files containing `# TODO: hardcoded`, `# FAKE`, `# MOCK` without a tracked justification comment.
+- Brian2 CPU only. No Tauri (web only). No Allen SDK (numpy pin) — Allen data via abagen cache and REST.
+- The AI side models a decoder-only transformer LLM plus its training loop; CNN-specific structure appears only where the brain link needs it (V1 ↔ first conv layer).
+- The registry is a curriculum, not an encyclopedia: canonical regions, seven circuits, ten cell types, nine synaptic mechanisms. Growth is by DOI-gated node additions.
