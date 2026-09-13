@@ -12,7 +12,7 @@ import type { SynapseResponse } from '@/lib/types';
 
 const COLORS: Record<string, string> = {
   AMPA: '#ffffff',
-  NMDA: '#ff2d2d',
+  NMDA: '#E10500',
   GABA_A: '#9bd2ff',
 };
 
@@ -40,15 +40,11 @@ export function SynapsePanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">
-          Synapse: AMPA · NMDA · GABA-A
-        </h2>
-        <span className="font-mono text-[10px] text-white/30">I = g(t)·B(V)·(V − E)</span>
+        <h2 className="kicker">Synapse: AMPA · NMDA · GABA-A</h2>
+        <span className="mono text-[11px] text-white/35">I = g(t)·B(V)·(V − E)</span>
       </div>
 
-      <div className="font-mono text-[9px] uppercase tracking-widest text-white/50">
-        postsynaptic current, 1 nS peak
-      </div>
+      <div className="meta-xs">postsynaptic current, 1 nS peak</div>
       <LinePlot
         width={320}
         height={120}
@@ -68,9 +64,7 @@ export function SynapsePanel() {
         empty="no run yet — click release"
       />
 
-      <div className="font-mono text-[9px] uppercase tracking-widest text-white/50">
-        NMDA peak current vs voltage (Jahr-Stevens)
-      </div>
+      <div className="meta-xs">NMDA peak current vs voltage (Jahr-Stevens)</div>
       <LinePlot
         width={320}
         height={110}
@@ -88,7 +82,7 @@ export function SynapsePanel() {
                 {
                   xs: response.nmda_iv_voltage_mV,
                   ys: response.nmda_iv_with_mg_pA,
-                  color: '#ff2d2d',
+                  color: '#E10500',
                   label: `Mg ${response.mg_mM} mM`,
                 },
                 {
@@ -104,9 +98,9 @@ export function SynapsePanel() {
         empty=""
       />
 
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-3 text-[13px]">
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">V hold</span>
+          <span className="meta-xs w-16 self-center">V hold</span>
           <input
             type="range"
             min={-90}
@@ -119,7 +113,7 @@ export function SynapsePanel() {
           <span className="text-white">{holding} mV</span>
         </label>
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">[Mg²⁺]</span>
+          <span className="meta-xs w-16 self-center">[Mg²⁺]</span>
           <input
             type="number"
             min={0}
@@ -127,14 +121,10 @@ export function SynapsePanel() {
             step={0.1}
             value={mg}
             onChange={(e) => setMg(Math.max(0, parseFloat(e.target.value) || 0))}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
           <span className="text-white/30">mM</span>
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="ml-auto rounded border border-white/30 px-3 py-1 text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onRun} disabled={running} className="btn btn-sm btn-red ml-auto">
             {running ? 'running…' : 'release'}
           </button>
         </label>
@@ -160,7 +150,7 @@ export function SynapsePanel() {
           </div>
         )}
         {response && (
-          <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+          <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
             {response.citation}
           </p>
         )}

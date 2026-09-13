@@ -75,16 +75,11 @@ export function STDPPanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">STDP — Bi & Poo 1998</h2>
-        <span className="font-mono text-[10px] text-white/30">Δt = t_post − t_pre</span>
+        <h2 className="kicker">STDP — Bi & Poo 1998</h2>
+        <span className="mono text-[11px] text-white/35">Δt = t_post − t_pre</span>
       </div>
 
-      <svg
-        width={PLOT_W}
-        height={PLOT_H}
-        viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
-        className="rounded border border-white/10 bg-black"
-      >
+      <svg width={PLOT_W} height={PLOT_H} viewBox={`0 0 ${PLOT_W} ${PLOT_H}`} className="plot">
         {/* Y axis */}
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
         {/* X axis (dynamic at zero) */}
@@ -107,7 +102,13 @@ export function STDPPanel() {
           />
         )}
 
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+        <text
+          x={4}
+          y={PAD_T + 8}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="var(--font-text)"
+        >
           Δw
         </text>
         <text
@@ -115,7 +116,7 @@ export function STDPPanel() {
           y={PAD_T + innerH + 14}
           fontSize={9}
           fill="rgba(255,255,255,0.5)"
-          fontFamily="monospace"
+          fontFamily="var(--font-text)"
         >
           ms
         </text>
@@ -127,7 +128,7 @@ export function STDPPanel() {
             fontSize={10}
             textAnchor="middle"
             fill="rgba(255,255,255,0.35)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
           >
             no run yet — click compute
           </text>
@@ -141,21 +142,17 @@ export function STDPPanel() {
         )}
       </svg>
 
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-3 text-[13px]">
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">Δt ms</span>
+          <span className="meta-xs w-16 self-center">Δt ms</span>
           <input
             type="number"
             step="1"
             value={dt}
             onChange={(e) => setDt(parseFloat(e.target.value) || 0)}
-            className="w-20 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-20 field"
           />
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="ml-auto rounded border border-white/30 px-3 py-1 text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onRun} disabled={running} className="btn btn-sm btn-red ml-auto">
             {running ? 'running…' : 'compute Δw'}
           </button>
         </label>
@@ -165,33 +162,33 @@ export function STDPPanel() {
         {response && (
           <dl className="space-y-1 text-white/70">
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">observed Δw</dt>
+              <dt className="meta-xs w-24 self-center">observed Δw</dt>
               <dd className={response.observed_delta_w >= 0 ? 'text-accent' : 'text-white'}>
                 {response.observed_delta_w >= 0 ? '+' : ''}
                 {response.observed_delta_w.toFixed(4)}
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">kernel Δw</dt>
+              <dt className="meta-xs w-24 self-center">kernel Δw</dt>
               <dd className="text-white/80">
                 {response.kernel_delta_w >= 0 ? '+' : ''}
                 {response.kernel_delta_w.toFixed(4)}
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">pre / post</dt>
+              <dt className="meta-xs w-24 self-center">pre / post</dt>
               <dd className="text-white/80">
                 {response.pre_spike_ms.toFixed(1)} / {response.post_spike_ms.toFixed(1)} ms
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">τ_+ / τ_-</dt>
+              <dt className="meta-xs w-24 self-center">τ_+ / τ_-</dt>
               <dd className="text-white/80">
                 {response.tau_plus_ms} / {response.tau_minus_ms} ms
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">A_+ / A_-</dt>
+              <dt className="meta-xs w-24 self-center">A_+ / A_-</dt>
               <dd className="text-white/80">
                 {response.a_plus} / {response.a_minus}
               </dd>
@@ -200,7 +197,7 @@ export function STDPPanel() {
         )}
 
         {response && (
-          <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+          <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
             {response.citation}
           </p>
         )}

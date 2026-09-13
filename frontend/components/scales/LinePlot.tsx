@@ -74,12 +74,7 @@ export function LinePlot({
       .join(' ');
 
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      className="rounded border border-white/10 bg-black"
-    >
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="plot">
       <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
       <line
         x1={PAD_L}
@@ -99,7 +94,13 @@ export function LinePlot({
         />
       )}
       {yLabel && (
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+        <text
+          x={4}
+          y={PAD_T + 8}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="var(--font-text)"
+        >
           {yLabel}
         </text>
       )}
@@ -110,7 +111,7 @@ export function LinePlot({
           fontSize={9}
           textAnchor="end"
           fill="rgba(255,255,255,0.5)"
-          fontFamily="monospace"
+          fontFamily="var(--font-text)"
         >
           {xLabel}
         </text>
@@ -121,7 +122,7 @@ export function LinePlot({
         fontSize={8}
         textAnchor="end"
         fill="rgba(255,255,255,0.4)"
-        fontFamily="monospace"
+        fontFamily="var(--font-text)"
       >
         {hasData ? y1.toPrecision(2) : ''}
       </text>
@@ -131,7 +132,7 @@ export function LinePlot({
         fontSize={8}
         textAnchor="end"
         fill="rgba(255,255,255,0.4)"
-        fontFamily="monospace"
+        fontFamily="var(--font-text)"
       >
         {hasData ? y0.toPrecision(2) : ''}
       </text>
@@ -150,7 +151,7 @@ export function LinePlot({
             y={PAD_T + 8}
             fontSize={8}
             fill={m.color ?? 'rgba(255,255,255,0.5)'}
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
           >
             {m.label}
           </text>
@@ -163,7 +164,7 @@ export function LinePlot({
           fontSize={10}
           textAnchor="middle"
           fill="rgba(255,255,255,0.35)"
-          fontFamily="monospace"
+          fontFamily="var(--font-text)"
         >
           {empty}
         </text>
@@ -194,7 +195,13 @@ export function LinePlot({
                 strokeWidth={2}
                 strokeDasharray={s.dash}
               />
-              <text x={16} y={3} fontSize={8} fill="rgba(255,255,255,0.6)" fontFamily="monospace">
+              <text
+                x={16}
+                y={3}
+                fontSize={8}
+                fill="rgba(255,255,255,0.6)"
+                fontFamily="var(--font-text)"
+              >
                 {s.label}
               </text>
             </g>

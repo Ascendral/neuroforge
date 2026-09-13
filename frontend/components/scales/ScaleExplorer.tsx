@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import type { EvidenceStrength, ScaleNode, ScalesGraphResponse } from '@/lib/types';
 
-import { STRENGTH_COLOR, STRENGTH_DASH, STRENGTH_LABEL, bestStrength } from './strength';
+import { STRENGTH_COLOR, STRENGTH_DASH, STRENGTH_LABEL, Tag, bestStrength } from './strength';
 
 // The ladder view: brain on the left, AI on the right, one rung at a time.
 // Lines between cards are the registry's analog links (colored by evidence
@@ -48,37 +48,37 @@ function Card({
     <button
       ref={register}
       onClick={onClick}
-      className={`w-full rounded border bg-black/85 p-2 text-left transition-colors ${
-        selected ? 'border-accent' : 'border-white/15 hover:border-white/40'
-      } ${dim ? 'opacity-40' : ''}`}
+      className={`press tile w-full p-4 text-left ${selected ? 'glass-strong' : 'glass'}`}
+      style={{
+        opacity: dim ? 0.35 : 1,
+        boxShadow: selected
+          ? 'inset 0 0 0 1.5px #E10500, inset 0 1px 0 rgba(255,255,255,0.22), 0 14px 34px rgba(0,0,0,0.5)'
+          : undefined,
+        transition:
+          'opacity 0.3s ease, transform 0.25s var(--spring), background-color 0.2s ease, box-shadow 0.2s ease',
+      }}
     >
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs font-semibold leading-tight text-white">{node.name}</span>
-        {best && (
-          <span
-            className="shrink-0 font-mono text-[9px]"
-            style={{ color: STRENGTH_COLOR[best] }}
-            title={STRENGTH_LABEL[best]}
-          >
-            {best === 'none' ? '∅' : best}
-          </span>
-        )}
+      <div className="flex items-start justify-between gap-3">
+        <span className="serif text-[17px] leading-tight text-white">{node.name}</span>
+        {best && <Tag s={best} />}
       </div>
-      <p className="mt-1 font-mono text-[10px] leading-snug text-white/55">{node.function}</p>
-      <div className="mt-1 flex flex-wrap gap-1 font-mono text-[9px] text-white/35">
+      <p className="mt-1.5 text-[13px] leading-snug text-white/55">{node.function}</p>
+      <div className="mt-2.5 flex flex-wrap gap-1.5 text-[10.5px] text-white/40">
         {node.widget && (
-          <span className="rounded border border-white/15 px-1">
-            ▶ {node.widget.replace('_', ' ')}
+          <span className="meta-xs rounded-full bg-white/[0.07] px-2 py-0.5 text-white/60">
+            ▶ live model
           </span>
         )}
         {node.anchors.length > 0 && (
-          <span className="rounded border border-white/15 px-1">◉ atlas</span>
+          <span className="meta-xs rounded-full bg-white/[0.07] px-2 py-0.5">◉ atlas</span>
         )}
         {node.neuromorpho && (
-          <span className="rounded border border-white/15 px-1">⌇ real cells</span>
+          <span className="meta-xs rounded-full bg-white/[0.07] px-2 py-0.5">⌇ real cells</span>
         )}
         {node.children.length > 0 && (
-          <span className="rounded border border-white/15 px-1">↘ {node.children.length}</span>
+          <span className="meta-xs rounded-full bg-white/[0.07] px-2 py-0.5">
+            ↘ {node.children.length} inside
+          </span>
         )}
       </div>
     </button>
@@ -133,46 +133,27 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
     const rootBox = root.getBoundingClientRect();
     const out: Line[] = [];
     const visible = new Set([...brainNodes, ...aiNodes].map((n) => n.id));
-    for (const n of brainNodes) {
-      for (const a of n.analogs) {
-        if (!visible.has(a.target)) continue;
-        const e1 = cardRefs.current.get(n.id);
-        const e2 = cardRefs.current.get(a.target);
-        if (!e1 || !e2) continue;
-        const b1 = e1.getBoundingClientRect();
-        const b2 = e2.getBoundingClientRect();
-        out.push({
-          from: n.id,
-          to: a.target,
-          strength: a.strength,
-          x1: b1.right - rootBox.left,
-          y1: b1.top + b1.height / 2 - rootBox.top + root.scrollTop,
-          x2: b2.left - rootBox.left,
-          y2: b2.top + b2.height / 2 - rootBox.top + root.scrollTop,
-        });
-      }
-    }
-    // AI → brain links not already covered
-    for (const n of aiNodes) {
-      for (const a of n.analogs) {
-        if (!visible.has(a.target)) continue;
-        if (out.some((l) => l.from === a.target && l.to === n.id)) continue;
-        const e1 = cardRefs.current.get(a.target);
-        const e2 = cardRefs.current.get(n.id);
-        if (!e1 || !e2) continue;
-        const b1 = e1.getBoundingClientRect();
-        const b2 = e2.getBoundingClientRect();
-        out.push({
-          from: a.target,
-          to: n.id,
-          strength: a.strength,
-          x1: b1.right - rootBox.left,
-          y1: b1.top + b1.height / 2 - rootBox.top + root.scrollTop,
-          x2: b2.left - rootBox.left,
-          y2: b2.top + b2.height / 2 - rootBox.top + root.scrollTop,
-        });
-      }
-    }
+    const push = (fromId: string, toId: string, strength: EvidenceStrength) => {
+      if (out.some((l) => l.from === fromId && l.to === toId)) return;
+      const e1 = cardRefs.current.get(fromId);
+      const e2 = cardRefs.current.get(toId);
+      if (!e1 || !e2) return;
+      const b1 = e1.getBoundingClientRect();
+      const b2 = e2.getBoundingClientRect();
+      out.push({
+        from: fromId,
+        to: toId,
+        strength,
+        x1: b1.right - rootBox.left,
+        y1: b1.top + b1.height / 2 - rootBox.top + root.scrollTop,
+        x2: b2.left - rootBox.left,
+        y2: b2.top + b2.height / 2 - rootBox.top + root.scrollTop,
+      });
+    };
+    for (const n of brainNodes)
+      for (const a of n.analogs) if (visible.has(a.target)) push(n.id, a.target, a.strength);
+    for (const n of aiNodes)
+      for (const a of n.analogs) if (visible.has(a.target)) push(a.target, n.id, a.strength);
     setLines(out);
   }, [brainNodes, aiNodes]);
 
@@ -207,36 +188,37 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
   return (
     <div className="flex h-full flex-col">
       {/* ladder */}
-      <div className="flex items-stretch gap-1 border-b border-white/10 px-4 py-2">
-        {graph.levels.map((l) => (
-          <button
-            key={l.level}
-            onClick={() => {
-              onLevel(l.level);
-              onSelect(null);
-            }}
-            className={`flex-1 rounded border px-2 py-1 text-left font-mono text-[10px] ${
-              l.level === level
-                ? 'border-accent text-white'
-                : 'border-white/15 text-white/50 hover:bg-white/5'
-            }`}
-          >
-            <div className="uppercase tracking-widest text-white/40">level {l.level}</div>
-            <div>
-              {l.brain_name} <span className="text-white/30">↔</span> {l.ai_name}
-            </div>
-          </button>
-        ))}
+      <div className="hairline-b flex items-stretch gap-2 px-5 py-3">
+        {graph.levels.map((l) => {
+          const on = l.level === level;
+          return (
+            <button
+              key={l.level}
+              onClick={() => {
+                onLevel(l.level);
+                onSelect(null);
+              }}
+              className={`press tile flex-1 px-4 py-2.5 text-left ${on ? 'bg-white text-[#0A0A0B]' : 'glass text-white/60 hover:text-white'}`}
+              style={{ transition: 'all 0.3s var(--spring)' }}
+            >
+              <div className={`meta-xs ${on ? '!text-[#0A0A0B]/55' : ''}`}>level {l.level}</div>
+              <div className="serif mt-0.5 text-[15px] leading-tight">
+                {l.brain_name} <span className="opacity-40">↔</span> {l.ai_name}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {lv && (
-        <div className="flex gap-6 border-b border-white/10 px-4 py-2 font-mono text-[10px] text-white/50">
+        <div className="hairline-b flex items-center gap-8 px-5 py-2.5 text-[12.5px] text-white/50">
           <div className="flex-1">
-            <span className="text-white/80">brain · {lv.brain_name}</span> — {lv.brain_blurb}
+            <span className="meta mr-2 text-white/80">brain</span>
+            {lv.brain_blurb}
           </div>
-          <div className="w-24 shrink-0 text-center text-white/30">
+          <div className="flex shrink-0 items-center gap-3">
             {(['equivalence', 'strong', 'analogy', 'none'] as EvidenceStrength[]).map((s) => (
-              <div key={s} className="flex items-center gap-1" title={STRENGTH_LABEL[s]}>
+              <div key={s} className="flex items-center gap-1.5" title={STRENGTH_LABEL[s]}>
                 <svg width={22} height={6}>
                   <line
                     x1={0}
@@ -248,19 +230,20 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
                     strokeDasharray={STRENGTH_DASH[s]}
                   />
                 </svg>
-                <span className="text-[9px]">{s}</span>
+                <span className="meta-xs">{s}</span>
               </div>
             ))}
           </div>
           <div className="flex-1 text-right">
-            <span className="text-white/80">AI · {lv.ai_name}</span> — {lv.ai_blurb}
+            {lv.ai_blurb}
+            <span className="meta ml-2 text-white/80">ai</span>
           </div>
         </div>
       )}
 
       {crossLevelLinks.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-1.5 font-mono text-[10px] text-white/50">
-          <span>links on other rungs:</span>
+        <div className="hairline-b rise flex flex-wrap items-center gap-2 px-5 py-2 text-[12.5px] text-white/50">
+          <span className="meta-xs">links on other rungs</span>
           {crossLevelLinks.map(({ a, t }) => (
             <button
               key={t.id}
@@ -268,8 +251,8 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
                 onLevel(t.level);
                 onSelect(t.id);
               }}
-              className="rounded border px-2 py-0.5 hover:bg-white/5"
-              style={{ borderColor: STRENGTH_COLOR[a.strength], color: STRENGTH_COLOR[a.strength] }}
+              className="chip"
+              style={{ color: STRENGTH_COLOR[a.strength] }}
             >
               L{t.level} · {t.name}
             </button>
@@ -291,15 +274,16 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
                 d={`M${l.x1} ${l.y1} C ${mx} ${l.y1}, ${mx} ${l.y2}, ${l.x2} ${l.y2}`}
                 fill="none"
                 stroke={STRENGTH_COLOR[l.strength]}
-                strokeWidth={active && related ? 2 : 1.2}
+                strokeWidth={active && related ? 2.2 : 1.2}
                 strokeDasharray={STRENGTH_DASH[l.strength]}
-                opacity={active ? 1 : 0.15}
+                opacity={active ? 1 : 0.12}
+                style={{ transition: 'opacity 0.3s ease' }}
               />
             );
           })}
         </svg>
-        <div className="grid grid-cols-[1fr_120px_1fr] gap-0 p-4">
-          <div className="space-y-2">
+        <div className="grid grid-cols-[1fr_140px_1fr] gap-0 p-5">
+          <div className="space-y-3">
             {brainNodes.map((n) => (
               <Card
                 key={n.id}
@@ -311,11 +295,11 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
               />
             ))}
             {brainNodes.length === 0 && (
-              <p className="font-mono text-[10px] text-white/40">nothing at this rung</p>
+              <p className="text-[12px] text-white/45">nothing at this rung</p>
             )}
           </div>
           <div />
-          <div className="space-y-2">
+          <div className="space-y-3">
             {aiNodes.map((n) => (
               <Card
                 key={n.id}
@@ -327,7 +311,7 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
               />
             ))}
             {aiNodes.length === 0 && (
-              <p className="font-mono text-[10px] text-white/40">nothing at this rung</p>
+              <p className="text-[12px] text-white/45">nothing at this rung</p>
             )}
           </div>
         </div>

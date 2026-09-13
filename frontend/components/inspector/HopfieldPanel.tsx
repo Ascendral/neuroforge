@@ -50,13 +50,8 @@ function PatternCanvas({ label, pattern }: { label: string; pattern: number[] | 
   }, [pattern]);
   return (
     <div className="flex flex-col items-center gap-1">
-      <canvas
-        ref={ref}
-        width={PATTERN_PX}
-        height={PATTERN_PX}
-        className="rounded border border-white/10 bg-black"
-      />
-      <span className="font-mono text-[10px] text-white/40">{label}</span>
+      <canvas ref={ref} width={PATTERN_PX} height={PATTERN_PX} className="plot" />
+      <span className="text-[12px] text-white/45">{label}</span>
     </div>
   );
 }
@@ -134,8 +129,8 @@ export function HopfieldPanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">Hopfield 1982 attractor</h2>
-        <span className="font-mono text-[10px] text-white/30">α = K/N (critical 0.138)</span>
+        <h2 className="kicker">Hopfield 1982 attractor</h2>
+        <span className="mono text-[11px] text-white/35">α = K/N (critical 0.138)</span>
       </div>
 
       <div className="flex justify-around">
@@ -144,12 +139,7 @@ export function HopfieldPanel() {
         <PatternCanvas label="recovered" pattern={response?.final_state ?? null} />
       </div>
 
-      <svg
-        width={PLOT_W}
-        height={PLOT_H}
-        viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
-        className="rounded border border-white/10 bg-black"
-      >
+      <svg width={PLOT_W} height={PLOT_H} viewBox={`0 0 ${PLOT_W} ${PLOT_H}`} className="plot">
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
         <line
           x1={PAD_L}
@@ -158,7 +148,13 @@ export function HopfieldPanel() {
           y2={PAD_T + innerH}
           stroke="rgba(255,255,255,0.3)"
         />
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+        <text
+          x={4}
+          y={PAD_T + 8}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="var(--font-text)"
+        >
           E
         </text>
         <text
@@ -166,7 +162,7 @@ export function HopfieldPanel() {
           y={PAD_T + innerH + 14}
           fontSize={9}
           fill="rgba(255,255,255,0.5)"
-          fontFamily="monospace"
+          fontFamily="var(--font-text)"
         >
           step
         </text>
@@ -178,7 +174,7 @@ export function HopfieldPanel() {
             fontSize={10}
             textAnchor="middle"
             fill="rgba(255,255,255,0.35)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
           >
             no run yet — click recall
           </text>
@@ -187,9 +183,9 @@ export function HopfieldPanel() {
         {energyPath && <path d={energyPath} fill="none" stroke="#9bd2ff" strokeWidth={1.4} />}
       </svg>
 
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-3 text-[13px]">
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">N</span>
+          <span className="meta-xs w-16 self-center">N</span>
           <input
             type="number"
             min={16}
@@ -201,14 +197,14 @@ export function HopfieldPanel() {
               const sq = Math.round(Math.sqrt(v));
               setNNeurons(sq * sq);
             }}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
           <span className="text-white/30">
             → {Math.round(Math.sqrt(nNeurons))}×{Math.round(Math.sqrt(nNeurons))}
           </span>
         </label>
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">K</span>
+          <span className="meta-xs w-16 self-center">K</span>
           <input
             type="number"
             min={1}
@@ -216,12 +212,12 @@ export function HopfieldPanel() {
             step={1}
             value={nPatterns}
             onChange={(e) => setNPatterns(parseInt(e.target.value) || 1)}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
           <span className="text-white/30">α={(nPatterns / nNeurons).toFixed(3)}</span>
         </label>
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">corrupt</span>
+          <span className="meta-xs w-16 self-center">corrupt</span>
           <input
             type="number"
             min={0}
@@ -231,13 +227,9 @@ export function HopfieldPanel() {
             onChange={(e) =>
               setCorruption(Math.max(0, Math.min(1, parseFloat(e.target.value) || 0)))
             }
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="ml-auto rounded border border-white/30 px-3 py-1 text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onRun} disabled={running} className="btn btn-sm btn-red ml-auto">
             {running ? 'running…' : 'recall'}
           </button>
         </label>
@@ -247,7 +239,7 @@ export function HopfieldPanel() {
         {response && (
           <dl className="space-y-1 text-white/70">
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">α (K/N)</dt>
+              <dt className="meta-xs w-24 self-center">α (K/N)</dt>
               <dd
                 className={
                   response.target_capacity_alpha > response.critical_capacity
@@ -262,17 +254,17 @@ export function HopfieldPanel() {
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">overlap</dt>
+              <dt className="meta-xs w-24 self-center">overlap</dt>
               <dd className={response.converged ? 'text-[#9bd2ff]' : 'text-accent'}>
                 {response.final_overlap.toFixed(3)}
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">converged</dt>
+              <dt className="meta-xs w-24 self-center">converged</dt>
               <dd className="text-white">{response.converged ? 'yes' : 'no'}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">ΔE</dt>
+              <dt className="meta-xs w-24 self-center">ΔE</dt>
               <dd className="text-white">
                 {response.energies[0].toFixed(2)} →{' '}
                 {response.energies[response.energies.length - 1].toFixed(2)}
@@ -282,7 +274,7 @@ export function HopfieldPanel() {
         )}
 
         {response && (
-          <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+          <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
             {response.citation}
           </p>
         )}
@@ -290,9 +282,9 @@ export function HopfieldPanel() {
 
       <div className="space-y-2 border-t border-white/10 pt-3">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-xs uppercase tracking-widest text-white/40">Real CA3 pyramidals</h3>
+          <h3 className="kicker">Real CA3 pyramidals</h3>
           {sample && (
-            <span className="font-mono text-[10px] text-white/30">
+            <span className="mono text-[11px] text-white/35">
               {sample.total_matching.toLocaleString()} on neuromorpho.org
             </span>
           )}
@@ -300,17 +292,17 @@ export function HopfieldPanel() {
 
         {sampleError && <p className="text-xs text-accent">{sampleError}</p>}
         {!sample && !sampleError && (
-          <p className="font-mono text-[10px] text-white/40">loading from neuromorpho.org…</p>
+          <p className="text-[12px] text-white/45">loading from neuromorpho.org…</p>
         )}
 
         {sample && (
-          <p className="font-mono text-[10px] leading-snug text-white/40">
+          <p className="text-[12.5px] leading-snug text-white/45">
             query: brain_region = &quot;CA3&quot; AND cell_type = &quot;pyramidal&quot;
           </p>
         )}
 
         {sample && (
-          <ul className="space-y-2 font-mono text-[10px]">
+          <ul className="space-y-2.5 text-[12.5px]">
             {sample.results.map((n) => {
               const isActive = selection?.selectedId === n.neuron_id;
               return (
@@ -343,7 +335,7 @@ export function HopfieldPanel() {
                         href={`https://doi.org/${n.reference_doi[0]}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-white/70 underline-offset-2 hover:underline"
+                        className="text-white/70 underline-offset-4 hover:underline"
                       >
                         doi:{n.reference_doi[0]}
                       </a>
@@ -352,7 +344,7 @@ export function HopfieldPanel() {
                       href={n.source_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-white/40 underline-offset-2 hover:underline"
+                      className="text-white/45 underline-offset-4 hover:underline"
                     >
                       neuromorpho ↗
                     </a>

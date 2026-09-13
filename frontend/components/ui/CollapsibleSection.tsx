@@ -6,7 +6,7 @@ interface CollapsibleSectionProps {
   title: string;
   subtitle?: string;
   defaultOpen?: boolean;
-  borderColor?: string;
+  borderColor?: string; // kept for call-site compatibility; unused in the glass look
   rightSlot?: ReactNode;
   children: ReactNode;
 }
@@ -15,27 +15,32 @@ export function CollapsibleSection({
   title,
   subtitle,
   defaultOpen = false,
-  borderColor = 'border-white/10',
   rightSlot,
   children,
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className={`rounded border ${borderColor} bg-black/85`}>
+    <div className="float-panel overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-baseline justify-between gap-2 px-3 py-2 text-left hover:bg-white/5"
+        className="press flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
       >
         <span className="flex items-baseline gap-2">
-          <span className="inline-block w-3 text-[10px] text-white/40">{open ? '▾' : '▸'}</span>
-          <span className="text-[10px] font-mono uppercase tracking-widest text-white/60">
-            {title}
+          <span
+            className="inline-block w-3 text-[10px] text-white/40"
+            style={{
+              transform: open ? 'rotate(90deg)' : 'none',
+              transition: 'transform 0.3s var(--spring)',
+            }}
+          >
+            ▸
           </span>
-          {subtitle && <span className="font-mono text-[10px] text-white/30">{subtitle}</span>}
+          <span className="meta text-white/80">{title}</span>
+          {subtitle && <span className="meta-xs">{subtitle}</span>}
         </span>
         {rightSlot}
       </button>
-      {open && <div className="space-y-2 px-3 pb-3 pt-1">{children}</div>}
+      {open && <div className="rise space-y-3 px-4 pb-4 pt-1 text-[13px]">{children}</div>}
     </div>
   );
 }

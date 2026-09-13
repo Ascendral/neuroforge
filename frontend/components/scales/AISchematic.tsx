@@ -77,8 +77,8 @@ const GROUP_LABELS: { label: string; x: number; y: number }[] = [
 
 const EDGE_STYLE: Record<string, { stroke: string; dash?: string }> = {
   data_flow: { stroke: 'rgba(255,255,255,0.55)' },
-  gradient: { stroke: 'rgba(255,45,45,0.7)', dash: '5 3' },
-  teaches: { stroke: 'rgba(255,45,45,0.5)', dash: '2 3' },
+  gradient: { stroke: 'rgba(225,5,0,0.7)', dash: '5 3' },
+  teaches: { stroke: 'rgba(225,5,0,0.5)', dash: '2 3' },
   modulates: { stroke: 'rgba(155,210,255,0.6)', dash: '2 3' },
   projects_to: { stroke: 'rgba(255,255,255,0.5)' },
 };
@@ -141,43 +141,55 @@ export function AISchematic({ graph, selectedId, onSelect }: AISchematicProps) {
           y={b.y}
           width={b.w}
           height={b.h}
-          rx={4}
-          fill={container ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.85)'}
-          stroke={isSel ? '#ff2d2d' : best ? STRENGTH_COLOR[best] : 'rgba(255,255,255,0.3)'}
-          strokeWidth={isSel ? 2 : 1}
+          rx={container ? 18 : 12}
+          fill={container ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.06)'}
+          stroke={isSel ? '#E10500' : best ? STRENGTH_COLOR[best] : 'rgba(255,255,255,0.22)'}
+          strokeWidth={isSel ? 2 : best === 'strong' || best === 'equivalence' ? 1.2 : 1}
           strokeDasharray={best ? STRENGTH_DASH[best] : undefined}
         />
+        {!container && (
+          <rect
+            x={b.x + 1}
+            y={b.y + 1}
+            width={b.w - 2}
+            height={1}
+            fill="rgba(255,255,255,0.18)"
+            rx={1}
+          />
+        )}
         <text
-          x={b.x + 8}
-          y={b.y + (container ? 14 : b.h / 2 - 3)}
-          fontSize={container ? 10 : 11}
-          fill="#fff"
-          fontFamily="ui-sans-serif, system-ui"
+          x={b.x + 10}
+          y={b.y + (container ? 16 : b.h / 2 - 3)}
+          fontSize={container ? 10 : 11.5}
+          fill={container ? 'rgba(255,255,255,0.45)' : '#fff'}
+          fontFamily={container ? 'var(--font-text)' : 'var(--font-display)'}
           fontWeight={600}
+          letterSpacing={container ? 1.5 : 0}
+          style={container ? { textTransform: 'uppercase' } : undefined}
         >
           {n.name.length > 30 && !container ? n.name.slice(0, 29) + '…' : n.name}
         </text>
         {!container && (
           <text
-            x={b.x + 8}
-            y={b.y + b.h / 2 + 10}
-            fontSize={8.5}
+            x={b.x + 10}
+            y={b.y + b.h / 2 + 11}
+            fontSize={9}
             fill="rgba(255,255,255,0.5)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
           >
             {n.analogs.length > 0
-              ? `↔ ${n.analogs[0].target_name}`.slice(0, Math.max(10, Math.floor(b.w / 5.2)))
+              ? `↔ ${n.analogs[0].target_name}`.slice(0, Math.max(10, Math.floor(b.w / 5.4)))
               : '∅ no brain counterpart'}
           </text>
         )}
         {n.widget && (
           <text
-            x={b.x + b.w - 8}
-            y={b.y + 12}
+            x={b.x + b.w - 10}
+            y={b.y + 13}
             fontSize={9}
             textAnchor="end"
-            fill="rgba(255,255,255,0.5)"
-            fontFamily="monospace"
+            fill="#E10500"
+            fontFamily="var(--font-text)"
           >
             ▶
           </text>
@@ -222,7 +234,7 @@ export function AISchematic({ graph, selectedId, onSelect }: AISchematicProps) {
             y={g.y - 8}
             fontSize={9}
             fill="rgba(255,255,255,0.35)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
             letterSpacing={1.5}
           >
             {g.label}
@@ -261,7 +273,7 @@ export function AISchematic({ graph, selectedId, onSelect }: AISchematicProps) {
                   fontSize={8}
                   textAnchor="middle"
                   fill="rgba(255,255,255,0.6)"
-                  fontFamily="monospace"
+                  fontFamily="var(--font-text)"
                 >
                   {e.note}
                 </text>
@@ -279,7 +291,7 @@ export function AISchematic({ graph, selectedId, onSelect }: AISchematicProps) {
             y={0}
             fontSize={9}
             fill="rgba(255,255,255,0.35)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
             letterSpacing={1.5}
           >
             BOX BORDER = EVIDENCE FOR ITS BRAIN ANALOG
@@ -295,7 +307,13 @@ export function AISchematic({ graph, selectedId, onSelect }: AISchematicProps) {
                 strokeWidth={2}
                 strokeDasharray={STRENGTH_DASH[s]}
               />
-              <text x={30} y={7} fontSize={8.5} fill="rgba(255,255,255,0.6)" fontFamily="monospace">
+              <text
+                x={30}
+                y={7}
+                fontSize={8.5}
+                fill="rgba(255,255,255,0.6)"
+                fontFamily="var(--font-text)"
+              >
                 {s}
               </text>
             </g>
@@ -305,7 +323,7 @@ export function AISchematic({ graph, selectedId, onSelect }: AISchematicProps) {
             y={60}
             fontSize={9}
             fill="rgba(255,255,255,0.35)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
             letterSpacing={1.5}
           >
             ARROWS
@@ -328,7 +346,7 @@ export function AISchematic({ graph, selectedId, onSelect }: AISchematicProps) {
                   y={7}
                   fontSize={8.5}
                   fill="rgba(255,255,255,0.6)"
-                  fontFamily="monospace"
+                  fontFamily="var(--font-text)"
                 >
                   {k.replace('_', ' ')}
                 </text>
@@ -338,7 +356,13 @@ export function AISchematic({ graph, selectedId, onSelect }: AISchematicProps) {
 
         {unplaced.length > 0 && (
           <g transform={`translate(40, ${H - 30})`}>
-            <text x={0} y={0} fontSize={9} fill="rgba(255,255,255,0.4)" fontFamily="monospace">
+            <text
+              x={0}
+              y={0}
+              fontSize={9}
+              fill="rgba(255,255,255,0.4)"
+              fontFamily="var(--font-text)"
+            >
               not placed on this diagram (registry has them):{' '}
               {unplaced.map((n) => n.name).join(' · ')}
             </text>

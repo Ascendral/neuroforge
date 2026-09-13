@@ -38,21 +38,17 @@ export function HHPanel() {
   return (
     <section className="space-y-3">
       <FiringPlot trace={trace} selectedPointId={null} />
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-3 text-[13px]">
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">stim µA</span>
+          <span className="meta-xs w-16 self-center">stim µA</span>
           <input
             type="number"
             step="0.5"
             value={stimulus}
             onChange={(e) => setStimulus(parseFloat(e.target.value) || 0)}
-            className="w-20 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-20 field"
           />
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="ml-auto rounded border border-white/30 px-3 py-1 text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onRun} disabled={running} className="btn btn-sm btn-red ml-auto">
             {running ? 'running…' : 'run hh'}
           </button>
         </label>
@@ -60,17 +56,17 @@ export function HHPanel() {
         {trace && (
           <dl className="space-y-1 text-white/70">
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">spikes</dt>
+              <dt className="meta-xs w-24 self-center">spikes</dt>
               <dd className="text-white">{trace.spike_times_ms.length}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-24 text-white/40">peak mV</dt>
+              <dt className="meta-xs w-24 self-center">peak mV</dt>
               <dd className="text-white">{Math.max(...trace.voltage_mV).toFixed(2)}</dd>
             </div>
           </dl>
         )}
         {trace && (
-          <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+          <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
             {trace.citation}
           </p>
         )}

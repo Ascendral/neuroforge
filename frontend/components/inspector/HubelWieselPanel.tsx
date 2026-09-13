@@ -65,13 +65,8 @@ function FilterCanvas({ label, filter }: FilterCanvasProps) {
   }, [filter]);
   return (
     <div className="flex flex-col items-center gap-1">
-      <canvas
-        ref={ref}
-        width={FILTER_PX}
-        height={FILTER_PX}
-        className="rounded border border-white/10 bg-black"
-      />
-      <span className="font-mono text-[10px] text-white/40">{label}</span>
+      <canvas ref={ref} width={FILTER_PX} height={FILTER_PX} className="plot" />
+      <span className="text-[12px] text-white/45">{label}</span>
     </div>
   );
 }
@@ -152,10 +147,8 @@ export function HubelWieselPanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">
-          V1 — Hubel & Wiesel 1962
-        </h2>
-        <span className="font-mono text-[10px] text-white/30">Gabor + energy model</span>
+        <h2 className="kicker">V1 — Hubel & Wiesel 1962</h2>
+        <span className="mono text-[11px] text-white/35">Gabor + energy model</span>
       </div>
 
       <div className="flex justify-around">
@@ -163,12 +156,7 @@ export function HubelWieselPanel() {
         <FilterCanvas label="odd (sin)" filter={response?.gabor_odd ?? null} />
       </div>
 
-      <svg
-        width={PLOT_W}
-        height={PLOT_H}
-        viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
-        className="rounded border border-white/10 bg-black"
-      >
+      <svg width={PLOT_W} height={PLOT_H} viewBox={`0 0 ${PLOT_W} ${PLOT_H}`} className="plot">
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
         <line
           x1={PAD_L}
@@ -194,14 +182,20 @@ export function HubelWieselPanel() {
                 fontSize={9}
                 textAnchor="middle"
                 fill="rgba(255,255,255,0.5)"
-                fontFamily="monospace"
+                fontFamily="var(--font-text)"
               >
                 {deg}°
               </text>
             </g>
           );
         })}
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+        <text
+          x={4}
+          y={PAD_T + 8}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="var(--font-text)"
+        >
           resp
         </text>
 
@@ -212,7 +206,7 @@ export function HubelWieselPanel() {
             fontSize={10}
             textAnchor="middle"
             fill="rgba(255,255,255,0.35)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
           >
             no run yet — click compute
           </text>
@@ -225,7 +219,7 @@ export function HubelWieselPanel() {
               x2={computed.preferredX}
               y1={PAD_T}
               y2={PAD_T + innerH}
-              stroke="rgba(255,45,45,0.4)"
+              stroke="rgba(225,5,0,0.4)"
               strokeDasharray="2 3"
             />
             <path
@@ -252,9 +246,9 @@ export function HubelWieselPanel() {
         </span>
       </div>
 
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-3 text-[13px]">
         <label className="flex items-baseline gap-2">
-          <span className="w-20 text-white/40">θ_pref °</span>
+          <span className="meta-xs w-20 self-center">θ_pref °</span>
           <input
             type="number"
             min={0}
@@ -262,13 +256,9 @@ export function HubelWieselPanel() {
             step={5}
             value={orientation}
             onChange={(e) => setOrientation(parseFloat(e.target.value) || 0)}
-            className="w-20 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-20 field"
           />
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="ml-auto rounded border border-white/30 px-3 py-1 text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onRun} disabled={running} className="btn btn-sm btn-red ml-auto">
             {running ? 'running…' : 'compute'}
           </button>
         </label>
@@ -276,14 +266,14 @@ export function HubelWieselPanel() {
         {error && <p className="text-accent">{error}</p>}
 
         {response && (
-          <p className="text-[10px] leading-snug text-white/40">
+          <p className="text-[12px] leading-snug text-white/45">
             CNN lineage: LeCun 1989 cited Hubel &amp; Wiesel directly. The first conv-layer filter
             of any modern CNN (VGG, ResNet) converges to a Gabor like the one above.
           </p>
         )}
 
         {response && (
-          <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+          <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
             {response.citation}
           </p>
         )}
@@ -291,11 +281,9 @@ export function HubelWieselPanel() {
 
       <div className="space-y-2 border-t border-white/10 pt-3">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-xs uppercase tracking-widest text-white/40">
-            Real V1 reconstructions
-          </h3>
+          <h3 className="kicker">Real V1 reconstructions</h3>
           {v1Sample && (
-            <span className="font-mono text-[10px] text-white/30">
+            <span className="mono text-[11px] text-white/35">
               {v1Sample.total_matching.toLocaleString()} on neuromorpho.org
             </span>
           )}
@@ -303,17 +291,17 @@ export function HubelWieselPanel() {
 
         {v1Error && <p className="text-xs text-accent">{v1Error}</p>}
         {!v1Sample && !v1Error && (
-          <p className="font-mono text-[10px] text-white/40">loading from neuromorpho.org…</p>
+          <p className="text-[12px] text-white/45">loading from neuromorpho.org…</p>
         )}
 
         {v1Sample && (
-          <p className="font-mono text-[10px] leading-snug text-white/40">
+          <p className="text-[12.5px] leading-snug text-white/45">
             query: brain_region = &quot;primary visual&quot;
           </p>
         )}
 
         {v1Sample && (
-          <ul className="space-y-2 font-mono text-[10px]">
+          <ul className="space-y-2.5 text-[12.5px]">
             {v1Sample.results.map((n) => {
               const isActive = selection?.selectedId === n.neuron_id;
               return (
@@ -346,7 +334,7 @@ export function HubelWieselPanel() {
                         href={`https://doi.org/${n.reference_doi[0]}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-white/70 underline-offset-2 hover:underline"
+                        className="text-white/70 underline-offset-4 hover:underline"
                       >
                         doi:{n.reference_doi[0]}
                       </a>
@@ -355,7 +343,7 @@ export function HubelWieselPanel() {
                       href={n.source_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-white/40 underline-offset-2 hover:underline"
+                      className="text-white/45 underline-offset-4 hover:underline"
                     >
                       neuromorpho ↗
                     </a>

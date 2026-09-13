@@ -17,7 +17,7 @@ function Condition({ title, r, ys }: { title: string; r: DopamineRPEResponse; ys
   const rew = r.reward_step * r.bin_ms;
   return (
     <div className="space-y-1">
-      <div className="font-mono text-[9px] uppercase tracking-widest text-white/50">{title}</div>
+      <div className="meta-xs">{title}</div>
       <LinePlot
         width={320}
         height={90}
@@ -30,7 +30,7 @@ function Condition({ title, r, ys }: { title: string; r: DopamineRPEResponse; ys
           { x: cue, label: 'cue', color: 'rgba(155,210,255,0.7)' },
           { x: rew, label: 'reward', color: 'rgba(255,216,107,0.7)' },
         ]}
-        series={[{ xs: r.times_ms, ys, color: '#ff2d2d', width: 1.6 }]}
+        series={[{ xs: r.times_ms, ys, color: '#E10500', width: 1.6 }]}
       />
     </div>
   );
@@ -58,10 +58,8 @@ export function DopaminePanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">
-          Dopamine = reward prediction error
-        </h2>
-        <span className="font-mono text-[10px] text-white/30">δ = r + γV(t) − V(t−1)</span>
+        <h2 className="kicker">Dopamine = reward prediction error</h2>
+        <span className="mono text-[11px] text-white/35">δ = r + γV(t) − V(t−1)</span>
       </div>
 
       {response ? (
@@ -81,9 +79,7 @@ export function DopaminePanel() {
             r={response}
             ys={response.delta_omitted}
           />
-          <div className="font-mono text-[9px] uppercase tracking-widest text-white/50">
-            learning: δ moves from reward to cue over trials
-          </div>
+          <div className="meta-xs">learning: δ moves from reward to cue over trials</div>
           <LinePlot
             width={320}
             height={90}
@@ -111,20 +107,20 @@ export function DopaminePanel() {
         <LinePlot width={320} height={90} series={[]} empty="no run yet — click train" />
       )}
 
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-3 text-[13px]">
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">trials</span>
+          <span className="meta-xs w-16 self-center">trials</span>
           <input
             type="number"
             min={1}
             max={2000}
             value={trials}
             onChange={(e) => setTrials(Math.max(1, parseInt(e.target.value) || 1))}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
         </label>
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">γ</span>
+          <span className="meta-xs w-16 self-center">γ</span>
           <input
             type="number"
             min={0.5}
@@ -134,21 +130,17 @@ export function DopaminePanel() {
             onChange={(e) =>
               setGamma(Math.min(1, Math.max(0.5, parseFloat(e.target.value) || 0.5)))
             }
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="ml-auto rounded border border-white/30 px-3 py-1 text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onRun} disabled={running} className="btn btn-sm btn-red ml-auto">
             {running ? 'training…' : 'train'}
           </button>
         </label>
         {error && <p className="text-accent">{error}</p>}
         {response && (
           <>
-            <p className="text-[10px] leading-snug text-white/50">{response.parameter_note}</p>
-            <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+            <p className="text-[12.5px] leading-snug text-white/55">{response.parameter_note}</p>
+            <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
               {response.citation}
             </p>
           </>

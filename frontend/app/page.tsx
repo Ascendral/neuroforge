@@ -8,6 +8,7 @@ import { NodeDetail } from '@/components/scales/NodeDetail';
 import { ScaleExplorer } from '@/components/scales/ScaleExplorer';
 import { TimelineView } from '@/components/scales/TimelineView';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
+import { Pills } from '@/components/ui/Pills';
 import {
   BrainCanvas,
   type FunctionHighlight,
@@ -573,62 +574,63 @@ export default function Page() {
 
   return (
     <NeuronSelectionCtx.Provider value={{ selectNeuron, selectedId: neuronId }}>
-      <main className="flex h-screen w-screen flex-col bg-black text-white">
-        <header className="flex items-baseline justify-between border-b border-white/10 px-6 py-4">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-xl font-semibold tracking-tight">NeuroForge</h1>
-            <span className="text-xs text-white/40">
+      <main className="flex h-screen w-screen flex-col bg-canvas text-white">
+        <header className="hairline-b flex items-center justify-between gap-6 px-6 py-3">
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col gap-1">
+              <span className="kicker">ascendral</span>
+              <h1 className="display text-white" style={{ fontSize: 22 }}>
+                NeuroForge
+              </h1>
+            </div>
+            <span className="hidden text-[12.5px] text-white/45 xl:block">
               brain ↔ AI on one ladder · 5 scales · 9 live models · every claim cited
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs">
-            {(['brain', 'scales', 'ai', 'timeline', 'neuron'] as ViewMode[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`rounded border px-3 py-1 font-mono ${
-                  view === v
-                    ? 'border-accent text-white'
-                    : 'border-white/20 text-white/50 hover:bg-white/5'
-                }`}
-              >
-                {VIEW_LABELS[v]}
-              </button>
-            ))}
-            {view === 'scales' && graph && (
-              <div className="text-white/60">
-                <span className="text-white">
-                  {graph.nodes.filter((n) => n.side === 'brain').length}
-                </span>{' '}
-                brain ·{' '}
-                <span className="text-white">
-                  {graph.nodes.filter((n) => n.side === 'ai').length}
-                </span>{' '}
-                AI nodes · {graph.nodes.reduce((s, n) => s + n.analogs.length, 0)} bridges
-              </div>
-            )}
-            {view === 'neuron' && neuron && (
-              <div className="text-white/60">
-                <span className="text-white">{neuron.neuron_name}</span>
-                {' · '}
-                <span>{neuron.species}</span>
-                {' · '}
-                <span>{neuron.brain_region.join(' / ')}</span>
-              </div>
-            )}
-            {view === 'brain' && brain && (
-              <div className="text-white/60">
-                fsaverage5 · {(brain.left.vertex_count + brain.right.vertex_count).toLocaleString()}{' '}
-                vertices
-                {markers.length > 0 && (
-                  <>
-                    {' · '}
-                    <span className="text-white">{markers.length}</span> neurons (schematic
-                    placement at region centroids)
-                  </>
-                )}
-              </div>
-            )}
+          <div className="flex items-center gap-5">
+            <div className="hidden text-[12.5px] text-white/50 lg:block">
+              {view === 'scales' && graph && (
+                <>
+                  <span className="text-white">
+                    {graph.nodes.filter((n) => n.side === 'brain').length}
+                  </span>{' '}
+                  brain ·{' '}
+                  <span className="text-white">
+                    {graph.nodes.filter((n) => n.side === 'ai').length}
+                  </span>{' '}
+                  AI nodes · {graph.nodes.reduce((s, n) => s + n.analogs.length, 0)} bridges
+                </>
+              )}
+              {view === 'neuron' && neuron && (
+                <>
+                  <span className="text-white">{neuron.neuron_name}</span>
+                  {' · '}
+                  <span>{neuron.species}</span>
+                  {' · '}
+                  <span>{neuron.brain_region.join(' / ')}</span>
+                </>
+              )}
+              {view === 'brain' && brain && (
+                <>
+                  fsaverage5 ·{' '}
+                  {(brain.left.vertex_count + brain.right.vertex_count).toLocaleString()} vertices
+                  {markers.length > 0 && (
+                    <>
+                      {' · '}
+                      <span className="text-white">{markers.length}</span> real neurons at atlas
+                      centroids
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+            <Pills
+              options={['brain', 'scales', 'ai', 'timeline', 'neuron'] as const}
+              value={view}
+              onChange={(v) => setView(v)}
+              label={(v) => VIEW_LABELS[v]}
+              size="sm"
+            />
           </div>
         </header>
 
@@ -637,12 +639,12 @@ export default function Page() {
             {view === 'brain' && (
               <>
                 {brainError && (
-                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-accent">
+                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-[13px] text-accent">
                     error fetching brain mesh: {brainError}
                   </div>
                 )}
                 {!brain && !brainError && (
-                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+                  <div className="absolute inset-0 flex items-center justify-center text-[13px] text-white/40">
                     loading fsaverage5 cortical mesh…
                   </div>
                 )}
@@ -723,7 +725,7 @@ export default function Page() {
                   />
                 )}
                 {nodeHighlight && !activeFunction && (
-                  <div className="absolute bottom-4 right-4 max-w-[300px] rounded border border-[#ffe45e]/40 bg-black/85 p-2 font-mono text-[10px]">
+                  <div className="float-panel rise absolute bottom-4 right-4 max-w-[320px] p-4 text-[12.5px]">
                     <div className="text-white/40">highlighting atlas anchors of</div>
                     <div className="text-white">{nodeHighlight.name}</div>
                     <ul className="mt-1 text-white/60">
@@ -748,13 +750,13 @@ export default function Page() {
                   </div>
                 )}
                 {functions && view === 'brain' && (
-                  <div className="absolute left-4 top-4 w-[280px] max-h-[calc(100vh-3rem)] space-y-2 overflow-y-auto pr-1">
+                  <div className="absolute left-5 top-5 w-[320px] max-h-[calc(100vh-6rem)] space-y-3 overflow-y-auto pr-1">
                     <CollapsibleSection
                       title="cognitive functions"
                       subtitle={`${functions.functions.length}`}
                       defaultOpen
                     >
-                      <p className="font-mono text-[10px] leading-snug text-white/50">
+                      <p className="text-[13px] leading-snug text-white/55">
                         Click any function. Brain regions associated with it will glow yellow. Each
                         entry cites its foundational discovery paper.
                       </p>
@@ -765,7 +767,7 @@ export default function Page() {
                             <button
                               key={f.name}
                               onClick={() => setActiveFunction(isActive ? null : f)}
-                              className={`rounded border px-2 py-1 font-mono text-[10px] ${
+                              className={`rounded border px-2 py-1 text-[12.5px] ${
                                 isActive
                                   ? 'border-[#ffe45e] bg-[#ffe45e]/10 text-white'
                                   : 'border-white/20 text-white/60 hover:bg-white/5'
@@ -777,7 +779,7 @@ export default function Page() {
                         })}
                       </div>
                       {activeFunction && (
-                        <div className="rounded border border-[#ffe45e]/40 bg-black/60 p-2 font-mono text-[10px] leading-snug">
+                        <div className="glass tile rise p-3.5 text-[12.5px] leading-snug">
                           <div className="mb-1 text-white">{activeFunction.name}</div>
                           <div className="mb-2 text-white/60">{activeFunction.description}</div>
                           <div className="mb-1 text-white/40">
@@ -794,7 +796,7 @@ export default function Page() {
                               </li>
                             ))}
                           </ul>
-                          <div className="border-t border-white/10 pt-2 text-white/40">
+                          <div className="hairline-t pt-3 text-[12px] text-white/40">
                             {activeFunction.citation}
                           </div>
                         </div>
@@ -811,17 +813,13 @@ export default function Page() {
                               e.stopPropagation();
                               setPauliVisible((v) => !v);
                             }}
-                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
-                              pauliVisible
-                                ? 'border-[#ff2d2d] bg-[#ff2d2d]/10 text-white'
-                                : 'border-white/20 text-white/60 hover:bg-white/5'
-                            }`}
+                            className={`chip ${pauliVisible ? 'chip-on' : ''}`}
                           >
                             {pauliVisible ? 'hide on brain' : 'show on brain'}
                           </span>
                         }
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                        <p className="text-[13px] leading-snug text-white/55">
                           16 deep subcortical nuclei. <span className="text-white/80">VTA</span>{' '}
                           makes the dopamine for reward; <span className="text-white/80">SNc</span>{' '}
                           makes the dopamine for movement (degenerates in Parkinson&apos;s).{' '}
@@ -830,7 +828,7 @@ export default function Page() {
                           (sleep, appetite, hormones); <span className="text-white/80">MN</span> is
                           the mammillary nucleus in the Papez memory circuit.
                         </p>
-                        <div className="space-y-0.5 font-mono text-[10px]">
+                        <div className="space-y-1 text-[12.5px]">
                           {pauli.nuclei.map((n) => (
                             <div key={n.abbrev} className="flex items-baseline gap-2">
                               <span
@@ -842,7 +840,7 @@ export default function Page() {
                             </div>
                           ))}
                         </div>
-                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                        <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
                           Pauli et al. Sci Data. 2018. doi:10.1038/sdata.2018.63
                         </p>
                       </CollapsibleSection>
@@ -858,22 +856,18 @@ export default function Page() {
                               e.stopPropagation();
                               setSchaeferVisible((v) => !v);
                             }}
-                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
-                              schaeferVisible
-                                ? 'border-[#7fff9b] bg-[#7fff9b]/10 text-white'
-                                : 'border-white/20 text-white/60 hover:bg-white/5'
-                            }`}
+                            className={`chip ${schaeferVisible ? 'chip-on' : ''}`}
                           >
                             {schaeferVisible ? 'hide on brain' : 'show on brain'}
                           </span>
                         }
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                        <p className="text-[13px] leading-snug text-white/55">
                           The cortex split into 100 fine-grained parcels, each colored by which of
                           the 7 Yeo functional networks it belongs to. Useful for seeing functional
                           subdivisions within each network.
                         </p>
-                        <p className="font-mono text-[10px] text-white/40">
+                        <p className="text-[12px] text-white/45">
                           Schaefer et al. Cereb Cortex. 2018. doi:10.1093/cercor/bhx179
                         </p>
                       </CollapsibleSection>
@@ -889,23 +883,19 @@ export default function Page() {
                               e.stopPropagation();
                               setDifumoVisible((v) => !v);
                             }}
-                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
-                              difumoVisible
-                                ? 'border-[#5eebff] bg-[#5eebff]/10 text-white'
-                                : 'border-white/20 text-white/60 hover:bg-white/5'
-                            }`}
+                            className={`chip ${difumoVisible ? 'chip-on' : ''}`}
                           >
                             {difumoVisible ? 'hide on brain' : 'show on brain'}
                           </span>
                         }
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                        <p className="text-[13px] leading-snug text-white/55">
                           64 fine-grained &quot;functional modes&quot; learned from 2,192 fMRI scans
                           (HCP, OASIS, Connectome). Each component is a coactivating brain region
                           with a plain-language anatomical name; spheres are colored by which Yeo
                           network they belong to.
                         </p>
-                        <div className="max-h-[180px] space-y-0.5 overflow-y-auto pr-1 font-mono text-[10px]">
+                        <div className="max-h-[200px] space-y-1 overflow-y-auto pr-1 text-[12.5px]">
                           {difumo.components.map((c) => (
                             <div key={c.component_id} className="flex items-baseline gap-2">
                               <span
@@ -917,7 +907,7 @@ export default function Page() {
                             </div>
                           ))}
                         </div>
-                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                        <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
                           Dadi et al. NeuroImage. 2020. doi:10.1016/j.neuroimage.2020.117126
                         </p>
                       </CollapsibleSection>
@@ -933,22 +923,18 @@ export default function Page() {
                               e.stopPropagation();
                               setYeo17Visible((v) => !v);
                             }}
-                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
-                              yeo17Visible
-                                ? 'border-[#c43afa] bg-[#c43afa]/10 text-white'
-                                : 'border-white/20 text-white/60 hover:bg-white/5'
-                            }`}
+                            className={`chip ${yeo17Visible ? 'chip-on' : ''}`}
                           >
                             {yeo17Visible ? 'hide on brain' : 'show on brain'}
                           </span>
                         }
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                        <p className="text-[13px] leading-snug text-white/55">
                           The 17-network split from the same Yeo 2011 paper. Each of the 7 large
                           networks is subdivided into 2-3 sub-networks (e.g. Default Mode A/B/C,
                           Visual Central/Peripheral). Colors come straight from the published LUT.
                         </p>
-                        <div className="space-y-0.5 font-mono text-[10px]">
+                        <div className="space-y-1 text-[12.5px]">
                           {yeo17.networks.map((n) => (
                             <div key={n.network_id} className="flex items-baseline gap-2">
                               <span
@@ -960,7 +946,7 @@ export default function Page() {
                             </div>
                           ))}
                         </div>
-                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                        <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
                           Yeo et al. J Neurophysiol. 2011. doi:10.1152/jn.00338.2011
                         </p>
                       </CollapsibleSection>
@@ -976,17 +962,13 @@ export default function Page() {
                               e.stopPropagation();
                               setHcp1065Visible((v) => !v);
                             }}
-                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
-                              hcp1065Visible
-                                ? 'border-[#7fff9b] bg-[#7fff9b]/10 text-white'
-                                : 'border-white/20 text-white/60 hover:bg-white/5'
-                            }`}
+                            className={`chip ${hcp1065Visible ? 'chip-on' : ''}`}
                           >
                             {hcp1065Visible ? 'hide on brain' : 'show on brain'}
                           </span>
                         }
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                        <p className="text-[13px] leading-snug text-white/55">
                           80 named fiber bundles averaged over 1,065 HCP young-adult subjects. Each
                           tract is rendered as the centerline of its empirical voxel-occupancy
                           distribution (PCA-binned mean per length-bin). Click a group to filter.
@@ -994,11 +976,7 @@ export default function Page() {
                         <div className="flex flex-wrap gap-1">
                           <button
                             onClick={() => setHcp1065Group(null)}
-                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
-                              hcp1065Group === null
-                                ? 'border-white bg-white/10 text-white'
-                                : 'border-white/20 text-white/60 hover:bg-white/5'
-                            }`}
+                            className={`chip ${hcp1065Group === null ? 'chip-on' : ''}`}
                           >
                             all
                           </button>
@@ -1010,11 +988,7 @@ export default function Page() {
                               <button
                                 key={g}
                                 onClick={() => setHcp1065Group(isActive ? null : g)}
-                                className={`flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[9px] ${
-                                  isActive
-                                    ? 'border-white bg-white/10 text-white'
-                                    : 'border-white/20 text-white/60 hover:bg-white/5'
-                                }`}
+                                className={`chip ${isActive ? 'chip-on' : ''}`}
                               >
                                 <span
                                   className="inline-block h-2 w-2 rounded"
@@ -1025,7 +999,7 @@ export default function Page() {
                             );
                           })}
                         </div>
-                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                        <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
                           Yeh et al. NeuroImage. 2018. doi:10.1016/j.neuroimage.2018.05.027
                           {' · '}
                           Atlas: doi:10.5281/zenodo.3627772
@@ -1038,11 +1012,9 @@ export default function Page() {
                         title="Allen brain gene expression"
                         subtitle={`${allenGenes.genes.length} curated`}
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
-                          {allenGenes.note}
-                        </p>
+                        <p className="text-[13px] leading-snug text-white/55">{allenGenes.note}</p>
                         {!allenGenes.available && (
-                          <p className="rounded border border-amber-500/40 bg-amber-500/10 p-2 font-mono text-[10px] text-amber-200">
+                          <p className="tile bg-amber-500/10 p-3 text-[12px] text-amber-200">
                             Cache not built yet. Run the abagen pipeline to enable this layer.
                           </p>
                         )}
@@ -1051,9 +1023,7 @@ export default function Page() {
                             {Array.from(new Set(allenGenes.genes.map((g) => g.system))).map(
                               (system) => (
                                 <div key={system}>
-                                  <div className="mb-1 font-mono text-[9px] uppercase tracking-wide text-white/40">
-                                    {system}
-                                  </div>
+                                  <div className="meta-xs mb-1.5">{system}</div>
                                   <div className="flex flex-wrap gap-1">
                                     {allenGenes.genes
                                       .filter((g) => g.system === system)
@@ -1076,7 +1046,7 @@ export default function Page() {
                                                 .finally(() => setActiveGeneLoading(null));
                                             }}
                                             title={g.description}
-                                            className={`rounded border px-2 py-0.5 font-mono text-[10px] ${
+                                            className={`rounded border px-2 py-0.5 text-[12.5px] ${
                                               isActive
                                                 ? 'border-[#ff66cc] bg-[#ff66cc]/15 text-white'
                                                 : 'border-white/20 text-white/70 hover:bg-white/5'
@@ -1091,7 +1061,7 @@ export default function Page() {
                               ),
                             )}
                             {activeGene && (
-                              <div className="rounded border border-[#ff66cc]/40 bg-black/60 p-2 font-mono text-[10px] leading-snug">
+                              <div className="glass tile rise p-3.5 text-[12.5px] leading-snug">
                                 <div className="mb-1 text-white">
                                   {activeGene.gene.symbol} · {activeGene.gene.role}
                                 </div>
@@ -1105,7 +1075,7 @@ export default function Page() {
                             )}
                           </div>
                         )}
-                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                        <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
                           {allenGenes.citation}
                         </p>
                       </CollapsibleSection>
@@ -1121,21 +1091,17 @@ export default function Page() {
                               e.stopPropagation();
                               setNetworksVisible((v) => !v);
                             }}
-                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
-                              networksVisible
-                                ? 'border-[#cd3e4e] bg-[#cd3e4e]/10 text-white'
-                                : 'border-white/20 text-white/60 hover:bg-white/5'
-                            }`}
+                            className={`chip ${networksVisible ? 'chip-on' : ''}`}
                           >
                             {networksVisible ? 'hide on brain' : 'show on brain'}
                           </span>
                         }
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                        <p className="text-[13px] leading-snug text-white/55">
                           7 large-scale brain systems discovered by clustering resting-state
                           activity across 1,000 subjects. Each network has a clear function:
                         </p>
-                        <div className="space-y-1 font-mono text-[10px]">
+                        <div className="space-y-1.5 text-[12.5px]">
                           {yeoNetworks.networks.map((n) => (
                             <div key={n.id} className="flex items-baseline gap-2">
                               <span
@@ -1149,7 +1115,7 @@ export default function Page() {
                             </div>
                           ))}
                         </div>
-                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                        <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
                           Yeo et al. J Neurophysiol. 2011. doi:10.1152/jn.00338.2011
                         </p>
                       </CollapsibleSection>
@@ -1165,21 +1131,17 @@ export default function Page() {
                               e.stopPropagation();
                               setTractsVisible((v) => !v);
                             }}
-                            className={`rounded border px-2 py-0.5 font-mono text-[9px] ${
-                              tractsVisible
-                                ? 'border-[#9bd2ff] bg-[#9bd2ff]/10 text-white'
-                                : 'border-white/20 text-white/60 hover:bg-white/5'
-                            }`}
+                            className={`chip ${tractsVisible ? 'chip-on' : ''}`}
                           >
                             {tractsVisible ? 'hide on brain' : 'show on brain'}
                           </span>
                         }
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                        <p className="text-[13px] leading-snug text-white/55">
                           The major fiber bundles connecting brain regions. Each carries a specific
                           kind of information; damage produces predictable deficits.
                         </p>
-                        <div className="space-y-1 font-mono text-[10px]">
+                        <div className="space-y-1.5 text-[12.5px]">
                           {tracts.tracts.map((t) => (
                             <div key={t.name} className="flex items-baseline gap-2">
                               <span
@@ -1193,7 +1155,7 @@ export default function Page() {
                             </div>
                           ))}
                         </div>
-                        <p className="border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                        <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
                           schematic Bezier centerlines (not fiber-resolved). Catani &amp; Thiebaut
                           de Schotten. Cortex. 2008. doi:10.1016/j.cortex.2008.05.004
                         </p>
@@ -1201,11 +1163,11 @@ export default function Page() {
                     )}
 
                     <CollapsibleSection title="neuron color key" subtitle="120 cells">
-                      <p className="font-mono text-[10px] leading-snug text-white/50">
+                      <p className="text-[13px] leading-snug text-white/55">
                         Each color = one anatomical population. Every cell is a real reconstruction
                         from neuromorpho.org rendered at its region&apos;s MNI centroid.
                       </p>
-                      <div className="space-y-1 font-mono text-[10px]">
+                      <div className="space-y-1.5 text-[12.5px]">
                         {[
                           ['#9bd2ff', 'V1 cortical pyramidal', 'Hubel-Wiesel'],
                           ['#7fff9b', 'Hippocampus pyramidal', 'Hebbian / LTP'],
@@ -1230,7 +1192,7 @@ export default function Page() {
                           </div>
                         ))}
                       </div>
-                      <div className="space-y-0.5 border-t border-white/10 pt-2 font-mono text-[10px] text-white/40">
+                      <div className="hairline-t space-y-1 pt-3 text-[11.5px] leading-snug text-white/40">
                         <p>
                           neuron scale: cortical ×12, subcortical ×6 (small regions like hippocampus
                           would otherwise contain cells exceeding their real bounds)
@@ -1253,7 +1215,7 @@ export default function Page() {
                         title="neurotransmitter receptors"
                         subtitle={`${receptors.receptors.length}`}
                       >
-                        <p className="font-mono text-[10px] leading-snug text-white/50">
+                        <p className="text-[13px] leading-snug text-white/55">
                           Where each neurotransmitter system acts in the brain, measured with
                           radioactive tracers (PET / SPECT) in living healthy subjects. Click any
                           receptor to highlight regions where it&apos;s densely expressed and read
@@ -1292,9 +1254,7 @@ export default function Page() {
                                 .filter((s) => grouped[s]?.length)
                                 .map((sys) => (
                                   <div key={sys} className="space-y-1">
-                                    <div className="font-mono text-[9px] uppercase tracking-widest text-white/40">
-                                      {systemLabels[sys] ?? sys}
-                                    </div>
+                                    <div className="meta-xs">{systemLabels[sys] ?? sys}</div>
                                     <div className="flex flex-wrap gap-1">
                                       {grouped[sys].map((r) => {
                                         const isActive = activeReceptor?.receptor.key === r.key;
@@ -1316,7 +1276,7 @@ export default function Page() {
                                                 setReceptorLoading(false);
                                               }
                                             }}
-                                            className={`rounded border px-2 py-1 font-mono text-[10px] disabled:cursor-not-allowed disabled:opacity-50 ${
+                                            className={`rounded border px-2 py-1 text-[12.5px] disabled:cursor-not-allowed disabled:opacity-50 ${
                                               isActive
                                                 ? 'border-[#5eebff] bg-[#5eebff]/10 text-white'
                                                 : 'border-white/20 text-white/60 hover:bg-white/5'
@@ -1334,7 +1294,7 @@ export default function Page() {
                           );
                         })()}
                         {activeReceptor && (
-                          <div className="space-y-2 rounded border border-[#5eebff]/30 bg-black/60 p-2 font-mono text-[10px] leading-snug">
+                          <div className="glass tile rise space-y-3 p-3.5 text-[12.5px] leading-snug">
                             <div>
                               <div className="text-white">{activeReceptor.receptor.name}</div>
                               <div className="text-white/40">
@@ -1344,23 +1304,17 @@ export default function Page() {
                               </div>
                             </div>
                             <div>
-                              <div className="text-[9px] uppercase tracking-widest text-white/40">
-                                what it does
-                              </div>
+                              <div className="meta-xs">what it does</div>
                               <p className="text-white/75">{activeReceptor.receptor.role}</p>
                             </div>
                             <div>
-                              <div className="text-[9px] uppercase tracking-widest text-white/40">
-                                pharmacology
-                              </div>
+                              <div className="meta-xs">pharmacology</div>
                               <p className="text-white/75">
                                 {activeReceptor.receptor.pharmacology}
                               </p>
                             </div>
                             <div>
-                              <div className="text-[9px] uppercase tracking-widest text-white/40">
-                                top regions (mean PET signal)
-                              </div>
+                              <div className="meta-xs">top regions (mean PET signal)</div>
                               <ul className="mt-0.5 space-y-0.5">
                                 {[...activeReceptor.cortical, ...activeReceptor.subcortical]
                                   .sort((a, b) => b.mean - a.mean)
@@ -1373,7 +1327,7 @@ export default function Page() {
                                   ))}
                               </ul>
                             </div>
-                            <div className="border-t border-white/10 pt-2 text-white/40">
+                            <div className="hairline-t pt-3 text-[12px] text-white/40">
                               {activeReceptor.receptor.citation}
                             </div>
                           </div>
@@ -1383,7 +1337,7 @@ export default function Page() {
                   </div>
                 )}
                 {clickedRegion && (
-                  <div className="absolute right-4 top-4 max-w-[300px] rounded border border-white/10 bg-black/85 p-3 font-mono text-[10px] leading-tight">
+                  <div className="float-panel rise absolute right-4 top-4 max-w-[300px] p-4 text-[12.5px] leading-snug">
                     <div className="text-white/40">destrieux region</div>
                     <div className="mb-2 break-words text-white">{clickedRegion.label}</div>
                     <div className="text-white/40">click @ MNI mm</div>
@@ -1407,7 +1361,7 @@ export default function Page() {
                     )}
                     <button
                       onClick={() => setClickedRegion(null)}
-                      className="mt-2 text-white/40 underline-offset-2 hover:text-white hover:underline"
+                      className="mt-2 text-white/45 underline-offset-4 hover:text-white hover:underline"
                     >
                       dismiss
                     </button>
@@ -1418,12 +1372,12 @@ export default function Page() {
             {view === 'scales' && (
               <>
                 {graphError && (
-                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-accent">
+                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-[13px] text-accent">
                     error fetching scale graph: {graphError}
                   </div>
                 )}
                 {!graph && !graphError && (
-                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+                  <div className="absolute inset-0 flex items-center justify-center text-[13px] text-white/40">
                     loading multi-scale graph…
                   </div>
                 )}
@@ -1441,12 +1395,12 @@ export default function Page() {
             {view === 'ai' && (
               <>
                 {graphError && (
-                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-accent">
+                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-[13px] text-accent">
                     error fetching scale graph: {graphError}
                   </div>
                 )}
                 {!graph && !graphError && (
-                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+                  <div className="absolute inset-0 flex items-center justify-center text-[13px] text-white/40">
                     loading AI schematic…
                   </div>
                 )}
@@ -1462,12 +1416,12 @@ export default function Page() {
             {view === 'timeline' && (
               <>
                 {timelineError && (
-                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-accent">
+                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-[13px] text-accent">
                     error fetching timeline: {timelineError}
                   </div>
                 )}
                 {!timeline && !timelineError && (
-                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+                  <div className="absolute inset-0 flex items-center justify-center text-[13px] text-white/40">
                     loading research timeline…
                   </div>
                 )}
@@ -1477,12 +1431,12 @@ export default function Page() {
             {view === 'neuron' && (
               <>
                 {neuronError && (
-                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-accent">
+                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-[13px] text-accent">
                     error fetching neuron {neuronId}: {neuronError}
                   </div>
                 )}
                 {!neuron && !neuronError && (
-                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+                  <div className="absolute inset-0 flex items-center justify-center text-[13px] text-white/40">
                     loading neuron {neuronId} from neuromorpho.org…
                   </div>
                 )}

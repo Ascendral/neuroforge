@@ -105,17 +105,10 @@ export function HebbianPanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">
-          Hebbian / LTP — Hebb 1949 · Bliss-Lømo 1973 · Oja 1982
-        </h2>
+        <h2 className="kicker">Hebbian / LTP — Hebb 1949 · Bliss-Lømo 1973 · Oja 1982</h2>
       </div>
 
-      <svg
-        width={PLOT_W}
-        height={PLOT_H}
-        viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
-        className="rounded border border-white/10 bg-black"
-      >
+      <svg width={PLOT_W} height={PLOT_H} viewBox={`0 0 ${PLOT_W} ${PLOT_H}`} className="plot">
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
         <line
           x1={PAD_L}
@@ -124,7 +117,13 @@ export function HebbianPanel() {
           y2={PAD_T + innerH}
           stroke="rgba(255,255,255,0.3)"
         />
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+        <text
+          x={4}
+          y={PAD_T + 8}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="var(--font-text)"
+        >
           ||w||
         </text>
         <text
@@ -132,7 +131,7 @@ export function HebbianPanel() {
           y={PAD_T + innerH + 14}
           fontSize={9}
           fill="rgba(255,255,255,0.5)"
-          fontFamily="monospace"
+          fontFamily="var(--font-text)"
         >
           iter
         </text>
@@ -144,7 +143,7 @@ export function HebbianPanel() {
             fontSize={10}
             textAnchor="middle"
             fill="rgba(255,255,255,0.35)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
           >
             no run yet — click compute
           </text>
@@ -166,7 +165,7 @@ export function HebbianPanel() {
               fontSize={9}
               textAnchor="end"
               fill="rgba(155,210,255,0.6)"
-              fontFamily="monospace"
+              fontFamily="var(--font-text)"
             >
               1
             </text>
@@ -187,9 +186,9 @@ export function HebbianPanel() {
         </span>
       </div>
 
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-3 text-[13px]">
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">iters</span>
+          <span className="meta-xs w-16 self-center">iters</span>
           <input
             type="number"
             step={500}
@@ -197,11 +196,11 @@ export function HebbianPanel() {
             max={20000}
             value={iters}
             onChange={(e) => setIters(parseInt(e.target.value) || 100)}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
         </label>
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">η</span>
+          <span className="meta-xs w-16 self-center">η</span>
           <input
             type="number"
             step={0.001}
@@ -209,13 +208,9 @@ export function HebbianPanel() {
             max={0.1}
             value={eta}
             onChange={(e) => setEta(parseFloat(e.target.value) || 0.001)}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="ml-auto rounded border border-white/30 px-3 py-1 text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onRun} disabled={running} className="btn btn-sm btn-red ml-auto">
             {running ? 'running…' : 'run learning'}
           </button>
         </label>
@@ -258,7 +253,7 @@ export function HebbianPanel() {
         )}
 
         {response && (
-          <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+          <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
             {response.citation}
           </p>
         )}
@@ -266,11 +261,9 @@ export function HebbianPanel() {
 
       <div className="space-y-2 border-t border-white/10 pt-3">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-xs uppercase tracking-widest text-white/40">
-            Real hippocampal pyramidals
-          </h3>
+          <h3 className="kicker">Real hippocampal pyramidals</h3>
           {sample && (
-            <span className="font-mono text-[10px] text-white/30">
+            <span className="mono text-[11px] text-white/35">
               {sample.total_matching.toLocaleString()} on neuromorpho.org
             </span>
           )}
@@ -278,17 +271,17 @@ export function HebbianPanel() {
 
         {sampleError && <p className="text-xs text-accent">{sampleError}</p>}
         {!sample && !sampleError && (
-          <p className="font-mono text-[10px] text-white/40">loading from neuromorpho.org…</p>
+          <p className="text-[12px] text-white/45">loading from neuromorpho.org…</p>
         )}
 
         {sample && (
-          <p className="font-mono text-[10px] leading-snug text-white/40">
+          <p className="text-[12.5px] leading-snug text-white/45">
             query: brain_region = &quot;hippocampus&quot; AND cell_type = &quot;pyramidal&quot;
           </p>
         )}
 
         {sample && (
-          <ul className="space-y-2 font-mono text-[10px]">
+          <ul className="space-y-2.5 text-[12.5px]">
             {sample.results.map((n) => {
               const isActive = selection?.selectedId === n.neuron_id;
               return (
@@ -321,7 +314,7 @@ export function HebbianPanel() {
                         href={`https://doi.org/${n.reference_doi[0]}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-white/70 underline-offset-2 hover:underline"
+                        className="text-white/70 underline-offset-4 hover:underline"
                       >
                         doi:{n.reference_doi[0]}
                       </a>
@@ -330,7 +323,7 @@ export function HebbianPanel() {
                       href={n.source_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-white/40 underline-offset-2 hover:underline"
+                      className="text-white/45 underline-offset-4 hover:underline"
                     >
                       neuromorpho ↗
                     </a>

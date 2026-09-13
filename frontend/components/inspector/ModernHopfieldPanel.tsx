@@ -42,13 +42,8 @@ function PatternCanvas({ label, pattern }: { label: string; pattern: number[] | 
   }, [pattern]);
   return (
     <div className="flex flex-col items-center gap-1">
-      <canvas
-        ref={ref}
-        width={PATTERN_PX}
-        height={PATTERN_PX}
-        className="rounded border border-white/10 bg-black"
-      />
-      <span className="font-mono text-[9px] text-white/40">{label}</span>
+      <canvas ref={ref} width={PATTERN_PX} height={PATTERN_PX} className="plot" />
+      <span className="meta-xs">{label}</span>
     </div>
   );
 }
@@ -89,10 +84,8 @@ export function ModernHopfieldPanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">
-          Modern Hopfield ≡ attention
-        </h2>
-        <span className="font-mono text-[10px] text-white/30">ξ ← X·softmax(β Xᵀξ)</span>
+        <h2 className="kicker">Modern Hopfield ≡ attention</h2>
+        <span className="mono text-[11px] text-white/35">ξ ← X·softmax(β Xᵀξ)</span>
       </div>
 
       <div className="flex justify-around">
@@ -104,15 +97,10 @@ export function ModernHopfieldPanel() {
 
       {response && (
         <div className="space-y-1">
-          <div className="font-mono text-[9px] uppercase tracking-widest text-white/40">
+          <div className="meta-xs">
             attention row of the first update (softmax over {response.n_patterns} stored patterns)
           </div>
-          <svg
-            width={320}
-            height={28}
-            viewBox="0 0 320 28"
-            className="rounded border border-white/10 bg-black"
-          >
+          <svg width={320} height={28} viewBox="0 0 320 28" className="plot">
             {response.modern_attention_weights.map((w, i) => {
               const bw = 320 / response.modern_attention_weights.length;
               return (
@@ -122,12 +110,12 @@ export function ModernHopfieldPanel() {
                   y={28 - w * 26}
                   width={Math.max(bw - 0.5, 0.5)}
                   height={w * 26}
-                  fill={i === response.target_index ? '#ff2d2d' : 'rgba(255,255,255,0.6)'}
+                  fill={i === response.target_index ? '#E10500' : 'rgba(255,255,255,0.6)'}
                 />
               );
             })}
           </svg>
-          <div className="font-mono text-[9px] text-white/40">
+          <div className="meta-xs">
             max |update − attention(Q=ξ, K=V=X)| ={' '}
             {response.attention_max_abs_diff.toExponential(1)} — the two formulas are the same
             computation.
@@ -146,7 +134,7 @@ export function ModernHopfieldPanel() {
           {
             x: response?.classic_critical_alpha ?? 0.138,
             label: '0.138',
-            color: 'rgba(255,45,45,0.7)',
+            color: 'rgba(225,5,0,0.7)',
           },
         ]}
         series={
@@ -161,7 +149,7 @@ export function ModernHopfieldPanel() {
                 {
                   xs: sweep.alphas,
                   ys: sweep.modern_success,
-                  color: '#ff2d2d',
+                  color: '#E10500',
                   label: 'modern 2021',
                 },
               ]
@@ -170,9 +158,9 @@ export function ModernHopfieldPanel() {
         empty="no run yet — click recall"
       />
 
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-3 text-[13px]">
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">d</span>
+          <span className="meta-xs w-16 self-center">d</span>
           <input
             type="number"
             min={16}
@@ -183,28 +171,28 @@ export function ModernHopfieldPanel() {
               const sq = Math.max(4, Math.round(Math.sqrt(v)));
               setD(sq * sq);
             }}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
           <span className="text-white/30">
             {Math.round(Math.sqrt(d))}×{Math.round(Math.sqrt(d))}
           </span>
         </label>
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">N</span>
+          <span className="meta-xs w-16 self-center">N</span>
           <input
             type="number"
             min={1}
             max={1024}
             value={n}
             onChange={(e) => setN(parseInt(e.target.value) || 1)}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
           <span className={n / d > 0.138 ? 'text-accent' : 'text-white/30'}>
             α={(n / d).toFixed(2)}
           </span>
         </label>
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">corrupt</span>
+          <span className="meta-xs w-16 self-center">corrupt</span>
           <input
             type="number"
             min={0}
@@ -214,11 +202,11 @@ export function ModernHopfieldPanel() {
             onChange={(e) =>
               setCorruption(Math.max(0, Math.min(1, parseFloat(e.target.value) || 0)))
             }
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
         </label>
         <label className="flex items-baseline gap-2">
-          <span className="w-16 text-white/40">β</span>
+          <span className="meta-xs w-16 self-center">β</span>
           <input
             type="number"
             min={0.01}
@@ -226,14 +214,10 @@ export function ModernHopfieldPanel() {
             step={0.05}
             value={beta}
             onChange={(e) => setBeta(Math.max(0.01, parseFloat(e.target.value) || 0.01))}
-            className="w-24 rounded border border-white/10 bg-black px-2 py-1 text-white outline-none focus:border-white/40"
+            className="w-24 field"
           />
           <span className="text-white/30">1/√d = {(1 / Math.sqrt(d)).toFixed(3)}</span>
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="ml-auto rounded border border-white/30 px-3 py-1 text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
+          <button onClick={onRun} disabled={running} className="btn btn-sm btn-red ml-auto">
             {running ? 'running…' : 'recall'}
           </button>
         </label>
@@ -243,7 +227,7 @@ export function ModernHopfieldPanel() {
         {response && (
           <dl className="space-y-1 text-white/70">
             <div className="flex gap-2">
-              <dt className="w-28 text-white/40">modern overlap</dt>
+              <dt className="meta-xs w-28 self-center">modern overlap</dt>
               <dd
                 className={
                   response.modern_overlaps[response.modern_overlaps.length - 1] > 0.95
@@ -255,13 +239,13 @@ export function ModernHopfieldPanel() {
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-28 text-white/40">classic overlap</dt>
+              <dt className="meta-xs w-28 self-center">classic overlap</dt>
               <dd className={response.classic_overlap > 0.95 ? 'text-white' : 'text-accent'}>
                 {response.classic_overlap.toFixed(3)}
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-28 text-white/40">energy</dt>
+              <dt className="meta-xs w-28 self-center">energy</dt>
               <dd className="text-white">
                 {response.modern_energies.map((e) => e.toFixed(1)).join(' → ')}
               </dd>
@@ -269,7 +253,7 @@ export function ModernHopfieldPanel() {
           </dl>
         )}
         {response && (
-          <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+          <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
             {response.citation}
           </p>
         )}

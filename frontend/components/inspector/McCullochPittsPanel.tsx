@@ -46,10 +46,8 @@ export function McCullochPittsPanel() {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs uppercase tracking-widest text-white/40">
-          McCulloch-Pitts 1943 — threshold logic
-        </h2>
-        <span className="font-mono text-[10px] text-white/30">historical abstraction</span>
+        <h2 className="kicker">McCulloch-Pitts 1943 — threshold logic</h2>
+        <span className="mono text-[11px] text-white/35">historical abstraction</span>
       </div>
 
       <div className="flex flex-wrap gap-1">
@@ -57,7 +55,7 @@ export function McCullochPittsPanel() {
           <button
             key={g}
             onClick={() => setGate(g)}
-            className={`rounded border px-2 py-1 font-mono text-[10px] ${
+            className={`rounded border px-2 py-1 text-[12.5px] ${
               gate === g
                 ? 'border-accent bg-accent/10 text-white'
                 : 'border-white/20 text-white/60 hover:bg-white/5'
@@ -71,7 +69,7 @@ export function McCullochPittsPanel() {
       {resultError && <p className="font-mono text-xs text-accent">{resultError}</p>}
 
       {result && (
-        <div className="space-y-2 font-mono text-xs">
+        <div className="space-y-3 text-[13px]">
           <p className="text-white/70">{result.description}</p>
 
           <div className="rounded border border-white/10 bg-black p-2">
@@ -109,13 +107,11 @@ export function McCullochPittsPanel() {
 
       <div className="space-y-2 border-t border-white/10 pt-3">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-xs uppercase tracking-widest text-white/40">
-            XOR — single-layer impossibility
-          </h3>
+          <h3 className="kicker">XOR — single-layer impossibility</h3>
           <button
             onClick={onRunXorSearch}
             disabled={running}
-            className="rounded border border-white/30 px-2 py-1 font-mono text-[10px] text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded border border-white/30 px-2 py-1 text-[12.5px] text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {running ? 'searching…' : 'brute-force search'}
           </button>
@@ -124,7 +120,7 @@ export function McCullochPittsPanel() {
         {xorError && <p className="font-mono text-xs text-accent">{xorError}</p>}
 
         {xor && (
-          <div className="space-y-1 font-mono text-[10px]">
+          <div className="space-y-1.5 text-[12.5px]">
             <p className="text-white/60">
               target XOR truth table: <span className="text-white">{xor.target.join(' ')}</span>
             </p>
@@ -149,7 +145,7 @@ export function McCullochPittsPanel() {
       </div>
 
       {result && (
-        <p className="border-t border-white/10 pt-2 text-[10px] leading-snug text-white/40">
+        <p className="hairline-t pt-3 text-[11.5px] leading-snug text-white/40">
           {result.citation}
         </p>
       )}

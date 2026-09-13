@@ -75,17 +75,12 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
   return (
     <section aria-label="Firing plot" className="space-y-2">
       <div className="flex items-baseline justify-between">
-        <h3 className="text-xs uppercase tracking-widest text-white/40">Membrane potential</h3>
-        <span className="font-mono text-[10px] text-white/30">
+        <h3 className="kicker">Membrane potential</h3>
+        <span className="mono text-[11px] text-white/35">
           {selectedPointId === null ? 'no point selected' : `point ${selectedPointId}`}
         </span>
       </div>
-      <svg
-        width={PLOT_W}
-        height={PLOT_H}
-        viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
-        className="rounded border border-white/10 bg-black"
-      >
+      <svg width={PLOT_W} height={PLOT_H} viewBox={`0 0 ${PLOT_W} ${PLOT_H}`} className="plot">
         {/* Y axis */}
         <line x1={PAD_L} x2={PAD_L} y1={PAD_T} y2={PAD_T + innerH} stroke="rgba(255,255,255,0.3)" />
         {/* X axis */}
@@ -115,7 +110,7 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
                 fontSize={9}
                 textAnchor="end"
                 fill="rgba(255,255,255,0.5)"
-                fontFamily="monospace"
+                fontFamily="var(--font-text)"
               >
                 {mv}
               </text>
@@ -124,7 +119,13 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
         })}
 
         {/* Axis labels */}
-        <text x={4} y={PAD_T + 8} fontSize={9} fill="rgba(255,255,255,0.5)" fontFamily="monospace">
+        <text
+          x={4}
+          y={PAD_T + 8}
+          fontSize={9}
+          fill="rgba(255,255,255,0.5)"
+          fontFamily="var(--font-text)"
+        >
           mV
         </text>
         <text
@@ -132,7 +133,7 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
           y={PAD_T + innerH + 14}
           fontSize={9}
           fill="rgba(255,255,255,0.5)"
-          fontFamily="monospace"
+          fontFamily="var(--font-text)"
         >
           ms
         </text>
@@ -144,7 +145,7 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
             fontSize={10}
             textAnchor="middle"
             fill="rgba(255,255,255,0.35)"
-            fontFamily="monospace"
+            fontFamily="var(--font-text)"
           >
             no simulation yet — click run hh
           </text>
@@ -160,7 +161,7 @@ export function FiringPlot({ trace, selectedPointId }: FiringPlotProps) {
                 x2={x}
                 y1={PAD_T}
                 y2={PAD_T + innerH}
-                stroke="rgba(255,45,45,0.4)"
+                stroke="rgba(225,5,0,0.4)"
                 strokeWidth={1}
               />
             ))}

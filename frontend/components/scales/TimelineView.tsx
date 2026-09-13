@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
+import { Pills } from '@/components/ui/Pills';
 import type { Milestone, ScalesGraphResponse, TimelineResponse } from '@/lib/types';
 
 // Research timeline 1921 → 2025. Every entry is a registry milestone with a
@@ -10,8 +11,11 @@ import type { Milestone, ScalesGraphResponse, TimelineResponse } from '@/lib/typ
 const CAT_COLOR: Record<Milestone['category'], string> = {
   neuro: '#9bd2ff',
   ai: '#ffffff',
-  bridge: '#ff2d2d',
+  bridge: '#E10500',
 };
+
+const FILTERS = ['all', 'neuro', 'ai', 'bridge'] as const;
+type Filter = (typeof FILTERS)[number];
 
 interface TimelineViewProps {
   timeline: TimelineResponse;
@@ -20,9 +24,12 @@ interface TimelineViewProps {
 }
 
 export function TimelineView({ timeline, graph, onJump }: TimelineViewProps) {
-  const [filter, setFilter] = useState<'all' | Milestone['category']>('all');
+  const [filter, setFilter] = useState<Filter>('all');
   const byId = useMemo(() => new Map((graph?.nodes ?? []).map((n) => [n.id, n])), [graph]);
-  const items = timeline.milestones.filter((m) => filter === 'all' || m.category === filter);
+  const items = useMemo(
+    () => timeline.milestones.filter((m) => filter === 'all' || m.category === filter),
+    [timeline, filter],
+  );
   const decades = useMemo(() => {
     const map = new Map<number, Milestone[]>();
     for (const m of items) {
@@ -34,59 +41,49 @@ export function TimelineView({ timeline, graph, onJump }: TimelineViewProps) {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-black/95 px-6 py-2 font-mono text-[10px]">
-        <span className="text-white/40">{timeline.n} milestones</span>
-        {(['all', 'neuro', 'ai', 'bridge'] as const).map((c) => (
-          <button
-            key={c}
-            onClick={() => setFilter(c)}
-            className={`rounded border px-2 py-0.5 ${filter === c ? 'border-white text-white' : 'border-white/20 text-white/50 hover:bg-white/5'}`}
-            style={c !== 'all' && filter === c ? { borderColor: CAT_COLOR[c] } : undefined}
-          >
-            {c}
-          </button>
-        ))}
-        <span className="ml-auto text-white/30">{timeline.note}</span>
+      <div className="hairline-b sticky top-0 z-10 flex items-center gap-4 bg-canvas/90 px-6 py-3 backdrop-blur-xl">
+        <Pills options={FILTERS} value={filter} onChange={setFilter} size="sm" />
+        <span className="meta-xs">
+          {items.length} of {timeline.n} milestones
+        </span>
+        <span className="ml-auto hidden text-[12px] text-white/35 lg:block">{timeline.note}</span>
       </div>
-      <div className="mx-auto max-w-4xl px-6 py-6">
+      <div className="mx-auto max-w-4xl px-6 py-8">
         {decades.map(([decade, ms]) => (
-          <div key={decade} className="mb-8">
-            <div className="mb-3 font-mono text-xs uppercase tracking-widest text-white/40">
+          <div key={decade} className="mb-12">
+            <div className="display mb-5 text-white/90" style={{ fontSize: 30 }}>
               {decade}s
             </div>
-            <ol className="space-y-3 border-l border-white/10 pl-5">
+            <ol className="space-y-3">
               {ms.map((m) => (
-                <li key={`${m.year}-${m.title}`} className="relative">
+                <li key={`${m.year}-${m.title}`} className="glass tile rise relative p-5 pl-6">
                   <span
-                    className="absolute -left-[26px] top-1.5 inline-block h-2 w-2 rounded-full"
+                    className="absolute left-0 top-6 h-8 w-[3px] rounded-r"
                     style={{ background: CAT_COLOR[m.category] }}
                   />
-                  <div className="flex items-baseline gap-3">
-                    <span className="font-mono text-xs text-white/50">{m.year}</span>
-                    <span className="text-sm font-semibold text-white">{m.title}</span>
-                    <span
-                      className="font-mono text-[10px]"
-                      style={{ color: CAT_COLOR[m.category] }}
-                    >
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="mono text-[13px] text-white/50">{m.year}</span>
+                    <span className="serif text-[19px] leading-tight text-white">{m.title}</span>
+                    <span className="meta-xs" style={{ color: CAT_COLOR[m.category] }}>
                       {m.category}
                     </span>
                   </div>
-                  <div className="font-mono text-[10px] text-white/45">{m.who}</div>
-                  <p className="mt-1 max-w-3xl text-xs leading-snug text-white/75">
+                  <div className="mt-1 text-[12.5px] text-white/45">{m.who}</div>
+                  <p className="mt-2 max-w-3xl text-[14px] leading-relaxed text-white/80">
                     {m.significance}
                   </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-[10px]">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     {m.doi ? (
                       <a
                         href={`https://doi.org/${m.doi}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-white/50 underline-offset-2 hover:text-white hover:underline"
+                        className="mono text-[11.5px] text-white/50 underline-offset-4 hover:text-white hover:underline"
                       >
                         doi:{m.doi}
                       </a>
                     ) : (
-                      <span className="text-white/30">{m.note}</span>
+                      <span className="text-[11.5px] text-white/35">{m.note}</span>
                     )}
                     {m.links.map((id) => {
                       const n = byId.get(id);
@@ -94,7 +91,7 @@ export function TimelineView({ timeline, graph, onJump }: TimelineViewProps) {
                         <button
                           key={id}
                           onClick={() => onJump(id)}
-                          className="rounded border border-white/20 px-1.5 py-0.5 text-white/60 hover:bg-white/5"
+                          className="chip"
                           title="open in the scale explorer"
                         >
                           {n ? `${n.side} L${n.level} · ${n.name}` : id}

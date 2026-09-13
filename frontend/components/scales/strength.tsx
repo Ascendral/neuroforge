@@ -1,7 +1,7 @@
 import type { EvidenceStrength } from '@/lib/types';
 
 export const STRENGTH_COLOR: Record<EvidenceStrength, string> = {
-  equivalence: '#ff2d2d',
+  equivalence: '#E10500',
   strong: '#ffffff',
   analogy: 'rgba(255,255,255,0.45)',
   none: 'rgba(255,255,255,0.22)',
@@ -25,4 +25,13 @@ export function bestStrength(strengths: EvidenceStrength[]): EvidenceStrength | 
   const order: EvidenceStrength[] = ['equivalence', 'strong', 'analogy', 'none'];
   for (const s of order) if (strengths.includes(s)) return s;
   return null;
+}
+
+/** Small evidence tag (pill) for a strength. */
+export function Tag({ s }: { s: EvidenceStrength }) {
+  return (
+    <span className={`tag tag-${s}`} title={STRENGTH_LABEL[s]}>
+      {s === 'none' ? 'no analog' : s}
+    </span>
+  );
 }

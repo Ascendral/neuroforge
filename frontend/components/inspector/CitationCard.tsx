@@ -15,8 +15,8 @@ export function CitationCard({ neuron }: CitationCardProps) {
 
   return (
     <section aria-label="Citations" className="space-y-3">
-      <h3 className="text-xs uppercase tracking-widest text-white/40">Source</h3>
-      <dl className="space-y-1 font-mono text-xs">
+      <h3 className="kicker">Source</h3>
+      <dl className="space-y-1.5 text-[13px]">
         <div className="flex gap-2">
           <dt className="w-20 text-white/40">archive</dt>
           <dd className="text-white">{neuron.archive}</dd>
@@ -38,7 +38,7 @@ export function CitationCard({ neuron }: CitationCardProps) {
           <dt className="w-20 text-white/40">swc</dt>
           <dd>
             <a
-              className="break-all text-white/70 underline-offset-2 hover:underline"
+              className="break-all text-white/70 underline-offset-4 hover:underline"
               href={neuron.swc_url}
               target="_blank"
               rel="noreferrer"
@@ -51,9 +51,9 @@ export function CitationCard({ neuron }: CitationCardProps) {
 
       {hasRefs && (
         <div className="space-y-2">
-          <h3 className="text-xs uppercase tracking-widest text-white/40">References</h3>
+          <h3 className="kicker">References</h3>
           {neuron.reference_doi.length > 0 && (
-            <ul className="space-y-1 font-mono text-xs">
+            <ul className="space-y-1.5 text-[13px]">
               {neuron.reference_doi.map((doi) => (
                 <li key={doi} className="flex gap-2">
                   <span className="w-12 text-white/40">doi</span>
@@ -70,7 +70,7 @@ export function CitationCard({ neuron }: CitationCardProps) {
             </ul>
           )}
           {neuron.reference_pmid.length > 0 && (
-            <ul className="space-y-1 font-mono text-xs">
+            <ul className="space-y-1.5 text-[13px]">
               {neuron.reference_pmid.map((pmid) => (
                 <li key={pmid} className="flex gap-2">
                   <span className="w-12 text-white/40">pmid</span>
