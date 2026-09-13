@@ -80,8 +80,11 @@ class Yeo17Network:
 def _yeo17_paths() -> tuple[Path, Path]:
     """Trigger nilearn fetch (which downloads the Yeo 2011 release tarball
     containing both 7- and 17-network volumes), then locate the 17-net file."""
-    datasets.fetch_atlas_yeo_2011()  # ensures download / cache
-    cache_dir = Path("~/nilearn_data/yeo_2011/Yeo_JNeurophysiol11_MNI152").expanduser()
+    fetched = datasets.fetch_atlas_yeo_2011()  # ensures download / cache
+    # nilearn's bunch exposes the 7-network volume as "maps"; the 17-network file sits in
+    # the same release directory. Derive it from the fetched path so this
+    # honours NILEARN_DATA / custom data_dir instead of a hardcoded ~ path.
+    cache_dir = Path(str(fetched["maps"])).parent
     vol = cache_dir / _YEO17_VOLUME_NAME
     lut = cache_dir / _YEO17_LUT_NAME
     if not vol.exists():

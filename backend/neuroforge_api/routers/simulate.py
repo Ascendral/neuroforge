@@ -5,6 +5,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from neuroforge_api.models.simulation import (
+    CapacitySweepResponse,
+    DopamineRPERequest,
+    DopamineRPEResponse,
     HebbianRequest,
     HebbianResponse,
     HHRequest,
@@ -13,11 +16,19 @@ from neuroforge_api.models.simulation import (
     HopfieldResponse,
     MCPGateResponse,
     MCPXorSearchResponse,
+    ModernHopfieldRequest,
+    ModernHopfieldResponse,
+    ReceptorKineticsModel,
     STDPRequest,
     STDPResponse,
+    SynapseRequest,
+    SynapseResponse,
+    SynapseTraceModel,
     V1Request,
     V1Response,
 )
+from neuroforge_api.simulators import synapse as synapse_module
+from neuroforge_api.simulators.dopamine_rpe import simulate_dopamine_rpe
 from neuroforge_api.simulators.hebbian import simulate_hebbian
 from neuroforge_api.simulators.hodgkin_huxley import simulate_hh
 from neuroforge_api.simulators.hopfield import simulate_hopfield
@@ -29,6 +40,11 @@ from neuroforge_api.simulators.mcp import (
     GATES,
     evaluate_gate,
     search_xor_single_layer,
+)
+from neuroforge_api.simulators.modern_hopfield import (
+    CLASSIC_CRITICAL_ALPHA,
+    capacity_sweep,
+    simulate_modern_hopfield,
 )
 from neuroforge_api.simulators.stdp import (
     A_MINUS,
@@ -78,6 +94,43 @@ HOPFIELD_CITATION = (
     "1987;173(1):30-67. doi:10.1016/0003-4916(87)90092-3"
 )
 HOPFIELD_CRITICAL_ALPHA = 0.138
+
+MODERN_HOPFIELD_CITATION = (
+    "Ramsauer H, Schäfl B, Lehner J, et al. Hopfield Networks is All You Need. "
+    "ICLR 2021. doi:10.48550/arXiv.2008.02217 (update rule ≡ transformer attention). "
+    "Krotov D, Hopfield JJ. Dense Associative Memory for Pattern Recognition. "
+    "NeurIPS 2016. doi:10.48550/arXiv.1606.01164. "
+    "Demircigil M, Heusel J, Löwe M, Upgang S, Vermet F. On a Model of Associative "
+    "Memory with Huge Storage Capacity. J Stat Phys. 2017;168(2):288-299. "
+    "doi:10.1007/s10955-017-1806-y (capacity exponential in d). "
+    "Classic bound: Amit DJ, Gutfreund H, Sompolinsky H. Ann Phys. 1987;173(1):30-67. "
+    "doi:10.1016/0003-4916(87)90092-3 (α_c ≈ 0.138)."
+)
+
+DOPAMINE_CITATION = (
+    "Schultz W, Dayan P, Montague PR. A neural substrate of prediction and reward. "
+    "Science. 1997;275(5306):1593-1599. doi:10.1126/science.275.5306.1593. "
+    "Montague PR, Dayan P, Sejnowski TJ. A framework for mesencephalic dopamine "
+    "systems based on predictive Hebbian learning. J Neurosci. 1996;16(5):1936-1947. "
+    "doi:10.1523/JNEUROSCI.16-05-01936.1996. "
+    "Sutton RS. Learning to predict by the methods of temporal differences. "
+    "Mach Learn. 1988;3(1):9-44. doi:10.1007/BF00115009. "
+    "Schultz W. Predictive reward signal of dopamine neurons. J Neurophysiol. "
+    "1998;80(1):1-27. doi:10.1152/jn.1998.80.1.1. "
+    "Distributional update: Dabney W, et al. Nature. 2020;577(7792):671-675. "
+    "doi:10.1038/s41586-019-1924-6."
+)
+
+SYNAPSE_CITATION = (
+    "Destexhe A, Mainen ZF, Sejnowski TJ. An efficient method for computing synaptic "
+    "conductances based on a kinetic model of receptor binding. Neural Comput. "
+    "1994;6(1):14-18. doi:10.1162/neco.1994.6.1.14. "
+    "Jahr CE, Stevens CF. Voltage dependence of NMDA-activated macroscopic conductances "
+    "predicted by single-channel kinetics. J Neurosci. 1990;10(9):3178-3182. "
+    "doi:10.1523/JNEUROSCI.10-09-03178.1990. "
+    "Collingridge GL, Kehl SJ, McLennan H. J Physiol. 1983;334(1):33-46. "
+    "doi:10.1113/jphysiol.1983.sp014478 (NMDA receptor triggers LTP)."
+)
 
 MCP_CITATION = (
     "McCulloch WS, Pitts W. A logical calculus of the ideas immanent in "
@@ -211,6 +264,158 @@ def run_hopfield(request: HopfieldRequest) -> HopfieldResponse:
         final_overlap=run.final_overlap,
         converged=run.converged,
         citation=HOPFIELD_CITATION,
+    )
+
+
+@router.post("/modern-hopfield", response_model=ModernHopfieldResponse)
+def run_modern_hopfield(request: ModernHopfieldRequest) -> ModernHopfieldResponse:
+    try:
+        run = simulate_modern_hopfield(
+            d=request.d,
+            n_patterns=request.n_patterns,
+            corruption_fraction=request.corruption_fraction,
+            beta=request.beta,
+            n_updates=request.n_updates,
+            target_index=request.target_index,
+            seed=request.seed,
+        )
+        sweep = None
+        if request.sweep:
+            s = capacity_sweep(
+                d=request.d,
+                n_trials=request.sweep_trials,
+                corruption_fraction=request.corruption_fraction,
+                beta=request.beta,
+                seed=request.seed,
+            )
+            sweep = CapacitySweepResponse(
+                d=s.d,
+                alphas=s.alphas.tolist(),
+                n_patterns=s.n_patterns.tolist(),
+                classic_success=s.classic_success.tolist(),
+                modern_success=s.modern_success.tolist(),
+                n_trials=s.n_trials,
+                threshold=s.threshold,
+                corruption_fraction=s.corruption_fraction,
+                beta=s.beta,
+            )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    final = run.modern_states[-1]
+    return ModernHopfieldResponse(
+        d=run.d,
+        n_patterns=run.n_patterns,
+        alpha=run.alpha,
+        beta=run.beta,
+        classic_critical_alpha=CLASSIC_CRITICAL_ALPHA,
+        target_index=run.target_index,
+        target=run.target.tolist(),
+        corrupted=run.corrupted.tolist(),
+        modern_final=final.tolist(),
+        modern_final_sign=[1 if v >= 0 else -1 for v in final],
+        modern_energies=run.modern_energies.tolist(),
+        modern_overlaps=run.modern_overlaps.tolist(),
+        modern_attention_weights=run.modern_attention_weights.tolist(),
+        classic_final=run.classic_final.astype(int).tolist(),
+        classic_overlap=run.classic_overlap,
+        attention_max_abs_diff=run.attention_max_abs_diff,
+        sweep=sweep,
+        citation=MODERN_HOPFIELD_CITATION,
+    )
+
+
+@router.post("/dopamine-rpe", response_model=DopamineRPEResponse)
+def run_dopamine_rpe(request: DopamineRPERequest) -> DopamineRPEResponse:
+    try:
+        r = simulate_dopamine_rpe(
+            n_steps=request.n_steps,
+            bin_ms=request.bin_ms,
+            cue_step=request.cue_step,
+            reward_step=request.reward_step,
+            reward=request.reward,
+            alpha=request.alpha,
+            gamma=request.gamma,
+            n_training_trials=request.n_training_trials,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return DopamineRPEResponse(
+        n_steps=r.n_steps,
+        bin_ms=r.bin_ms,
+        cue_step=r.cue_step,
+        reward_step=r.reward_step,
+        alpha=r.alpha,
+        gamma=r.gamma,
+        n_training_trials=r.n_training_trials,
+        times_ms=r.times_ms.tolist(),
+        delta_unpredicted=r.delta_unpredicted.tolist(),
+        delta_predicted=r.delta_predicted.tolist(),
+        delta_omitted=r.delta_omitted.tolist(),
+        value_trained=r.value_trained.tolist(),
+        delta_at_reward_per_trial=r.delta_at_reward_per_trial.tolist(),
+        delta_at_cue_per_trial=r.delta_at_cue_per_trial.tolist(),
+        parameter_note=(
+            "Model form (TD(0), tapped-delay-line stimulus) is Montague 1996 / Schultz 1997. "
+            f"Numerical constants are this demo's: learning rate α={r.alpha}, discount γ={r.gamma}, "
+            f"{r.bin_ms:.0f} ms bins, cue at {r.cue_step * r.bin_ms:.0f} ms, reward at "
+            f"{r.reward_step * r.bin_ms:.0f} ms, {r.n_training_trials} training trials. "
+            "δ is the model's prediction error (dimensionless), not a fitted firing rate; the "
+            "paper's claims reproduced are the SIGN and TIMING of δ in the three conditions."
+        ),
+        citation=DOPAMINE_CITATION,
+    )
+
+
+@router.post("/synapse", response_model=SynapseResponse)
+def run_synapse(request: SynapseRequest) -> SynapseResponse:
+    try:
+        traces = [
+            synapse_module.simulate_synapse(
+                r.key,
+                holding_mV=request.holding_mV,
+                g_max_nS=request.g_max_nS,
+                mg_mM=request.mg_mM,
+                duration_ms=request.duration_ms,
+                dt_ms=request.dt_ms,
+                onset_ms=request.onset_ms,
+            )
+            for r in synapse_module.RECEPTORS
+        ]
+        v, i_mg, i_free = synapse_module.nmda_iv_curve(mg_mM=request.mg_mM)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return SynapseResponse(
+        times_ms=traces[0].times_ms.tolist(),
+        holding_mV=request.holding_mV,
+        mg_mM=request.mg_mM,
+        g_max_nS=request.g_max_nS,
+        receptors=[
+            ReceptorKineticsModel(
+                key=r.key,
+                name=r.name,
+                transmitter=r.transmitter,
+                tau_rise_ms=r.tau_rise_ms,
+                tau_decay_ms=r.tau_decay_ms,
+                e_rev_mV=r.e_rev_mV,
+                mg_block=r.mg_block,
+                citation=r.citation,
+            )
+            for r in synapse_module.RECEPTORS
+        ],
+        traces=[
+            SynapseTraceModel(
+                key=t.key,
+                conductance_nS=t.conductance_nS.tolist(),
+                current_pA=t.current_pA.tolist(),
+                block_fraction=t.block_fraction,
+            )
+            for t in traces
+        ],
+        nmda_iv_voltage_mV=v.tolist(),
+        nmda_iv_with_mg_pA=i_mg.tolist(),
+        nmda_iv_without_mg_pA=i_free.tolist(),
+        citation=SYNAPSE_CITATION,
     )
 
 

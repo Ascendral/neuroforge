@@ -150,7 +150,7 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         tracer="[18F]fluorodopa",
         n_subjects=12,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/FDOPA_fluorodopa_hc12_gomez.nii",
-        citation="Gomez et al. Hansen 2022 doi:10.1038/s41593-022-01186-3",
+        citation="García-Gómez FJ, García-Solís D, Luis-Simón FJ, et al. Elaboración de una plantilla de SPM para la normalización de imágenes de PET con 18F-DOPA. Imagen Diagnóstica. 2018;9(1). doi:10.33588/imagendiagnostica.901.2 (healthy-control template, n=12); distributed via Hansen 2022 doi:10.1038/s41593-022-01186-3",
     ),
     ReceptorEntry(
         key="NET",
@@ -161,7 +161,7 @@ RECEPTORS: tuple[ReceptorEntry, ...] = (
         tracer="[11C]MRB",
         n_subjects=10,
         url="https://github.com/netneurolab/hansen_receptors/raw/main/data/PET_nifti_images/NAT_MRB_hc10_hesse.nii",
-        citation="Hesse S et al. Hansen 2022 doi:10.1038/s41593-022-01186-3",
+        citation="Hesse S, Becker GA, Rullmann M, et al. Central noradrenaline transporter availability in highly obese, non-depressed individuals. Eur J Nucl Med Mol Imaging. 2017;44(6):1056-1064. doi:10.1007/s00259-016-3590-3 (healthy-control map, n=10); distributed via Hansen 2022 doi:10.1038/s41593-022-01186-3",
     ),
     ReceptorEntry(
         key="CB1",

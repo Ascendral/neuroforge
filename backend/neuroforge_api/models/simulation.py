@@ -123,6 +123,121 @@ class HopfieldResponse(BaseModel):
     citation: str
 
 
+class ModernHopfieldRequest(BaseModel):
+    d: int = Field(default=64, ge=16, le=256)
+    n_patterns: int = Field(default=64, ge=1, le=1024)
+    corruption_fraction: float = Field(default=0.2, ge=0.0, le=1.0)
+    beta: float | None = Field(default=None, gt=0.0, le=50.0)
+    n_updates: int = Field(default=3, ge=1, le=20)
+    target_index: int = Field(default=0, ge=0)
+    seed: int = Field(default=42, ge=0)
+    sweep: bool = Field(default=True, description="also run the classic-vs-modern capacity sweep")
+    sweep_trials: int = Field(default=6, ge=1, le=30)
+
+
+class CapacitySweepResponse(BaseModel):
+    d: int
+    alphas: list[float]
+    n_patterns: list[int]
+    classic_success: list[float]
+    modern_success: list[float]
+    n_trials: int
+    threshold: float
+    corruption_fraction: float
+    beta: float
+
+
+class ModernHopfieldResponse(BaseModel):
+    d: int
+    n_patterns: int
+    alpha: float
+    beta: float
+    classic_critical_alpha: float
+    target_index: int
+    target: list[float]
+    corrupted: list[float]
+    modern_final: list[float]
+    modern_final_sign: list[int]
+    modern_energies: list[float]
+    modern_overlaps: list[float]
+    modern_attention_weights: list[float]
+    classic_final: list[int]
+    classic_overlap: float
+    attention_max_abs_diff: float
+    sweep: CapacitySweepResponse | None
+    citation: str
+
+
+class DopamineRPERequest(BaseModel):
+    n_steps: int = Field(default=30, ge=6, le=200)
+    bin_ms: float = Field(default=100.0, gt=0, le=1000)
+    cue_step: int = Field(default=5, ge=0)
+    reward_step: int = Field(default=20, ge=1)
+    reward: float = Field(default=1.0, gt=0, le=10)
+    alpha: float = Field(default=0.1, gt=0, le=1.0)
+    gamma: float = Field(default=0.98, gt=0, le=1.0)
+    n_training_trials: int = Field(default=200, ge=1, le=2000)
+
+
+class DopamineRPEResponse(BaseModel):
+    n_steps: int
+    bin_ms: float
+    cue_step: int
+    reward_step: int
+    alpha: float
+    gamma: float
+    n_training_trials: int
+    times_ms: list[float]
+    delta_unpredicted: list[float]
+    delta_predicted: list[float]
+    delta_omitted: list[float]
+    value_trained: list[float]
+    delta_at_reward_per_trial: list[float]
+    delta_at_cue_per_trial: list[float]
+    parameter_note: str
+    citation: str
+
+
+class SynapseRequest(BaseModel):
+    holding_mV: float = Field(default=-65.0, ge=-120.0, le=60.0)
+    g_max_nS: float = Field(default=1.0, ge=0.0, le=100.0)
+    mg_mM: float = Field(default=1.0, ge=0.0, le=10.0)
+    duration_ms: float = Field(default=200.0, gt=0, le=2000)
+    dt_ms: float = Field(default=0.1, gt=0, le=5.0)
+    onset_ms: float = Field(default=5.0, ge=0)
+
+
+class ReceptorKineticsModel(BaseModel):
+    key: str
+    name: str
+    transmitter: str
+    tau_rise_ms: float
+    tau_decay_ms: float
+    e_rev_mV: float
+    mg_block: bool
+    citation: str
+
+
+class SynapseTraceModel(BaseModel):
+    key: str
+    conductance_nS: list[float]
+    current_pA: list[float]
+    block_fraction: float
+
+
+class SynapseResponse(BaseModel):
+    times_ms: list[float]
+    holding_mV: float
+    mg_mM: float
+    g_max_nS: float
+    receptors: list[ReceptorKineticsModel]
+    traces: list[SynapseTraceModel]
+    nmda_iv_voltage_mV: list[float]
+    nmda_iv_with_mg_pA: list[float]
+    nmda_iv_without_mg_pA: list[float]
+    citation: str
+
+
 class MCPGateResponse(BaseModel):
     name: str
     description: str
