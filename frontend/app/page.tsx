@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 
 import { NeuronInspector } from '@/components/inspector/NeuronInspector';
+import { AISchematic } from '@/components/scales/AISchematic';
+import { NodeDetail } from '@/components/scales/NodeDetail';
+import { ScaleExplorer } from '@/components/scales/ScaleExplorer';
+import { TimelineView } from '@/components/scales/TimelineView';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import {
   BrainCanvas,
@@ -19,7 +23,10 @@ import type {
   FunctionalNetworksResponse,
   HCP1065Response,
   PauliNucleiResponse,
+  ScaleNode,
+  ScalesGraphResponse,
   SchaeferParcelsResponse,
+  TimelineResponse,
   Yeo17Response,
 } from '@/lib/types';
 import { NeuronCanvas } from '@/components/viewer/NeuronCanvas';
@@ -40,8 +47,10 @@ import {
   fetchReceptorMap,
   fetchReceptors,
   fetchRegionSample,
+  fetchScalesGraph,
   fetchSchaeferParcels,
   fetchSubcorticalMeshes,
+  fetchTimeline,
   fetchV1NeuronSample,
   fetchWhiteMatterTracts,
   fetchYeo17,
@@ -60,7 +69,36 @@ import type {
 } from '@/lib/types';
 
 const DEFAULT_NEURON_ID = 1;
-type ViewMode = 'brain' | 'neuron';
+type ViewMode = 'brain' | 'scales' | 'ai' | 'timeline' | 'neuron';
+
+const VIEW_LABELS: Record<ViewMode, string> = {
+  brain: 'brain',
+  scales: 'scales',
+  ai: 'ai schematic',
+  timeline: 'timeline',
+  neuron: 'neuron',
+};
+
+// Left/right hemisphere centroids of a bilateral atlas mesh, from its real
+// vertices (x < 0 = left in MNI). Used to place cells inside structures whose
+// atlas label is a single bilateral mask (Pauli nuclei, Diedrichsen cerebellum).
+function hemiCentroids(verticesFlat: number[]): {
+  left: [number, number, number] | null;
+  right: [number, number, number] | null;
+} {
+  const acc = { l: [0, 0, 0, 0], r: [0, 0, 0, 0] };
+  for (let i = 0; i + 2 < verticesFlat.length; i += 3) {
+    const x = verticesFlat[i];
+    const t = x < 0 ? acc.l : acc.r;
+    t[0] += x;
+    t[1] += verticesFlat[i + 1];
+    t[2] += verticesFlat[i + 2];
+    t[3] += 1;
+  }
+  const mean = (t: number[]): [number, number, number] | null =>
+    t[3] > 0 ? [t[0] / t[3], t[1] / t[3], t[2] / t[3]] : null;
+  return { left: mean(acc.l), right: mean(acc.r) };
+}
 
 interface SelectedPoint {
   id: number;
@@ -109,6 +147,67 @@ export default function Page() {
   const [allenGenes, setAllenGenes] = useState<AllenGeneListResponse | null>(null);
   const [activeGene, setActiveGene] = useState<AllenGeneExpressionResponse | null>(null);
   const [activeGeneLoading, setActiveGeneLoading] = useState<string | null>(null);
+  const [graph, setGraph] = useState<ScalesGraphResponse | null>(null);
+  const [graphError, setGraphError] = useState<string | null>(null);
+  const [timeline, setTimeline] = useState<TimelineResponse | null>(null);
+  const [timelineError, setTimelineError] = useState<string | null>(null);
+  const [scalesLevel, setScalesLevel] = useState(2);
+  const [scalesSelected, setScalesSelected] = useState<string | null>(null);
+  const [nodeHighlight, setNodeHighlight] = useState<{
+    name: string;
+    highlights: FunctionHighlight[];
+  } | null>(null);
+
+  // Multi-scale graph: fetched once, independent of the atlas payloads.
+  useEffect(() => {
+    let cancelled = false;
+    fetchScalesGraph()
+      .then((g) => {
+        if (!cancelled) setGraph(g);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setGraphError(err instanceof Error ? err.message : String(err));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Timeline: fetched the first time the view is opened.
+  useEffect(() => {
+    if (view !== 'timeline' || timeline || timelineError) return;
+    let cancelled = false;
+    fetchTimeline()
+      .then((t) => {
+        if (!cancelled) setTimeline(t);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setTimelineError(err instanceof Error ? err.message : String(err));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [view, timeline, timelineError]);
+
+  const jumpToNode = (id: string) => {
+    const n = graph?.nodes.find((x) => x.id === id);
+    if (!n) return;
+    setScalesLevel(n.level);
+    setScalesSelected(id);
+    setView('scales');
+  };
+
+  const showNodeOnBrain = (n: ScaleNode) => {
+    setActiveFunction(null);
+    setNodeHighlight({
+      name: n.name,
+      highlights: n.anchors.map((a) => ({
+        label: `${a.label} (${a.source})`,
+        centroid_mni_mm: a.centroid_mni_mm as [number, number, number],
+      })),
+    });
+    setView('brain');
+  };
 
   // Fetch brain mesh + regions + cognitive functions + receptor list once
   useEffect(() => {
@@ -205,14 +304,18 @@ export default function Page() {
     let v1Cells: unknown;
     void v1Cells;
 
-    // Schematic MNI centroids for structures not in Harvard-Oxford.
-    // Approximate from Mai JK, Majtanik M, Paxinos G. Atlas of the Human
-    // Brain, 4th ed. Academic Press, 2015. Labeled "schematic" in legend.
-    const cerebellum: [number, number, number] = [0, -60, -30];
+    // Olfactory bulb has no atlas in-tree — schematic MNI centroid from
+    // Mai JK, Majtanik M, Paxinos G. Atlas of the Human Brain, 4th ed.
+    // Academic Press, 2015. Labeled "schematic" in the legend.
     const olfactoryL: [number, number, number] = [-5, 30, -25];
     const olfactoryR: [number, number, number] = [5, 30, -25];
-    const substantiaNigraL: [number, number, number] = [-10, -15, -10];
-    const substantiaNigraR: [number, number, number] = [10, -15, -10];
+    // Cerebellum and substantia nigra use REAL per-hemisphere centroids
+    // derived from the Diedrichsen 2009 and Pauli 2017 atlas meshes.
+    const cbHemi = cerebellum
+      ? hemiCentroids(cerebellum.vertices_flat)
+      : { left: null, right: null };
+    const snc = pauli?.nuclei.find((n) => n.abbrev === 'SNc');
+    const snHemi = snc ? hemiCentroids(snc.vertices_flat) : { left: null, right: null };
 
     Promise.all([
       fetchSafe(fetchV1NeuronSample(10)),
@@ -259,16 +362,19 @@ export default function Page() {
           });
         };
 
-        // Schematic-anchor variant: uses hardcoded MNI centroids from Mai 2015
-        const pushSchematic = (
+        // Explicit-centroid variant: used for the olfactory bulb (schematic,
+        // Mai 2015) and for cerebellum / SNc (real per-hemisphere centroids
+        // computed from the atlas meshes). Cells are skipped, not faked, if
+        // the mesh has not arrived.
+        const pushAt = (
           sample: { results: NeuronMarker['neuron'][] } | null,
-          leftCentroid: [number, number, number],
+          leftCentroid: [number, number, number] | null,
           color: string,
           module: string,
           scale: number,
-          rightCentroid?: [number, number, number],
+          rightCentroid?: [number, number, number] | null,
         ) => {
-          if (!sample) return;
+          if (!sample || !leftCentroid) return;
           sample.results.forEach((n, i) => {
             const c = rightCentroid && i % 2 === 1 ? rightCentroid : leftCentroid;
             out.push({ neuron: n, centroid_mni_mm: c, module, color, scale });
@@ -337,13 +443,14 @@ export default function Page() {
           'Right Caudate',
         );
 
-        // Schematic placements (no Harvard-Oxford label exists for these).
-        pushSchematic(
+        // Structures without a Harvard-Oxford label.
+        pushAt(
           purk as { results: NeuronMarker['neuron'][] } | null,
-          cerebellum,
+          cbHemi.left,
           '#ff8c5e',
           'cerebellum_purkinje',
           SCALE_SCHEMATIC,
+          cbHemi.right,
         );
         push(
           dg as { results: NeuronMarker['neuron'][] } | null,
@@ -353,7 +460,7 @@ export default function Page() {
           SCALE_SUBCORTICAL,
           'Right Hippocampus',
         );
-        pushSchematic(
+        pushAt(
           olf as { results: NeuronMarker['neuron'][] } | null,
           olfactoryL,
           '#ff6bb5',
@@ -361,13 +468,13 @@ export default function Page() {
           SCALE_SCHEMATIC,
           olfactoryR,
         );
-        pushSchematic(
+        pushAt(
           sn as { results: NeuronMarker['neuron'][] } | null,
-          substantiaNigraL,
+          snHemi.left,
           '#c45eff',
           'substantia_nigra_dopa',
           SCALE_SUBCORTICAL,
-          substantiaNigraR,
+          snHemi.right,
         );
 
         setMarkers(out);
@@ -379,7 +486,7 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, [regions]);
+  }, [regions, pauli, cerebellum]);
 
   // Once markers are placed, fetch each neuron's SWC in parallel so the
   // brain shell can replace dots with actual reconstructed morphology.
@@ -470,29 +577,36 @@ export default function Page() {
         <header className="flex items-baseline justify-between border-b border-white/10 px-6 py-4">
           <div className="flex items-baseline gap-3">
             <h1 className="text-xl font-semibold tracking-tight">NeuroForge</h1>
-            <span className="text-xs text-white/40">fsaverage5 + harvard-oxford + 6 modules</span>
+            <span className="text-xs text-white/40">
+              brain ↔ AI on one ladder · 5 scales · 9 live models · every claim cited
+            </span>
           </div>
           <div className="flex items-center gap-3 text-xs">
-            <button
-              onClick={() => setView('brain')}
-              className={`rounded border px-3 py-1 font-mono ${
-                view === 'brain'
-                  ? 'border-accent text-white'
-                  : 'border-white/20 text-white/50 hover:bg-white/5'
-              }`}
-            >
-              brain
-            </button>
-            <button
-              onClick={() => setView('neuron')}
-              className={`rounded border px-3 py-1 font-mono ${
-                view === 'neuron'
-                  ? 'border-accent text-white'
-                  : 'border-white/20 text-white/50 hover:bg-white/5'
-              }`}
-            >
-              neuron
-            </button>
+            {(['brain', 'scales', 'ai', 'timeline', 'neuron'] as ViewMode[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`rounded border px-3 py-1 font-mono ${
+                  view === v
+                    ? 'border-accent text-white'
+                    : 'border-white/20 text-white/50 hover:bg-white/5'
+                }`}
+              >
+                {VIEW_LABELS[v]}
+              </button>
+            ))}
+            {view === 'scales' && graph && (
+              <div className="text-white/60">
+                <span className="text-white">
+                  {graph.nodes.filter((n) => n.side === 'brain').length}
+                </span>{' '}
+                brain ·{' '}
+                <span className="text-white">
+                  {graph.nodes.filter((n) => n.side === 'ai').length}
+                </span>{' '}
+                AI nodes · {graph.nodes.reduce((s, n) => s + n.analogs.length, 0)} bridges
+              </div>
+            )}
             {view === 'neuron' && neuron && (
               <div className="text-white/60">
                 <span className="text-white">{neuron.neuron_name}</span>
@@ -560,7 +674,9 @@ export default function Page() {
                               label: r.label,
                               centroid_mni_mm: r.centroid_mni_mm as [number, number, number],
                             })) as FunctionHighlight[])
-                        : []
+                        : nodeHighlight
+                          ? nodeHighlight.highlights
+                          : []
                     }
                     tracts={
                       tractsVisible && tracts
@@ -605,6 +721,31 @@ export default function Page() {
                     }
                     intensityColor={activeGene ? '#ff66cc' : '#5eebff'}
                   />
+                )}
+                {nodeHighlight && !activeFunction && (
+                  <div className="absolute bottom-4 left-4 rounded border border-[#ffe45e]/40 bg-black/85 p-2 font-mono text-[10px]">
+                    <div className="text-white/40">highlighting atlas anchors of</div>
+                    <div className="text-white">{nodeHighlight.name}</div>
+                    <ul className="mt-1 text-white/60">
+                      {nodeHighlight.highlights.map((h) => (
+                        <li key={h.label}>{h.label}</li>
+                      ))}
+                    </ul>
+                    <div className="mt-1 flex gap-3">
+                      <button
+                        onClick={() => setView('scales')}
+                        className="text-[#ffe45e] hover:underline"
+                      >
+                        back to scales
+                      </button>
+                      <button
+                        onClick={() => setNodeHighlight(null)}
+                        className="text-white/40 hover:text-white"
+                      >
+                        dismiss
+                      </button>
+                    </div>
+                  </div>
                 )}
                 {functions && view === 'brain' && (
                   <div className="absolute left-4 top-4 w-[280px] max-h-[calc(100vh-3rem)] space-y-2 overflow-y-auto pr-1">
@@ -1074,10 +1215,10 @@ export default function Page() {
                           ['#ff9b6b', 'Thalamic relay neuron', ''],
                           ['#ff6bd4', 'Amygdala', ''],
                           ['#6bffd4', 'Striatum', 'Caudate'],
-                          ['#ff8c5e', 'Cerebellum Purkinje cell', 'schematic'],
+                          ['#ff8c5e', 'Cerebellum Purkinje cell', 'Diedrichsen 2009 mesh'],
                           ['#b5e85b', 'Dentate gyrus granule cell', ''],
                           ['#ff6bb5', 'Olfactory bulb mitral cell', 'schematic'],
-                          ['#c45eff', 'Substantia nigra dopaminergic', 'schematic'],
+                          ['#c45eff', 'Substantia nigra dopaminergic', 'Pauli 2017 SNc mesh'],
                         ].map(([color, name, note]) => (
                           <div key={name} className="flex items-baseline gap-2">
                             <span
@@ -1096,7 +1237,9 @@ export default function Page() {
                         </p>
                         <p>
                           &quot;schematic&quot; = MNI centroid from Mai et al. 2015 stereotaxic
-                          atlas (structure not in Harvard-Oxford)
+                          atlas (olfactory bulb only — no atlas in-tree). Cerebellum and SNc cells
+                          sit at per-hemisphere centroids computed from the real Diedrichsen / Pauli
+                          meshes.
                         </p>
                         <p>
                           firing animation: pulse propagates from soma at 250 µm/ms, 600 ms ISI
@@ -1272,6 +1415,65 @@ export default function Page() {
                 )}
               </>
             )}
+            {view === 'scales' && (
+              <>
+                {graphError && (
+                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-accent">
+                    error fetching scale graph: {graphError}
+                  </div>
+                )}
+                {!graph && !graphError && (
+                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+                    loading multi-scale graph…
+                  </div>
+                )}
+                {graph && (
+                  <ScaleExplorer
+                    graph={graph}
+                    level={scalesLevel}
+                    selectedId={scalesSelected}
+                    onLevel={setScalesLevel}
+                    onSelect={setScalesSelected}
+                  />
+                )}
+              </>
+            )}
+            {view === 'ai' && (
+              <>
+                {graphError && (
+                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-accent">
+                    error fetching scale graph: {graphError}
+                  </div>
+                )}
+                {!graph && !graphError && (
+                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+                    loading AI schematic…
+                  </div>
+                )}
+                {graph && (
+                  <AISchematic
+                    graph={graph}
+                    selectedId={scalesSelected}
+                    onSelect={(id) => setScalesSelected(id === scalesSelected ? null : id)}
+                  />
+                )}
+              </>
+            )}
+            {view === 'timeline' && (
+              <>
+                {timelineError && (
+                  <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-accent">
+                    error fetching timeline: {timelineError}
+                  </div>
+                )}
+                {!timeline && !timelineError && (
+                  <div className="absolute inset-0 flex items-center justify-center text-sm text-white/40">
+                    loading research timeline…
+                  </div>
+                )}
+                {timeline && <TimelineView timeline={timeline} graph={graph} onJump={jumpToNode} />}
+              </>
+            )}
             {view === 'neuron' && (
               <>
                 {neuronError && (
@@ -1289,7 +1491,28 @@ export default function Page() {
             )}
           </div>
 
-          {neuron && <NeuronInspector neuron={neuron} selected={selected} />}
+          {(view === 'brain' || view === 'neuron') && neuron && (
+            <NeuronInspector neuron={neuron} selected={selected} />
+          )}
+          {(view === 'scales' || view === 'ai') &&
+            graph &&
+            scalesSelected &&
+            (() => {
+              const n = graph.nodes.find((x) => x.id === scalesSelected);
+              return n ? (
+                <NodeDetail
+                  graph={graph}
+                  node={n}
+                  onSelect={(id) => {
+                    const t = graph.nodes.find((x) => x.id === id);
+                    if (t) setScalesLevel(t.level);
+                    setScalesSelected(id);
+                  }}
+                  onShowOnBrain={showNodeOnBrain}
+                  onClose={() => setScalesSelected(null)}
+                />
+              ) : null;
+            })()}
         </div>
       </main>
     </NeuronSelectionCtx.Provider>

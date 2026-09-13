@@ -466,3 +466,216 @@ export interface WhiteMatterTractsResponse {
   citation: string;
   note: string;
 }
+
+// ---------------------------------------------------------------------------
+// Multi-scale graph (backend: neuroforge_api/routers/scales.py)
+// ---------------------------------------------------------------------------
+
+export type EvidenceStrength = 'equivalence' | 'strong' | 'analogy' | 'none';
+
+export interface CiteModel {
+  text: string;
+  doi: string | null;
+}
+
+export interface ScaleAnalog {
+  target: string;
+  target_name: string;
+  strength: EvidenceStrength;
+  note: string;
+  cites: CiteModel[];
+}
+
+export interface ScaleFact {
+  label: string;
+  value: string;
+  cite: CiteModel;
+}
+
+export interface ScaleAnchor {
+  label: string;
+  source: 'harvard_oxford' | 'pauli' | 'diedrichsen' | string;
+  centroid_mni_mm: number[];
+}
+
+export interface ScaleNode {
+  id: string;
+  side: 'brain' | 'ai';
+  level: number;
+  name: string;
+  parent: string | null;
+  group: string;
+  order: number;
+  description: string;
+  function: string;
+  mechanism: string;
+  cites: CiteModel[];
+  analogs: ScaleAnalog[];
+  no_analog_note: string | null;
+  facts: ScaleFact[];
+  anchors: ScaleAnchor[];
+  neuromorpho: Record<string, string> | null;
+  widget: string | null;
+  children: string[];
+  analog_of: string[];
+}
+
+export interface ScaleEdge {
+  source: string;
+  target: string;
+  kind: string;
+  note: string;
+  cite: CiteModel | null;
+}
+
+export interface ScaleLevel {
+  level: number;
+  brain_name: string;
+  ai_name: string;
+  brain_blurb: string;
+  ai_blurb: string;
+}
+
+export interface ScalesGraphResponse {
+  levels: ScaleLevel[];
+  nodes: ScaleNode[];
+  edges: ScaleEdge[];
+  strengths: EvidenceStrength[];
+  note: string;
+}
+
+export interface Milestone {
+  year: number;
+  category: 'neuro' | 'ai' | 'bridge';
+  title: string;
+  who: string;
+  doi: string | null;
+  significance: string;
+  links: string[];
+  note: string | null;
+}
+
+export interface TimelineResponse {
+  milestones: Milestone[];
+  n: number;
+  note: string;
+}
+
+// ---------------------------------------------------------------------------
+// New simulators
+// ---------------------------------------------------------------------------
+
+export interface ModernHopfieldRequest {
+  d?: number;
+  n_patterns?: number;
+  corruption_fraction?: number;
+  beta?: number | null;
+  n_updates?: number;
+  target_index?: number;
+  seed?: number;
+  sweep?: boolean;
+  sweep_trials?: number;
+}
+
+export interface CapacitySweepResponse {
+  d: number;
+  alphas: number[];
+  n_patterns: number[];
+  classic_success: number[];
+  modern_success: number[];
+  n_trials: number;
+  threshold: number;
+  corruption_fraction: number;
+  beta: number;
+}
+
+export interface ModernHopfieldResponse {
+  d: number;
+  n_patterns: number;
+  alpha: number;
+  beta: number;
+  classic_critical_alpha: number;
+  target_index: number;
+  target: number[];
+  corrupted: number[];
+  modern_final: number[];
+  modern_final_sign: number[];
+  modern_energies: number[];
+  modern_overlaps: number[];
+  modern_attention_weights: number[];
+  classic_final: number[];
+  classic_overlap: number;
+  attention_max_abs_diff: number;
+  sweep: CapacitySweepResponse | null;
+  citation: string;
+}
+
+export interface DopamineRPERequest {
+  n_steps?: number;
+  bin_ms?: number;
+  cue_step?: number;
+  reward_step?: number;
+  reward?: number;
+  alpha?: number;
+  gamma?: number;
+  n_training_trials?: number;
+}
+
+export interface DopamineRPEResponse {
+  n_steps: number;
+  bin_ms: number;
+  cue_step: number;
+  reward_step: number;
+  alpha: number;
+  gamma: number;
+  n_training_trials: number;
+  times_ms: number[];
+  delta_unpredicted: number[];
+  delta_predicted: number[];
+  delta_omitted: number[];
+  value_trained: number[];
+  delta_at_reward_per_trial: number[];
+  delta_at_cue_per_trial: number[];
+  parameter_note: string;
+  citation: string;
+}
+
+export interface SynapseRequest {
+  holding_mV?: number;
+  g_max_nS?: number;
+  mg_mM?: number;
+  duration_ms?: number;
+  dt_ms?: number;
+  onset_ms?: number;
+}
+
+export interface ReceptorKinetics {
+  key: string;
+  name: string;
+  transmitter: string;
+  tau_rise_ms: number;
+  tau_decay_ms: number;
+  e_rev_mV: number;
+  mg_block: boolean;
+  citation: string;
+}
+
+export interface SynapseTrace {
+  key: string;
+  conductance_nS: number[];
+  current_pA: number[];
+  block_fraction: number;
+}
+
+export interface SynapseResponse {
+  times_ms: number[];
+  holding_mV: number;
+  mg_mM: number;
+  g_max_nS: number;
+  receptors: ReceptorKinetics[];
+  traces: SynapseTrace[];
+  nmda_iv_voltage_mV: number[];
+  nmda_iv_with_mg_pA: number[];
+  nmda_iv_without_mg_pA: number[];
+  citation: string;
+}

@@ -313,3 +313,64 @@ export async function fetchDifumo(): Promise<DifumoResponse> {
   }
   return (await response.json()) as DifumoResponse;
 }
+
+// ---------------------------------------------------------------------------
+// Multi-scale graph + timeline + new simulators
+// ---------------------------------------------------------------------------
+
+import type {
+  DopamineRPERequest,
+  DopamineRPEResponse,
+  ModernHopfieldRequest,
+  ModernHopfieldResponse,
+  ScalesGraphResponse,
+  SynapseRequest,
+  SynapseResponse,
+  TimelineResponse,
+} from './types';
+
+async function getJson<T>(path: string, label: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`${label}: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as T;
+}
+
+async function postJson<T>(path: string, body: unknown, label: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`${label}: ${response.status} ${text.slice(0, 200)}`);
+  }
+  return (await response.json()) as T;
+}
+
+export function fetchScalesGraph(): Promise<ScalesGraphResponse> {
+  return getJson('/api/scales/graph', 'fetchScalesGraph');
+}
+
+export function fetchTimeline(): Promise<TimelineResponse> {
+  return getJson('/api/research/timeline', 'fetchTimeline');
+}
+
+export function simulateModernHopfield(
+  request: ModernHopfieldRequest = {},
+): Promise<ModernHopfieldResponse> {
+  return postJson('/api/simulate/modern-hopfield', request, 'simulateModernHopfield');
+}
+
+export function simulateDopamineRPE(
+  request: DopamineRPERequest = {},
+): Promise<DopamineRPEResponse> {
+  return postJson('/api/simulate/dopamine-rpe', request, 'simulateDopamineRPE');
+}
+
+export function simulateSynapse(request: SynapseRequest = {}): Promise<SynapseResponse> {
+  return postJson('/api/simulate/synapse', request, 'simulateSynapse');
+}
