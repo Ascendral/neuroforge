@@ -2,9 +2,21 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { Hero, heroStill } from '@/components/ui/Hero';
 import type { EvidenceStrength, ScaleNode, ScalesGraphResponse } from '@/lib/types';
 
 import { STRENGTH_COLOR, STRENGTH_DASH, STRENGTH_LABEL, Tag, bestStrength } from './strength';
+
+// One real still per rung: whole brain for the organ, a V1 pyramidal cell
+// for regions, a CA3 pyramidal for circuits, a Purkinje cell for cells, a
+// dopamine neuron (the neuromodulator rung) for synapse / molecule.
+const HERO_BY_LEVEL: Record<number, string> = {
+  1: 'brain',
+  2: 'v1',
+  3: 'ca3',
+  4: 'purkinje',
+  5: 'dopaminergic',
+};
 
 // The ladder view: brain on the left, AI on the right, one rung at a time.
 // Lines between cards are the registry's analog links (colored by evidence
@@ -185,8 +197,32 @@ export function ScaleExplorer({ graph, level, selectedId, onLevel, onSelect }: S
       );
   }, [selected, byId, level]);
 
+  const liveModels = [...brainNodes, ...aiNodes].filter((n) => n.widget).length;
+  const bridgesHere =
+    brainNodes.reduce((s, n) => s + n.analogs.length, 0) +
+    aiNodes.reduce((s, n) => s + n.analogs.length, 0);
+
   return (
     <div className="flex h-full flex-col">
+      {!selected && lv && (
+        <Hero
+          still={heroStill(HERO_BY_LEVEL[level] ?? 'brain')}
+          kicker={`level ${level} of 5`}
+          title={
+            <>
+              {lv.brain_name} <span className="text-white/30">↔</span> {lv.ai_name}
+            </>
+          }
+          subtitle={`${lv.brain_blurb} ${lv.ai_blurb}`}
+          callouts={[
+            { label: 'brain nodes', value: brainNodes.length },
+            { label: 'ai nodes', value: aiNodes.length },
+            { label: 'bridges', value: bridgesHere },
+            { label: 'live models', value: liveModels },
+          ]}
+          height={250}
+        />
+      )}
       {/* ladder */}
       <div className="hairline-b flex items-stretch gap-2 px-5 py-3">
         {graph.levels.map((l) => {

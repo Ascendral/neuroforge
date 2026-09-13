@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
+import { Hero, heroStill } from '@/components/ui/Hero';
 import { Pills } from '@/components/ui/Pills';
 import type { Milestone, ScalesGraphResponse, TimelineResponse } from '@/lib/types';
 
@@ -39,8 +40,30 @@ export function TimelineView({ timeline, graph, onJump }: TimelineViewProps) {
     return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
   }, [items]);
 
+  const count = (c: Milestone['category']) =>
+    timeline.milestones.filter((m) => m.category === c).length;
+  const years = timeline.milestones.map((m) => m.year);
+
   return (
     <div className="h-full overflow-y-auto">
+      <Hero
+        still={heroStill('pyramidal')}
+        kicker="research timeline"
+        title={
+          <>
+            {Math.min(...years)} <span className="text-white/30">→</span> {Math.max(...years)}
+          </>
+        }
+        subtitle="Landmark results in neuroscience, in AI, and at the bridge between them. Every entry cites a DOI that the build verifies."
+        callouts={[
+          { label: 'milestones', value: timeline.n },
+          { label: 'neuro', value: count('neuro') },
+          { label: 'ai', value: count('ai') },
+          { label: 'bridge', value: count('bridge') },
+          { label: 'dois verified', value: timeline.milestones.filter((m) => m.doi).length },
+        ]}
+        height={260}
+      />
       <div className="hairline-b sticky top-0 z-10 flex items-center gap-4 bg-canvas/90 px-6 py-3 backdrop-blur-xl">
         <Pills options={FILTERS} value={filter} onChange={setFilter} size="sm" />
         <span className="meta-xs">

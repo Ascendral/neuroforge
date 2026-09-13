@@ -1,0 +1,147 @@
+[
+  {
+    "key": "pyramidal",
+    "file": "/hero/pyramidal.jpg",
+    "kind": "neuron",
+    "neuron_id": 10042,
+    "neuron_name": "oi28rpy1-1",
+    "archive": "Kisvarday",
+    "species": "cat",
+    "brain_region": [
+      "neocortex",
+      "occipital",
+      "layer 5-6"
+    ],
+    "cell_type": [
+      "pyramidal",
+      "principal cell"
+    ],
+    "point_count": 73526,
+    "doi": "10.1371/journal.pcbi.1000711",
+    "source_url": "https://neuromorpho.org/neuron_info.jsp?neuron_id=10042",
+    "caption": "oi28rpy1-1 \u00b7 cat \u00b7 neocortex / occipital \u00b7 Kisvarday archive \u00b7 neuromorpho.org"
+  },
+  {
+    "key": "purkinje",
+    "file": "/hero/purkinje.jpg",
+    "kind": "neuron",
+    "neuron_id": 10071,
+    "neuron_name": "Purkinje-slice-ageP35-4",
+    "archive": "Dusart",
+    "species": "mouse",
+    "brain_region": [
+      "cerebellum",
+      "cerebellar cortex",
+      "Purkinje layer"
+    ],
+    "cell_type": [
+      "Purkinje",
+      "principal cell"
+    ],
+    "point_count": 4173,
+    "doi": "10.1523/JNEUROSCI.2977-12.2013",
+    "source_url": "https://neuromorpho.org/neuron_info.jsp?neuron_id=10071",
+    "caption": "Purkinje-slice-ageP35-4 \u00b7 mouse \u00b7 cerebellum / cerebellar cortex \u00b7 Dusart archive \u00b7 neuromorpho.org"
+  },
+  {
+    "key": "ca3",
+    "file": "/hero/ca3.jpg",
+    "kind": "neuron",
+    "neuron_id": 106016,
+    "neuron_name": "Cell-16-2_1",
+    "archive": "Baltussen_Ultanir",
+    "species": "mouse",
+    "brain_region": [
+      "hippocampus",
+      "CA3"
+    ],
+    "cell_type": [
+      "principal cell",
+      "pyramidal",
+      "Ctip2-negative"
+    ],
+    "point_count": 384,
+    "doi": "10.15252/embj.201899763",
+    "source_url": "https://neuromorpho.org/neuron_info.jsp?neuron_id=106016",
+    "caption": "Cell-16-2_1 \u00b7 mouse \u00b7 hippocampus / CA3 \u00b7 Baltussen_Ultanir archive \u00b7 neuromorpho.org"
+  },
+  {
+    "key": "granule",
+    "file": "/hero/granule.jpg",
+    "kind": "neuron",
+    "neuron_id": 102087,
+    "neuron_name": "01052017e4-DGC-000",
+    "archive": "Nandi",
+    "species": "mouse",
+    "brain_region": [
+      "hippocampus",
+      "dentate gyrus",
+      "granule layer",
+      "outer"
+    ],
+    "cell_type": [
+      "principal cell",
+      "granule",
+      "mature"
+    ],
+    "point_count": 211,
+    "doi": "10.1016/j.neuroscience.2017.11.017",
+    "source_url": "https://neuromorpho.org/neuron_info.jsp?neuron_id=102087",
+    "caption": "01052017e4-DGC-000 \u00b7 mouse \u00b7 hippocampus / dentate gyrus \u00b7 Nandi archive \u00b7 neuromorpho.org"
+  },
+  {
+    "key": "dopaminergic",
+    "file": "/hero/dopaminergic.jpg",
+    "kind": "neuron",
+    "neuron_id": 104506,
+    "neuron_name": "MYUX109L-RECONSTRUCCION-CORREGIDA-AIS-AND-SC",
+    "archive": "Henny",
+    "species": "mouse",
+    "brain_region": [
+      "basal ganglia",
+      "substantia nigra",
+      "pars compacta",
+      "lateral"
+    ],
+    "cell_type": [
+      "principal cell",
+      "dopaminergic"
+    ],
+    "point_count": 7703,
+    "doi": "10.1523/JNEUROSCI.1432-17.2017",
+    "source_url": "https://neuromorpho.org/neuron_info.jsp?neuron_id=104506",
+    "caption": "MYUX109L-RECONSTRUCCION-CORREGIDA-AIS-AND-SC \u00b7 mouse \u00b7 basal ganglia / substantia nigra \u00b7 Henny archive \u00b7 neuromorpho.org"
+  },
+  {
+    "key": "v1",
+    "file": "/hero/v1.jpg",
+    "kind": "neuron",
+    "neuron_id": 102374,
+    "neuron_name": "Chat-IRES-Cre-neo_Ai14-316042-03-01-01_610873063_m",
+    "archive": "Allen Cell Types",
+    "species": "mouse",
+    "brain_region": [
+      "neocortex",
+      "occipital",
+      "primary visual",
+      "layer 4"
+    ],
+    "cell_type": [
+      "interneuron",
+      "Aspiny"
+    ],
+    "point_count": 7604,
+    "doi": "10.1016/j.neuron.2015.02.022",
+    "source_url": "https://neuromorpho.org/neuron_info.jsp?neuron_id=102374",
+    "caption": "Chat-IRES-Cre-neo_Ai14-316042-03-01-01_610873063_m \u00b7 mouse \u00b7 neocortex / occipital \u00b7 Allen Cell Types archive \u00b7 neuromorpho.org"
+  },
+  {
+    "key": "brain",
+    "file": "/hero/brain.jpg",
+    "kind": "brain",
+    "vertex_count": 10242,
+    "face_count": 20480,
+    "caption": "fsaverage5 pial surface \u00b7 left hemisphere \u00b7 10,242 vertices \u00b7 lateral view \u00b7 flat-shaded from the real mesh",
+    "citation": "Surface: Fischl B et al. fsaverage template. Hum Brain Mapp. 1999;8(4):272-84. doi:10.1002/(SICI)1097-0193(1999)8:4<272::AID-HBM10>3.0.CO;2-4. Cortical parcellation: Destrieux C et al. NeuroImage. 2010;53(1):1-15. doi:10.1016/j.neuroimage.2010.06.010. Subcortical parcellation: Desikan RS et al. (Harvard-Oxford / FSL). NeuroImage. 2006;31(3):968-980. doi:10.1016/j.neuroimage.2006.01.021"
+  }
+]
