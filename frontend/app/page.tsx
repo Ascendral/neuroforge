@@ -723,7 +723,7 @@ export default function Page() {
                   />
                 )}
                 {nodeHighlight && !activeFunction && (
-                  <div className="absolute bottom-4 left-4 rounded border border-[#ffe45e]/40 bg-black/85 p-2 font-mono text-[10px]">
+                  <div className="absolute bottom-4 right-4 max-w-[300px] rounded border border-[#ffe45e]/40 bg-black/85 p-2 font-mono text-[10px]">
                     <div className="text-white/40">highlighting atlas anchors of</div>
                     <div className="text-white">{nodeHighlight.name}</div>
                     <ul className="mt-1 text-white/60">
