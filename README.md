@@ -2,6 +2,12 @@
 
 The human brain and a modern AI system on one ladder of scales — organ/system → region/architecture → circuit/block → cell/unit → synapse/parameter — with the bridge between them drawn at every rung and tagged by how much evidence backs it. Real atlases, real reconstructed neurons, live biophysical and computational models, every claim cited to a DOI that a script verifies. **Zero theater. Zero fake data. Zero placeholder responses.**
 
+![A real mouse Purkinje cell reconstruction rendered by NeuroForge](docs/media/purkinje.jpg)
+
+*Every image in NeuroForge is real data. This one is [Purkinje-slice-ageP35-4](https://neuromorpho.org/neuron_info.jsp?neuron_id=10071) — a mouse cerebellar Purkinje cell, Dusart archive via neuromorpho.org, doi:10.1523/JNEUROSCI.2977-12.2013 — rendered by [`scripts/render_heroes.py`](scripts/render_heroes.py) from its SWC reconstruction. No generative art anywhere in the project.*
+
+Free open research by [Ascendral](https://ascendralsoftware.com). Runs locally — see [Local dev](#local-dev).
+
 ## What is in it
 
 | View             | What you get                                                                                                                                                            |
@@ -11,6 +17,10 @@ The human brain and a modern AI system on one ladder of scales — organ/system 
 | **ai schematic** | The complete AI side as one diagram: inference stack, exploded transformer block, augmentation (KV cache, RAG, MoE, in-context learning), training loop (loss, backprop, optimizer, regularization, RLHF, replay), units, parameters |
 | **timeline**     | 72 landmark results 1921 → 2025 (neuro / AI / bridge), each DOI-verified and linked to the node it concerns                                                              |
 | **neuron**       | Any NeuroMorpho reconstruction in 3D with the Hodgkin-Huxley model running on it                                                                                         |
+
+![The scales view: brain regions on the left bridged to transformer architecture on the right, links tagged by evidence](docs/media/scales.jpg)
+
+*The scales view at rung 2 of 5: brain regions on the left, the transformer stack on the right, every bridge tagged `equivalence` / `strong` / `analogy` / `none` by the evidence behind it. Deep-link any view with `?view=scales|ai|timeline|neuron`.*
 
 ## Live models (all parameters cited)
 
@@ -82,4 +92,4 @@ Audit logs per sprint live in `docs/audits/` — latest: [multiscale-ladder.md](
 
 ## License
 
-TBD.
+Code is [MIT](LICENSE). The datasets NeuroForge fetches (atlases, NeuroMorpho reconstructions, receptor maps, gene expression) remain under their original licenses and citation requirements — the app displays the source for each, and `citations.py` carries the full bibliography.
