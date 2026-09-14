@@ -107,8 +107,16 @@ interface SelectedPoint {
   parentId: number;
 }
 
+const VIEW_MODES: ViewMode[] = ['brain', 'scales', 'ai', 'timeline', 'neuron'];
+
 export default function Page() {
   const [view, setView] = useState<ViewMode>('brain');
+
+  // Deep link: ?view=scales|ai|timeline|neuron (applied after hydration to avoid an SSR mismatch)
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get('view');
+    if (v && VIEW_MODES.includes(v as ViewMode)) setView(v as ViewMode);
+  }, []);
   const [neuronId, setNeuronId] = useState<number>(DEFAULT_NEURON_ID);
   const [neuron, setNeuron] = useState<NeuronResponse | null>(null);
   const [brain, setBrain] = useState<BrainMeshResponse | null>(null);
