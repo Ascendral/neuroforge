@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { Landing } from '@/components/home/Landing';
 import { NeuronInspector } from '@/components/inspector/NeuronInspector';
 import { AISchematic } from '@/components/scales/AISchematic';
 import { NodeDetail } from '@/components/scales/NodeDetail';
@@ -70,9 +71,10 @@ import type {
 } from '@/lib/types';
 
 const DEFAULT_NEURON_ID = 1;
-type ViewMode = 'brain' | 'scales' | 'ai' | 'timeline' | 'neuron';
+type ViewMode = 'home' | 'brain' | 'scales' | 'ai' | 'timeline' | 'neuron';
 
 const VIEW_LABELS: Record<ViewMode, string> = {
+  home: 'home',
   brain: 'brain',
   scales: 'scales',
   ai: 'ai schematic',
@@ -107,12 +109,12 @@ interface SelectedPoint {
   parentId: number;
 }
 
-const VIEW_MODES: ViewMode[] = ['brain', 'scales', 'ai', 'timeline', 'neuron'];
+const VIEW_MODES: ViewMode[] = ['home', 'brain', 'scales', 'ai', 'timeline', 'neuron'];
 
 export default function Page() {
-  const [view, setView] = useState<ViewMode>('brain');
+  const [view, setView] = useState<ViewMode>('home');
 
-  // Deep link: ?view=scales|ai|timeline|neuron (applied after hydration to avoid an SSR mismatch)
+  // Deep link: ?view=brain|scales|ai|timeline|neuron (applied after hydration to avoid an SSR mismatch)
   useEffect(() => {
     const v = new URLSearchParams(window.location.search).get('view');
     if (v && VIEW_MODES.includes(v as ViewMode)) setView(v as ViewMode);
@@ -633,7 +635,7 @@ export default function Page() {
               )}
             </div>
             <Pills
-              options={['brain', 'scales', 'ai', 'timeline', 'neuron'] as const}
+              options={['home', 'brain', 'scales', 'ai', 'timeline', 'neuron'] as const}
               value={view}
               onChange={(v) => setView(v)}
               label={(v) => VIEW_LABELS[v]}
@@ -644,6 +646,7 @@ export default function Page() {
 
         <div className="flex flex-1 overflow-hidden">
           <div className="relative flex-1">
+            {view === 'home' && <Landing graph={graph} onNavigate={(v) => setView(v)} />}
             {view === 'brain' && (
               <>
                 {brainError && (
